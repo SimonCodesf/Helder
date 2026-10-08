@@ -12,6 +12,7 @@ import {
   startExploration,
   nextExploration,
   finishExploration,
+  requeueExploration,
   explorationTerm,
   explorationTasks,
 } from "../src/learning.js";
@@ -290,4 +291,17 @@ test("Explored cards stay explored in later rounds", () => {
   prepareStep(ss, s);
   assert.equal(ss.phase, "recall");
   assert.equal(ss.exploration, undefined);
+});
+
+test("Failed reverse exploration returns once at the end", () => {
+  const s = fixture();
+  const ss = createSession(s, { type: "all" });
+  prepareStep(ss, s);
+  startExploration(ss, s);
+  assert.equal(ss.exploration.task.kind, "reverse");
+  const first = ss.exploration.ids[0];
+  ss.exploration.revealed = true;
+  assert.equal(requeueExploration(ss), true);
+  assert.equal(ss.exploration.ids.at(-1), first);
+  assert.equal(requeueExploration(ss), false);
 });

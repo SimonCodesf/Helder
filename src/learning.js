@@ -1,4 +1,4 @@
-import { normalize, shuffle } from "./utils.js?v=3.1.8";
+import { normalize, shuffle } from "./utils.js?v=3.1.9";
 
 // Pedagogical scaffolding is separate from the FSRS memory model.
 // Choice/application answers must be authored, never invented from other cards.
@@ -187,6 +187,18 @@ export function nextExploration(session, state) {
     return;
   }
   startExploreTask(session, state);
+}
+// A failed reverse exploration returns once at the end of the group.
+// A second failure moves on, so a difficult card can never loop forever.
+export function requeueExploration(session) {
+  const e = session.exploration;
+  if (!e || e.task?.kind !== "reverse") return false;
+  e.retried ??= [];
+  const id = e.ids[e.index];
+  if (e.retried.includes(id)) return false;
+  e.retried.push(id);
+  e.ids.push(id);
+  return true;
 }
 export function finishExploration(session) {
   const ids = session.exploration.ids;
