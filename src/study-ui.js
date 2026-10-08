@@ -1,10 +1,10 @@
-import { escapeHTML as e, intervalLabel, safeURL } from "./utils.js?v=3.1.9";
-import { icon } from "./icons.js?v=3.1.9";
-import { markdown } from "./markdown.js?v=3.1.9";
-import { faces } from "./model.js?v=3.1.9";
-import { previewRatings } from "./scheduler.js?v=3.1.9";
-import { currentCardId } from "./study.js?v=3.1.9";
-import { facet } from "./curriculum.js?v=3.1.9";
+import { escapeHTML as e, intervalLabel, safeURL } from "./utils.js?v=3.1.10";
+import { icon } from "./icons.js?v=3.1.10";
+import { markdown } from "./markdown.js?v=3.1.10";
+import { faces } from "./model.js?v=3.1.10";
+import { previewRatings } from "./scheduler.js?v=3.1.10";
+import { currentCardId } from "./study.js?v=3.1.10";
+import { facet } from "./curriculum.js?v=3.1.10";
 export function studyScreen(
   state,
   session,
@@ -91,21 +91,20 @@ export function studyScreen(
       `<div class="question">${markdown(c.prompt)}</div><div class="choice-options">${session.choiceOptions.map((o, index) => `<button class="choice-option${revealed && o.original === c.correct ? " correct" : ""}${revealed && o.original === picked && picked !== c.correct ? " incorrect" : ""}" data-action="choose-answer" data-choice="${o.original}" ${revealed ? "disabled" : ""}><span class="option-index">${String.fromCharCode(65 + index)}</span><span>${e(o.text)}</span>${revealed && o.original === c.correct ? icon("check") : ""}</button>`).join("")}</div>${revealed ? `<div class="choice-feedback ${picked === c.correct ? "positive" : ""}"><strong>${picked === c.correct ? "Juist." : "Nog niet."}</strong></div>` : ``}</section><div class="study-dock reveal-dock">${revealed ? button("Verder", "choice-done", "primary large", "", "arrow") : button("Zelf ophalen", "choice-skip", "ghost large", "", "arrow")}</div></div>`
     );
   }
-  content += `<div class="question">${markdown(face.question)}</div>`;
   if (session.intro)
     return (
       content +
-      `<hr class="answer-divider"><div class="answer-label">De kern</div><div class="answer-text">${markdown(face.answer)}</div></section><div class="study-dock reveal-dock">${button(note.learning?.choice && card.template === "forward" ? "Verder" : "Zelf proberen", "intro-done", "primary large", "", "arrow")}</div></div>`
+      `<div class="question">${markdown(face.question)}</div><hr class="answer-divider"><div class="answer-label">De kern</div><div class="answer-text">${markdown(face.answer)}</div></section><div class="study-dock reveal-dock">${button(note.learning?.choice && card.template === "forward" ? "Verder" : "Zelf proberen", "intro-done", "primary large", "", "arrow")}</div></div>`
     );
   if (!session.revealed)
     return (
       content +
-      `${state.settings.answerMode === "write" ? `<div class="study-answer-input"><label class="field-label" for="study-answer">Jouw antwoord</label><textarea id="study-answer" placeholder="Wat kun je zelf terughalen?">${e(session.answer)}</textarea></div>` : ""}${session.hintUsed ? `<div class="hint-box">${e(note.hint)}</div>` : ""}${note.hint && !session.hintUsed ? `<div class="study-controls">${button("Hint", "show-hint", "ghost", "", "bulb")}</div>` : ""}</section><div class="study-dock reveal-dock">${button("Toon antwoord", "reveal", "primary large", "", "arrow")}</div></div>`
+      `<div class="flip-surface learn-flip" role="button" tabindex="0" data-action="reveal" aria-label="Tik om het antwoord te tonen"><div class="question">${markdown(face.question)}</div><p class="flip-hint">Tik om het antwoord te tonen</p></div>${state.settings.answerMode === "write" ? `<div class="study-answer-input"><label class="field-label" for="study-answer">Jouw antwoord</label><textarea id="study-answer" placeholder="Wat kun je zelf terughalen?">${e(session.answer)}</textarea></div>` : ""}${session.hintUsed ? `<div class="hint-box">${e(note.hint)}</div>` : ""}${note.hint && !session.hintUsed ? `<div class="study-controls">${button("Hint", "show-hint", "ghost", "", "bulb")}</div>` : ""}</section></div>`
     );
   const preview = previewRatings(card, state.settings.retention);
   return (
     content +
-    `${session.answer.trim() ? `<div class="your-answer"><span class="label">Jouw antwoord</span><p>${e(session.answer)}</p></div>` : ""}<hr class="answer-divider"><div class="answer-label">Antwoord</div><div class="answer-text">${markdown(face.answer)}</div>${safeURL(note.source) ? `<p class="source-link"><a href="${e(safeURL(note.source))}" target="_blank" rel="noopener noreferrer">Bron</a></p>` : ""}</section><div class="study-dock grade-dock"><div class="dock-heading"><p class="grade-prompt">Hoe ging het?</p>${session.lastUndo ? button("", "undo-grade", "icon-button", 'aria-label="Laatste beoordeling ongedaan"', "undo") : ""}</div><div class="grade-grid">${[
+    `<div class="question">${markdown(face.question)}</div>${session.answer.trim() ? `<div class="your-answer"><span class="label">Jouw antwoord</span><p>${e(session.answer)}</p></div>` : ""}<hr class="answer-divider"><div class="answer-label">Antwoord</div><div class="answer-text">${markdown(face.answer)}</div>${safeURL(note.source) ? `<p class="source-link"><a href="${e(safeURL(note.source))}" target="_blank" rel="noopener noreferrer">Bron</a></p>` : ""}</section><div class="study-dock grade-dock"><div class="dock-heading"><p class="grade-prompt">Hoe ging het?</p>${session.lastUndo ? button("", "undo-grade", "icon-button", 'aria-label="Laatste beoordeling ongedaan"', "undo") : ""}</div><div class="grade-grid">${[
       [1, "Opnieuw", "again"],
       [2, "Moeilijk", "hard"],
       [3, "Goed", "good"],

@@ -10,9 +10,9 @@ import {
   shuffle,
   downloadText,
   safeURL,
-} from "./utils.js?v=3.1.9";
-import { icon } from "./icons.js?v=3.1.9";
-import { markdown } from "./markdown.js?v=3.1.9";
+} from "./utils.js?v=3.1.10";
+import { icon } from "./icons.js?v=3.1.10";
+import { markdown } from "./markdown.js?v=3.1.10";
 import {
   parseImport,
   splitTags,
@@ -20,7 +20,7 @@ import {
   toMarkdown,
   toTSV,
   noteImportKey,
-} from "./parser.js?v=3.1.9";
+} from "./parser.js?v=3.1.10";
 import {
   emptyCollection,
   validateCollection,
@@ -38,21 +38,21 @@ import {
   isAvailable,
   faces,
   burySiblings,
-} from "./model.js?v=3.1.9";
+} from "./model.js?v=3.1.10";
 import {
   loadCollection,
   saveCollection,
   requestPersistentStorage,
   getDeviceValue,
   setDeviceValue,
-} from "./storage.js?v=3.1.9";
-import { previewRatings, scheduleRating, State } from "./scheduler.js?v=3.1.9";
+} from "./storage.js?v=3.1.10";
+import { previewRatings, scheduleRating, State } from "./scheduler.js?v=3.1.10";
 import {
   createSession,
   currentCardId,
   advanceSession,
-} from "./study.js?v=3.1.9";
-import { guideView } from "./guide.js?v=3.1.9";
+} from "./study.js?v=3.1.10";
+import { guideView } from "./guide.js?v=3.1.10";
 import {
   prepareStep,
   startExploration,
@@ -63,7 +63,7 @@ import {
   beginRecall,
   recognitionOptions,
   shouldApply,
-} from "./learning.js?v=3.1.9";
+} from "./learning.js?v=3.1.10";
 import {
   facet,
   structureFor,
@@ -72,19 +72,19 @@ import {
   progressFor,
   labelMap,
   mapText,
-} from "./curriculum.js?v=3.1.9";
+} from "./curriculum.js?v=3.1.10";
 import {
   progressStrip,
   courseStructure,
   folderTile,
-} from "./curriculum-ui.js?v=3.1.9";
-import { studyScreen } from "./study-ui.js?v=3.1.9";
-import { explorationScreen } from "./exploration-ui.js?v=3.1.9";
-import { emailView } from "./email-ui.js?v=3.1.9";
-import { setupSwipe } from "./swipe.js?v=3.1.9";
-import { CloudConnection } from "./cloud.js?v=3.1.9";
-import { cloudPanel, conflictBody } from "./cloud-ui.js?v=3.1.9";
-import { LocalChangedError, localFromCloud } from "./sync-core.js?v=3.1.9";
+} from "./curriculum-ui.js?v=3.1.10";
+import { studyScreen } from "./study-ui.js?v=3.1.10";
+import { explorationScreen } from "./exploration-ui.js?v=3.1.10";
+import { emailView } from "./email-ui.js?v=3.1.10";
+import { setupSwipe } from "./swipe.js?v=3.1.10";
+import { CloudConnection } from "./cloud.js?v=3.1.10";
+import { cloudPanel, conflictBody } from "./cloud-ui.js?v=3.1.10";
+import { LocalChangedError, localFromCloud } from "./sync-core.js?v=3.1.10";
 import {
   setupInterface,
   syncInterface,
@@ -93,7 +93,7 @@ import {
   offlineUpdateReady,
   offlineAvailable,
   statusButton,
-} from "./interface.js?v=3.1.9";
+} from "./interface.js?v=3.1.10";
 
 let cloud;
 let state,
@@ -1420,6 +1420,7 @@ async function handleClick(event) {
         break;
       }
       case "reveal":
+        if (event.target.closest("textarea, input, select")) break;
         session.revealed = true;
         renderApp();
         break;
@@ -1962,7 +1963,10 @@ document.addEventListener("keydown", (event) => {
   if (
     !session.revealed &&
     ((event.key === "Enter" && (event.ctrlKey || event.metaKey)) ||
-      (!typing && event.key === " "))
+      (!typing && event.key === " ") ||
+      (!typing &&
+        event.key === "Enter" &&
+        event.target.classList.contains("learn-flip")))
   ) {
     event.preventDefault();
     $('[data-action="reveal"]')?.click();
@@ -2023,7 +2027,7 @@ async function boot() {
     state = saved ? validateCollection(saved) : emptyCollection();
     if (!saved) {
       try {
-        const response = await fetch("./data/starter.json?v=3.1.9");
+        const response = await fetch("./data/starter.json?v=3.1.10");
         if (!response.ok) throw new Error("Starterbestand ontbreekt.");
         const starters = await response.json();
         for (const data of starters) {
