@@ -1,6 +1,7 @@
-import { uid, localDay, nextMidnight, normalize } from "./utils.js?v=3.1.17";
-import { emptySchedule, State, retrievability } from "./scheduler.js?v=3.1.17";
-import { validateNote, clozeMatches } from "./parser.js?v=3.1.17";
+import { uid, localDay, nextMidnight, normalize } from "./utils.js?v=3.1.18";
+import { emptySchedule, State, retrievability } from "./scheduler.js?v=3.1.18";
+import { validateNote, clozeMatches } from "./parser.js?v=3.1.18";
+import { exploredCardIds } from "./learning.js?v=3.1.18";
 export const SCHEMA_VERSION = 1;
 export const DEFAULT_SETTINGS = {
   newPerDay: 15,
@@ -290,11 +291,17 @@ export function stats(state, scope = { type: "all" }, now = Date.now()) {
   const freshNotes = new Set(
     fresh.filter((c) => !dueNotes.has(c.noteId)).map((c) => c.noteId),
   );
+  // Explored but never rated: already introduced to learning, still awaiting
+  // a first FSRS rating. Shown separately and blocking new exploration.
+  const explored = new Set(exploredCardIds(state));
   return {
     total: cards.length,
     notes: scopeNotes(state, scope).length,
     due: dueNotes.size,
     new: fresh.length,
+    learning: available.filter(
+      (c) => c.schedule.state === State.New && explored.has(c.id),
+    ).length,
     newToday: Math.min(
       freshNotes.size,
       state.settings.dailyLimit === false

@@ -1,6 +1,6 @@
-import { queueFor } from "./model.js?v=3.1.17";
-import { shuffle, uid } from "./utils.js?v=3.1.17";
-import { exploredCardIds } from "./learning.js?v=3.1.17";
+import { queueFor, stats } from "./model.js?v=3.1.18";
+import { shuffle, uid } from "./utils.js?v=3.1.18";
+import { exploredCardIds } from "./learning.js?v=3.1.18";
 // A learn round stays steady: with fewer than this many due reviews, one
 // small batch of new cards is explored up front. Nothing new is added
 // mid-round; the rest waits for the next round.
@@ -31,9 +31,12 @@ export function createSession(
     const warmed = new Set(exploredCardIds(state)),
       isNew = (id) =>
         state.cards.find((c) => c.id === id)?.schedule.state === 0,
-      dueCount = queue.filter((id) => !isNew(id)).length;
+      dueCount = queue.filter((id) => !isNew(id)).length,
+      // Cards already in learning await their first rating: no new batch
+      // until they are rated.
+      inLearning = stats(state, scope, Date.now()).learning;
     batch =
-      dueCount < MAX_DUE_WITH_NEW
+      dueCount < MAX_DUE_WITH_NEW && !inLearning
         ? queue
             .filter((id) => isNew(id) && !warmed.has(id))
             .slice(0, state.settings.exploreSize ?? 3)

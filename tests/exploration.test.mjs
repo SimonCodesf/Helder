@@ -4,6 +4,7 @@ import {
   emptyCollection,
   newSet,
   upsertNote,
+  stats,
   validateCollection,
 } from "../src/model.js";
 import { createSession, currentCardId } from "../src/study.js";
@@ -324,4 +325,26 @@ test("Failed reverse exploration returns twice, then drops", () => {
     { cardId: first, round: "exploration", dropped: true },
   );
   assert.ok(!exploredCardIds(s).includes(first));
+});
+
+test("Unrated explored cards block new batches and show in stats", () => {
+  const s = fixture();
+  s.activities.push({ cardId: s.cards[0].id, round: "exploration" });
+  assert.equal(stats(s).learning, 1);
+  const ss = createSession(s, { type: "all" });
+  // The unrated card stays in the round, but nothing new is explored.
+  assert.ok(ss.queue.includes(s.cards[0].id));
+  prepareStep(ss, s);
+  assert.equal(ss.phase, "recall");
+  assert.equal(ss.exploration, undefined);
+  // Dropped cards neither block nor count.
+  s.activities.push({
+    cardId: s.cards[0].id,
+    round: "exploration",
+    dropped: true,
+  });
+  assert.equal(stats(s).learning, 0);
+  const fresh = createSession(s, { type: "all" });
+  prepareStep(fresh, s);
+  assert.equal(fresh.phase, "explore");
 });
