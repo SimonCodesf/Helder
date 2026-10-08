@@ -1,6 +1,6 @@
-import { uid, localDay, nextMidnight, normalize } from "./utils.js?v=3.1.4";
-import { emptySchedule, State, retrievability } from "./scheduler.js?v=3.1.4";
-import { validateNote, clozeMatches } from "./parser.js?v=3.1.4";
+import { uid, localDay, nextMidnight, normalize } from "./utils.js?v=3.1.5";
+import { emptySchedule, State, retrievability } from "./scheduler.js?v=3.1.5";
+import { validateNote, clozeMatches } from "./parser.js?v=3.1.5";
 export const SCHEMA_VERSION = 1;
 export const DEFAULT_SETTINGS = {
   newPerDay: 15,
@@ -13,6 +13,7 @@ export const DEFAULT_SETTINGS = {
   scaffold: true,
   exploreSize: 3,
   application: true,
+  flashShuffle: true,
 };
 export function emptyCollection() {
   return {
@@ -194,6 +195,28 @@ export function deleteNotes(state, ids) {
   state.activities = (state.activities ?? []).filter(
     (a) => !cards.has(a.cardId),
   );
+}
+export function resetSet(state, setId) {
+  const wanted = new Set(
+    state.notes.filter((n) => n.setId === setId).map((n) => n.id),
+  );
+  if (!state.sets.some((s) => s.id === setId)) return 0;
+  const ids = new Set();
+  for (const card of state.cards) {
+    if (!wanted.has(card.noteId)) continue;
+    ids.add(card.id);
+    card.schedule = emptySchedule();
+    card.buriedUntil = 0;
+    delete card.practiceMark;
+    delete card.practiceAt;
+  }
+  state.reviews = state.reviews.filter((r) => !ids.has(r.cardId));
+  state.activities = (state.activities ?? []).filter(
+    (a) => !ids.has(a.cardId),
+  );
+  const set = state.sets.find((s) => s.id === setId);
+  if (set) set.updatedAt = Date.now();
+  return ids.size;
 }
 export function scopeNotes(state, scope = { type: "all" }) {
   let notes = state.notes;
@@ -523,7 +546,8 @@ export function validateCollection(raw) {
     typeof settings.dailyLimit !== "boolean" ||
     typeof settings.scaffold !== "boolean" ||
     ![1, 3, 5].includes(settings.exploreSize) ||
-    typeof settings.application !== "boolean"
+    typeof settings.application !== "boolean" ||
+    typeof settings.flashShuffle !== "boolean"
   )
     throw new Error("Ongeldige instellingen.");
   return {

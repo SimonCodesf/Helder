@@ -1,5 +1,5 @@
-import { queueFor } from "./model.js?v=3.1.4";
-import { shuffle, uid } from "./utils.js?v=3.1.4";
+import { queueFor } from "./model.js?v=3.1.5";
+import { shuffle, uid } from "./utils.js?v=3.1.5";
 // Sessions are a UI concern, not a second scheduling algorithm. Only FSRS changes due dates.
 export function createSession(
   state,
@@ -18,7 +18,8 @@ export function createSession(
       return true;
     });
   }
-  if (mode === "flash" || practice) queue = shuffle(queue);
+  if (mode === "flash" ? state.settings.flashShuffle !== false : practice)
+    queue = shuffle(queue);
   else if (state.settings.mix) {
     queue = queue.slice(0, state.settings.sessionSize); // Select urgent cards BEFORE mixing.
     // Mix reviews without randomly pulling advanced new material ahead of beginners' cards.

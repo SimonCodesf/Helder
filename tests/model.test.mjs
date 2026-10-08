@@ -14,6 +14,7 @@ import {
   burySiblings,
   faces,
   deleteNotes,
+  resetSet,
   validateCollection,
 } from "../src/model.js";
 import {
@@ -242,6 +243,48 @@ test("Snapshot rejects string values for boolean settings and card flags", () =>
   bad.settings.mix = "false";
   assert.throws(() => validateCollection(bad), /instellingen/);
   bad = clone(s);
+  bad.settings.flashShuffle = "false";
+  assert.throws(() => validateCollection(bad), /instellingen/);
+  bad = clone(s);
   bad.cards[0].suspended = "false";
   assert.throws(() => validateCollection(bad), /pauzestatus/);
+});
+test("Reset per set wist planning, logboek en swipes, andere sets niet", () => {
+  const s = emptyCollection(),
+    a = newSet(s, { title: "A" }),
+    b = newSet(s, { title: "B" });
+  upsertNote(s, a.id, { kind: "basic", front: "V1", back: "A1" });
+  upsertNote(s, a.id, { kind: "basic", front: "V2", back: "A2" });
+  upsertNote(s, b.id, { kind: "basic", front: "V3", back: "A3" });
+  for (const c of s.cards) {
+    c.schedule = { ...c.schedule, state: 2, reps: 3 };
+    c.practiceMark = "known";
+    c.practiceAt = 1;
+    s.reviews.push({ cardId: c.id, time: 1, rating: 3, day: "2026-01-01" });
+  }
+  assert.equal(resetSet(s, a.id), 2);
+  for (const c of s.cards) {
+    const note = s.notes.find((n) => n.id === c.noteId);
+    if (note.setId === a.id) {
+      assert.equal(c.schedule.state, State.New);
+      assert.equal(c.practiceMark, undefined);
+    } else {
+      assert.equal(c.schedule.state, 2);
+      assert.equal(c.practiceMark, "known");
+    }
+  }
+  assert.equal(s.reviews.length, 1);
+  assert.equal(resetSet(s, "missing"), 0);
+});
+test("Flashcards husselen staat aan en volgt de instelling", () => {
+  assert.equal(emptyCollection().settings.flashShuffle, true);
+  const s = emptyCollection(),
+    set = newSet(s, { title: "Test" });
+  for (let i = 0; i < 8; i++)
+    upsertNote(s, set.id, { kind: "basic", front: "V" + i, back: "A" + i });
+  s.settings.flashShuffle = false;
+  const scope = { type: "set", id: set.id },
+    expected = queueFor(s, scope, Date.now(), { practice: true }),
+    session = createSession(s, scope, { mode: "flash" });
+  assert.deepEqual(session.queue, expected);
 });
