@@ -1,10 +1,10 @@
-import { escapeHTML as e, intervalLabel, safeURL } from "./utils.js?v=3.1.13";
-import { icon } from "./icons.js?v=3.1.13";
-import { markdown } from "./markdown.js?v=3.1.13";
-import { faces } from "./model.js?v=3.1.13";
-import { previewRatings } from "./scheduler.js?v=3.1.13";
-import { currentCardId } from "./study.js?v=3.1.13";
-import { facet } from "./curriculum.js?v=3.1.13";
+import { escapeHTML as e, intervalLabel, safeURL } from "./utils.js?v=3.1.14";
+import { icon } from "./icons.js?v=3.1.14";
+import { markdown } from "./markdown.js?v=3.1.14";
+import { faces } from "./model.js?v=3.1.14";
+import { previewRatings } from "./scheduler.js?v=3.1.14";
+import { currentCardId } from "./study.js?v=3.1.14";
+import { facet } from "./curriculum.js?v=3.1.14";
 export function studyScreen(
   state,
   session,
@@ -70,7 +70,7 @@ export function studyScreen(
       [4, "makkelijk", "tally-easy"],
     ].filter(([r]) => rated[r] > 0);
     const sentence = `${warmed ? `${warmed} verkend, ` : ""}${fresh} nieuw, ${remaining.length - fresh} te herhalen${ratings.length ? `, ${ratings.map(([r, label]) => `${rated[r]} ${label}`).join(", ")}` : ""}`;
-    content += `<p class="study-stats" aria-label="${sentence}"><span aria-hidden="true">${warmed ? `<span title="Verkend">✓ ${warmed}</span> · ` : ""}<span title="Nieuw">+${fresh}</span> · <span title="Te herhalen">↻ ${remaining.length - fresh}</span>${ratings.map(([r, label, cls]) => ` · <span class="${cls}" title="${label}">${rated[r]}</span>`).join("")}</span></p>`;
+    content += `<p class="study-stats" aria-label="${sentence}"><span aria-hidden="true">${warmed ? `<span class="tally-warmed" title="Verkend">✓ ${warmed}</span> · ` : ""}<span class="tally-fresh" title="Nieuw">+${fresh}</span> · <span class="tally-due" title="Te herhalen">↻ ${remaining.length - fresh}</span>${ratings.map(([r, label, cls]) => ` · <span class="${cls}" title="${label}">${rated[r]}</span>`).join("")}</span></p>`;
   }
   content += `<section class="study-card">${header}`;
   if (session.phase === "orient")

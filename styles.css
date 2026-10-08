@@ -1064,11 +1064,26 @@ svg {
   text-align: center;
   margin: -8px 0 16px;
 }
+.tally-warmed {
+  color: var(--blue);
+  font-weight: 650;
+}
+.tally-fresh {
+  color: var(--green);
+  font-weight: 650;
+}
+.tally-due {
+  color: var(--orange);
+  font-weight: 650;
+}
+.tally-todo {
+  color: var(--blue);
+  font-weight: 650;
+}
 .tally-again {
   color: var(--red);
   font-weight: 650;
-}
-.tally-hard {
+}.tally-hard {
   color: var(--orange);
   font-weight: 650;
 }
