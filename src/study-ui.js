@@ -1,10 +1,10 @@
-import { escapeHTML as e, intervalLabel, safeURL } from "./utils.js?v=3.1.1";
-import { icon } from "./icons.js?v=3.1.1";
-import { markdown } from "./markdown.js?v=3.1.1";
-import { faces } from "./model.js?v=3.1.1";
-import { previewRatings } from "./scheduler.js?v=3.1.1";
-import { currentCardId } from "./study.js?v=3.1.1";
-import { facet } from "./curriculum.js?v=3.1.1";
+import { escapeHTML as e, intervalLabel, safeURL } from "./utils.js?v=3.1.2";
+import { icon } from "./icons.js?v=3.1.2";
+import { markdown } from "./markdown.js?v=3.1.2";
+import { faces } from "./model.js?v=3.1.2";
+import { previewRatings } from "./scheduler.js?v=3.1.2";
+import { currentCardId } from "./study.js?v=3.1.2";
+import { facet } from "./curriculum.js?v=3.1.2";
 export function studyScreen(
   state,
   session,
@@ -35,7 +35,7 @@ export function studyScreen(
     const mark = session.flashMarks?.[id];
     return (
       content +
-      `<section class="study-card flash-card" data-swipe><span class="swipe-stamp known">${icon("check")} Gekend</span><span class="swipe-stamp unknown">${icon("refresh")} Nog niet</span>${header}<div class="flip-surface" role="button" tabindex="0" data-action="flip" aria-label="Kaart omdraaien"><div class="${session.revealed ? "answer-text" : "question"}">${markdown(session.revealed ? face.answer : face.question)}</div><p class="flip-hint">${mark ? `Gemarkeerd als ${mark === "known" ? "gekend" : "nog niet gekend"}` : "Tik om te draaien. Swipes wijzigen je planning niet."}</p></div></section><div class="study-dock flash-dock"><div class="dock-heading"><p class="small muted">${Object.values(session.flashMarks ?? {}).filter((v) => v === "known").length} gekend · ${Object.values(session.flashMarks ?? {}).filter((v) => v === "unknown").length} nog niet</p><div class="flash-history-actions">${button("", "flash-prev", "icon-button", session.index === 0 ? 'disabled aria-label="Vorige kaart"' : 'aria-label="Vorige kaart"', "back")}${button("", "flash-next", "icon-button", 'aria-label="Kaart overslaan"', "chevron")}${button("", "flash-shuffle", "icon-button", 'aria-label="Kaarten husselen"', "shuffle")}</div></div><div class="flash-flip-row">${session.flashUndo ? button("", "undo-flash", "icon-button", 'aria-label="Laatste swipe ongedaan"', "undo") : ""}${button("Omdraaien", "flip", "primary large", "", "refresh")}</div><div class="swipe-actions">${button("Nog niet", "flash-mark", "unknown", 'data-mark="unknown"', "back")}${button("Gekend", "flash-mark", "known", 'data-mark="known"', "check")}</div></div></div>`
+      `<section class="study-card flash-card" data-swipe><span class="swipe-stamp known">${icon("check")} Gekend</span><span class="swipe-stamp unknown">${icon("refresh")} Nog niet</span>${header}<div class="flip-surface" role="button" tabindex="0" data-action="flip" aria-label="Kaart omdraaien"><div class="${session.revealed ? "answer-text" : "question"}">${markdown(session.revealed ? face.answer : face.question)}</div><p class="flip-hint">${mark ? `Gemarkeerd als ${mark === "known" ? "gekend" : "nog niet gekend"}` : "Tik om te draaien · swipe om te sorteren"}</p></div></section><div class="study-dock flash-dock"><div class="dock-heading"><p class="small muted">${Object.values(session.flashMarks ?? {}).filter((v) => v === "known").length} gekend · ${Object.values(session.flashMarks ?? {}).filter((v) => v === "unknown").length} nog niet</p><div class="flash-history-actions">${button("", "flash-prev", "icon-button", session.index === 0 ? 'disabled aria-label="Vorige kaart"' : 'aria-label="Vorige kaart"', "back")}${button("", "flash-next", "icon-button", 'aria-label="Kaart overslaan"', "chevron")}${button("", "flash-shuffle", "icon-button", 'aria-label="Kaarten husselen"', "shuffle")}</div></div><div class="flash-flip-row">${session.flashUndo ? button("", "undo-flash", "icon-button", 'aria-label="Laatste swipe ongedaan"', "undo") : ""}${button("Omdraaien", "flip", "primary large", "", "refresh")}</div><div class="swipe-actions">${button("Nog niet", "flash-mark", "unknown", 'data-mark="unknown"', "back")}${button("Gekend", "flash-mark", "known", 'data-mark="known"', "check")}</div></div></div>`
     );
   }
   if (session.application) {

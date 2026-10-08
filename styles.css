@@ -2409,6 +2409,9 @@ textarea {
   .study-dock {
     padding: 12px 20px calc(16px + env(safe-area-inset-bottom, 0px));
   }
+  .flash-dock {
+    display: none;
+  }
   .dock-heading {
     margin-bottom: 12px;
   }
