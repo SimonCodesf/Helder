@@ -1074,7 +1074,7 @@ svg {
   margin: -8px 0 16px;
 }
 .tally-warmed {
-  color: var(--blue);
+  color: var(--muted);
   font-weight: 650;
 }
 .tally-fresh {
