@@ -1,10 +1,10 @@
-import { escapeHTML as e, intervalLabel, safeURL } from "./utils.js?v=3.1.19";
-import { icon } from "./icons.js?v=3.1.19";
-import { markdown } from "./markdown.js?v=3.1.19";
-import { faces, stats } from "./model.js?v=3.1.19";
-import { previewRatings } from "./scheduler.js?v=3.1.19";
-import { currentCardId } from "./study.js?v=3.1.19";
-import { facet } from "./curriculum.js?v=3.1.19";
+import { escapeHTML as e, intervalLabel, safeURL } from "./utils.js?v=3.1.20";
+import { icon } from "./icons.js?v=3.1.20";
+import { markdown } from "./markdown.js?v=3.1.20";
+import { faces, scopeCards } from "./model.js?v=3.1.20";
+import { previewRatings } from "./scheduler.js?v=3.1.20";
+import { currentCardId } from "./study.js?v=3.1.20";
+import { facet } from "./curriculum.js?v=3.1.20";
 export function studyScreen(
   state,
   session,
@@ -55,22 +55,32 @@ export function studyScreen(
     );
   }
   if (!flash && !session.application) {
-    // Scope-wide and persistent: closing the round changes nothing here.
-    // Never-rated terms always count, and rating moves cards live: out of
-    // nieuw/te herhalen, into their own color.
-    const st = stats(state, session.scope),
-      warmed = (session.warmedIds ?? []).length,
-      rated = [0, 0, 0, 0, 0];
-    for (const done of session.completed)
-      if (done.rating >= 1 && done.rating <= 4) rated[done.rating]++;
-    const ratings = [
-      [1, "opnieuw", "tally-again"],
-      [2, "moeilijk", "tally-hard"],
-      [3, "goed", "tally-good"],
-      [4, "makkelijk", "tally-easy"],
-    ].filter(([r]) => rated[r] > 0);
-    const sentence = `${warmed ? `${warmed} verkend, ` : ""}${st.new} nieuw, ${st.due} te herhalen${ratings.length ? `, ${ratings.map(([r, label]) => `${rated[r]} ${label}`).join(", ")}` : ""}`;
-    content += `<p class="study-stats" aria-label="${sentence}"><span aria-hidden="true">${warmed ? `<span class="tally-warmed" title="Verkend">✓ ${warmed}</span> · ` : ""}<span class="tally-fresh" title="Nieuw, ook zonder oordeel">+${st.new}</span> · <span class="tally-due" title="Te herhalen">↻ ${st.due}</span>${ratings.map(([r, label, cls]) => ` · <span class="${cls}" title="${label}">${rated[r]}</span>`).join("")}</span></p>`;
+    // Scope-wide and persistent: every card sits in exactly one group.
+    // Terms move live: exploring moves +N to ✓W, rating moves cards into
+    // (and between) the four colors. Closing the round changes nothing.
+    const scoped = scopeCards(state, session.scope),
+      explored = new Set(session.warmedIds ?? []),
+      lastRating = new Map();
+    for (const r of state.reviews) {
+      const prev = lastRating.get(r.cardId);
+      if (!prev || r.time >= prev.time) lastRating.set(r.cardId, r);
+    }
+    let fresh = 0,
+      warming = 0;
+    const groups = [0, 0, 0, 0, 0];
+    for (const c of scoped) {
+      const last = lastRating.get(c.id);
+      if (!last) {
+        if (explored.has(c.id)) warming++;
+        else fresh++;
+      } else if (last.rating >= 1 && last.rating <= 4) {
+        groups[last.rating]++;
+      } else {
+        groups[3]++;
+      }
+    }
+    const sentence = `${warming} verkend, ${fresh} nieuw, ${groups[1]} opnieuw, ${groups[2]} moeilijk, ${groups[3]} goed, ${groups[4]} makkelijk`;
+    content += `<p class="study-stats" aria-label="${sentence}"><span aria-hidden="true"><span class="tally-warmed" title="Verkend, nog geen oordeel">✓ ${warming}</span> · <span class="tally-fresh" title="Nieuw">+${fresh}</span> · <span class="tally-again" title="Opnieuw">${groups[1]}</span> · <span class="tally-hard" title="Moeilijk">${groups[2]}</span> · <span class="tally-good" title="Goed">${groups[3]}</span> · <span class="tally-easy" title="Makkelijk">${groups[4]}</span></span></p>`;
   }
   content += `<section class="study-card">${header}`;
   if (session.phase === "orient")
