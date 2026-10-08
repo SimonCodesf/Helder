@@ -1,10 +1,10 @@
-import { escapeHTML as e, intervalLabel, safeURL } from "./utils.js?v=3.1.0";
-import { icon } from "./icons.js?v=3.1.0";
-import { markdown } from "./markdown.js?v=3.1.0";
-import { faces } from "./model.js?v=3.1.0";
-import { previewRatings } from "./scheduler.js?v=3.1.0";
-import { currentCardId } from "./study.js?v=3.1.0";
-import { facet } from "./curriculum.js?v=3.1.0";
+import { escapeHTML as e, intervalLabel, safeURL } from "./utils.js?v=3.1.1";
+import { icon } from "./icons.js?v=3.1.1";
+import { markdown } from "./markdown.js?v=3.1.1";
+import { faces } from "./model.js?v=3.1.1";
+import { previewRatings } from "./scheduler.js?v=3.1.1";
+import { currentCardId } from "./study.js?v=3.1.1";
+import { facet } from "./curriculum.js?v=3.1.1";
 export function studyScreen(
   state,
   session,
@@ -18,7 +18,7 @@ export function studyScreen(
     flash = session.mode === "flash",
     done = flash ? session.index : session.completed.length,
     current = state.sets.find((s) => s.id === note.setId);
-  let content = `<div class="study-page has-dock${flash ? " flash-page" : ""}"><header class="study-header">${button("Stoppen", "end-study", "ghost", "", "back")}<div class="study-context"><h1>${flash ? "Flashcards" : session.practice ? "Vrij oefenen" : "Leren"}</h1><p>${e(current?.title ?? scopeTitle(session.scope))}</p></div><span class="study-counter">${Math.min(done + 1, session.total)} <span>/ ${session.total}</span></span></header><progress class="study-progress" value="${done}" max="${Math.max(1, session.total)}" aria-label="Voortgang in deze ronde"></progress>`;
+  let content = `<div class="study-page has-dock${flash ? " flash-page" : ""}"><header class="study-header"><button type="button" class="icon-button" data-action="end-study" aria-label="Stoppen">${icon("close")}</button><div class="study-context"><h1>${flash ? "Flashcards" : session.practice ? "Oefenen" : "Leren"}</h1><p>${e(current?.title ?? scopeTitle(session.scope))}</p></div><span class="study-counter">${Math.min(done + 1, session.total)} <span>/ ${session.total}</span></span></header><progress class="study-progress" value="${done}" max="${Math.max(1, session.total)}" aria-label="Voortgang in deze ronde"></progress>`;
   const label = flash
     ? session.revealed
       ? "Antwoord"
@@ -54,7 +54,7 @@ export function studyScreen(
   if (session.phase === "orient")
     return (
       content +
-      `<div class="step-caption">Nieuw · kies je startpunt</div><div class="question">${markdown(face.question)}</div><p class="study-prompt">Nog onbekend? Begin met de uitleg. Ken je dit al? Probeer het zonder hulp.</p><div class="learning-route"><span>${icon("book")} Begrijpen</span><span>${icon("target")} Zelf ophalen</span><span>${icon("bulb")} Toepassen</span></div></section><div class="study-dock reveal-dock">${button("Eerst kennismaken", "intro", "primary large", "", "book")}${button("Ik wil het zelf proberen", "intro-skip", "ghost large", "", "arrow")}</div></div>`
+      `<div class="question">${markdown(face.question)}</div></section><div class="study-dock reveal-dock">${button("Bekijk uitleg", "intro", "primary large", "", "book")}${button("Zelf proberen", "intro-skip", "ghost large", "", "arrow")}</div></div>`
     );
   if (session.phase === "choice") {
     const c = note.learning.choice,
@@ -62,29 +62,24 @@ export function studyScreen(
       revealed = picked != null;
     return (
       content +
-      `<div class="step-caption">Oefenen met steun · nog geen geheugenmeting</div><div class="question">${markdown(c.prompt)}</div><div class="choice-options">${session.choiceOptions.map((o, index) => `<button class="choice-option${revealed && o.original === c.correct ? " correct" : ""}${revealed && o.original === picked && picked !== c.correct ? " incorrect" : ""}" data-action="choose-answer" data-choice="${o.original}" ${revealed ? "disabled" : ""}><span class="option-index">${String.fromCharCode(65 + index)}</span><span>${e(o.text)}</span>${revealed && o.original === c.correct ? icon("check") : ""}</button>`).join("")}</div>${revealed ? `<div class="choice-feedback ${picked === c.correct ? "positive" : ""}"><strong>${picked === c.correct ? "Juist herkend. Nu zelf ophalen." : "Nog niet. Bekijk wat het verschil is."}</strong><p>${e(c.feedback || "Het juiste antwoord is gemarkeerd. Leg aan jezelf uit waarom de andere opties niet passen.")}</p></div>` : `<p class="small muted">De antwoordopties helpen je nu. Daarna verdwijnen ze.</p>`}</section><div class="study-dock reveal-dock">${revealed ? button("Zonder opties proberen", "choice-done", "primary large", "", "arrow") : button("Liever zelf ophalen", "choice-skip", "ghost large", "", "arrow")}</div></div>`
+      `<div class="question">${markdown(c.prompt)}</div><div class="choice-options">${session.choiceOptions.map((o, index) => `<button class="choice-option${revealed && o.original === c.correct ? " correct" : ""}${revealed && o.original === picked && picked !== c.correct ? " incorrect" : ""}" data-action="choose-answer" data-choice="${o.original}" ${revealed ? "disabled" : ""}><span class="option-index">${String.fromCharCode(65 + index)}</span><span>${e(o.text)}</span>${revealed && o.original === c.correct ? icon("check") : ""}</button>`).join("")}</div>${revealed ? `<div class="choice-feedback ${picked === c.correct ? "positive" : ""}"><strong>${picked === c.correct ? "Juist." : "Nog niet."}</strong></div>` : ``}</section><div class="study-dock reveal-dock">${revealed ? button("Verder", "choice-done", "primary large", "", "arrow") : button("Zelf ophalen", "choice-skip", "ghost large", "", "arrow")}</div></div>`
     );
   }
-  content += `<div class="step-caption">${session.intro ? "1 · Eerst begrijpen" : "Zelf ophalen · in je eigen woorden"}</div><div class="question">${markdown(face.question)}</div>`;
+  content += `<div class="question">${markdown(face.question)}</div>`;
   if (session.intro)
     return (
       content +
-      `<hr class="answer-divider"><div class="answer-label">De kern</div><div class="answer-text">${markdown(face.answer)}</div><p class="study-prompt">Lees de uitleg en zoek een verband met iets dat je kent. Daarna verdwijnt deze hulp.</p></section><div class="study-dock reveal-dock">${button(note.learning?.choice && card.template === "forward" ? "Verder: herkennen" : "Verbergen en zelf proberen", "intro-done", "primary large", "", "arrow")}<p class="small muted">Kennismaken is geen bewijs dat je dit later nog weet.</p></div></div>`
+      `<hr class="answer-divider"><div class="answer-label">De kern</div><div class="answer-text">${markdown(face.answer)}</div></section><div class="study-dock reveal-dock">${button(note.learning?.choice && card.template === "forward" ? "Verder" : "Zelf proberen", "intro-done", "primary large", "", "arrow")}</div></div>`
     );
   if (!session.revealed)
     return (
       content +
-      `<p class="study-prompt">${state.settings.answerMode === "write" ? "Leg het uit zonder terug te kijken. De kern is genoeg." : "Beantwoord hardop of in je hoofd. Controleer daarna de inhoud."}</p>${state.settings.answerMode === "write" ? `<div class="study-answer-input"><label class="field-label" for="study-answer">Jouw antwoord</label><textarea id="study-answer" placeholder="Wat kun je zelf terughalen?" aria-describedby="answer-help">${e(session.answer)}</textarea><p id="answer-help" class="small muted">Andere woorden mogen. Geen automatische tekstbeoordeling.</p></div>` : ""}${session.hintUsed ? `<div class="hint-box">${e(note.hint)}</div>` : ""}<div class="study-controls">${note.hint && !session.hintUsed ? button("Een hint", "show-hint", "ghost", "", "bulb") : ""}${card.schedule.state === 0 && !session.introSeen ? button("Toch de uitleg bekijken", "intro", "ghost", "", "book") : ""}</div></section><div class="study-foot"><p>Je beoordeling wordt bewaard, niet je getypte antwoord.</p>${session.lastUndo ? button("Vorige beoordeling ongedaan", "undo-grade", "ghost", "", "undo") : ""}</div><div class="study-dock reveal-dock">${button("Controleer je antwoord", "reveal", "primary large", "", "arrow")}<p class="keyboard"><kbd>${state.settings.answerMode === "write" ? "Ctrl / ⌘ + Enter" : "Spatie"}</kbd> antwoord bekijken</p></div></div>`
+      `${state.settings.answerMode === "write" ? `<div class="study-answer-input"><label class="field-label" for="study-answer">Jouw antwoord</label><textarea id="study-answer" placeholder="Wat kun je zelf terughalen?">${e(session.answer)}</textarea></div>` : ""}${session.hintUsed ? `<div class="hint-box">${e(note.hint)}</div>` : ""}${note.hint && !session.hintUsed ? `<div class="study-controls">${button("Hint", "show-hint", "ghost", "", "bulb")}</div>` : ""}</section><div class="study-dock reveal-dock">${button("Toon antwoord", "reveal", "primary large", "", "arrow")}</div></div>`
     );
-  const preview = previewRatings(card, state.settings.retention),
-    help = session.hintUsed
-      ? "Hint gebruikt? Kies Opnieuw."
-      : session.introSeen
-        ? "Net uitleg of opties gezien? Makkelijk is uitgeschakeld."
-        : "Vergeten of onvolledig? Opnieuw. Correct met moeite? Moeilijk.";
+  const preview = previewRatings(card, state.settings.retention);
   return (
     content +
-    `${session.answer.trim() ? `<div class="your-answer"><span class="label">Jouw antwoord</span><p>${e(session.answer)}</p></div>` : ""}<hr class="answer-divider"><div class="answer-label">Modelantwoord</div><div class="answer-text">${markdown(face.answer)}</div>${safeURL(note.source) ? `<p class="source-link"><a href="${e(safeURL(note.source))}" target="_blank" rel="noopener noreferrer">Bron bekijken ${icon("arrow")}</a></p>` : ""}<details class="understanding"><summary>${icon("bulb")} Begripscheck ${icon("down")}</summary><p>${e(note.explain || "Geef een eigen voorbeeld. Welk verwant begrip lijkt erop, en wat is het verschil?")}</p></details></section><div class="study-dock grade-dock"><div class="dock-heading"><p class="grade-prompt">${session.practice ? "Hoe ging het? Geen herplanning." : "Hoe goed kon je dit zelf ophalen?"}</p>${session.lastUndo ? button("", "undo-grade", "icon-button", 'aria-label="Laatste beoordeling ongedaan"', "undo") : ""}</div><div class="grade-grid">${[
+    `${session.answer.trim() ? `<div class="your-answer"><span class="label">Jouw antwoord</span><p>${e(session.answer)}</p></div>` : ""}<hr class="answer-divider"><div class="answer-label">Antwoord</div><div class="answer-text">${markdown(face.answer)}</div>${safeURL(note.source) ? `<p class="source-link"><a href="${e(safeURL(note.source))}" target="_blank" rel="noopener noreferrer">Bron</a></p>` : ""}</section><div class="study-dock grade-dock"><div class="dock-heading"><p class="grade-prompt">Hoe ging het?</p>${session.lastUndo ? button("", "undo-grade", "icon-button", 'aria-label="Laatste beoordeling ongedaan"', "undo") : ""}</div><div class="grade-grid">${[
       [1, "Opnieuw", "again"],
       [2, "Moeilijk", "hard"],
       [3, "Goed", "good"],
@@ -92,10 +87,10 @@ export function studyScreen(
     ]
       .map(
         ([r, label, cls]) =>
-          `<button class="grade ${cls}" data-action="rate" data-rating="${r}" ${grading || (session.hintUsed && r !== 1) || (session.introSeen && r === 4) ? "disabled" : ""}><strong>${label}</strong><span>${session.practice ? "Vrij oefenen" : intervalLabel(preview[r].card.due)}</span></button>`,
+          `<button class="grade ${cls}" data-action="rate" data-rating="${r}" ${grading || (session.hintUsed && r !== 1) || (session.introSeen && r === 4) ? "disabled" : ""}><strong>${label}</strong><span class="grade-interval">${session.practice ? "Oefenen" : intervalLabel(preview[r].card.due)}</span></button>`,
       )
       .join(
         "",
-      )}</div><p class="grading-help">${help}</p><p class="keyboard"><kbd>1</kbd><kbd>2</kbd><kbd>3</kbd><kbd>4</kbd> beoordelen</p></div></div>`
+      )}</div></div></div>`
   );
 }

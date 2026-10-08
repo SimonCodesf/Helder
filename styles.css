@@ -2317,14 +2317,14 @@ textarea {
     padding: 0 20px 20px;
   }
   .study-header {
-    grid-template-columns: 90px minmax(0, 1fr) 54px;
+    grid-template-columns: 44px minmax(0, 1fr) 54px;
     gap: 8px;
     position: sticky;
     top: 0;
     z-index: 10;
     background: var(--canvas);
-    padding-top: calc(16px + env(safe-area-inset-top, 0px));
-    padding-bottom: 16px;
+    padding-top: calc(12px + env(safe-area-inset-top, 0px));
+    padding-bottom: 12px;
     margin-bottom: 4px;
   }
   .study-header > .btn {
@@ -2341,17 +2341,29 @@ textarea {
   .study-context p {
     margin-top: 3px;
   }
+  .study-context p {
+    display: none;
+  }
   .study-counter {
     font-size: 15px;
   }
   .study-progress {
-    margin-bottom: 20px;
+    margin-bottom: 16px;
   }
   .study-card {
     padding: 20px;
+    min-height: 0;
+  }
+  .step-caption,
+  .study-prompt,
+  .study-foot,
+  .grading-help,
+  .learning-route,
+  .study-card .keyboard {
+    display: none;
   }
   .study-card-head {
-    margin-bottom: 20px;
+    margin-bottom: 16px;
     gap: 8px;
   }
   .study-card-head .tags {
@@ -2361,7 +2373,8 @@ textarea {
     display: none;
   }
   .question {
-    font-size: 26px;
+    font-size: 22px;
+    line-height: 1.4;
   }
   .study-prompt {
     margin: 12px 0 20px;
@@ -2381,7 +2394,7 @@ textarea {
     padding: 12px;
   }
   .answer-divider {
-    margin: 24px 0 20px;
+    margin: 16px 0;
   }
   .understanding {
     margin-top: 20px;
@@ -2404,6 +2417,10 @@ textarea {
   }
   .grade {
     padding: 10px 4px;
+    min-height: 64px;
+  }
+  .grade .grade-interval {
+    display: none;
   }
   .study-dock .grade-grid {
     gap: 6px;
@@ -2419,7 +2436,7 @@ textarea {
     gap: 12px;
   }
   .flash-card .question {
-    font-size: 28px;
+    font-size: 24px;
   }
   .flip-surface {
     min-height: 250px;
