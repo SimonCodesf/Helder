@@ -1078,7 +1078,7 @@ svg {
   font-weight: 650;
 }
 .tally-fresh {
-  color: var(--green);
+  color: var(--muted);
   font-weight: 650;
 }
 .tally-due {
