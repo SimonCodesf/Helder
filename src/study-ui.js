@@ -1,10 +1,10 @@
-import { escapeHTML as e, intervalLabel, safeURL } from "./utils.js?v=3.1.22";
-import { icon } from "./icons.js?v=3.1.22";
-import { markdown } from "./markdown.js?v=3.1.22";
-import { faces, scopeCards } from "./model.js?v=3.1.22";
-import { previewRatings } from "./scheduler.js?v=3.1.22";
-import { currentCardId } from "./study.js?v=3.1.22";
-import { facet } from "./curriculum.js?v=3.1.22";
+import { escapeHTML as e, intervalLabel, safeURL } from "./utils.js?v=3.1.23";
+import { icon } from "./icons.js?v=3.1.23";
+import { markdown } from "./markdown.js?v=3.1.23";
+import { faces, scopeCards } from "./model.js?v=3.1.23";
+import { previewRatings } from "./scheduler.js?v=3.1.23";
+import { currentCardId } from "./study.js?v=3.1.23";
+import { facet } from "./curriculum.js?v=3.1.23";
 export function studyScreen(
   state,
   session,
@@ -55,32 +55,43 @@ export function studyScreen(
     );
   }
   if (!flash && !session.application) {
-    // Scope-wide and persistent: every card sits in exactly one group.
-    // Terms move live: exploring moves +N to ✓W, rating moves cards into
-    // (and between) the four colors. Closing the round changes nothing.
+    // Scope-wide and persistent: ✓ counts every explored term (rated or
+    // not), + the explored terms still awaiting their first rating. Rated
+    // terms additionally sit in exactly one color by last rating, so terms
+    // visibly move from + into (and between) colors as you rate.
     const scoped = scopeCards(state, session.scope),
-      explored = new Set(session.warmedIds ?? []),
+      revoked = new Set();
+    for (const a of state.activities ?? []) {
+      if (a.round !== "exploration") continue;
+      if (a.dropped === true) revoked.add(a.cardId);
+      else revoked.delete(a.cardId);
+    }
+    const explored = new Set(
+      [...(session.warmedIds ?? []), ...(session.supportIds ?? [])].filter(
+        (id) => !revoked.has(id),
+      ),
+    ),
       lastRating = new Map();
     for (const r of state.reviews) {
       const prev = lastRating.get(r.cardId);
       if (!prev || r.time >= prev.time) lastRating.set(r.cardId, r);
     }
-    let fresh = 0,
-      warming = 0;
+    let covered = 0,
+      inflight = 0;
     const groups = [0, 0, 0, 0, 0];
     for (const c of scoped) {
       const last = lastRating.get(c.id);
+      if (explored.has(c.id)) covered++;
       if (!last) {
-        if (explored.has(c.id)) warming++;
-        else fresh++;
+        if (explored.has(c.id)) inflight++;
       } else if (last.rating >= 1 && last.rating <= 4) {
         groups[last.rating]++;
       } else {
         groups[3]++;
       }
     }
-    const sentence = `${warming} verkend, ${fresh} nieuw, ${groups[1]} opnieuw, ${groups[2]} moeilijk, ${groups[3]} goed, ${groups[4]} makkelijk`;
-    content += `<p class="study-stats" aria-label="${sentence}"><span aria-hidden="true"><span class="tally-warmed" title="Verkend, nog geen oordeel">✓ ${warming}</span> · <span class="tally-fresh" title="Nieuw">+${fresh}</span> · <span class="tally-again" title="Opnieuw">${groups[1]}</span> · <span class="tally-hard" title="Moeilijk">${groups[2]}</span> · <span class="tally-good" title="Goed">${groups[3]}</span> · <span class="tally-easy" title="Makkelijk">${groups[4]}</span></span></p>`;
+    const sentence = `${covered} verkend, ${inflight} nog zonder oordeel, ${groups[1]} opnieuw, ${groups[2]} moeilijk, ${groups[3]} goed, ${groups[4]} makkelijk`;
+    content += `<p class="study-stats" aria-label="${sentence}"><span aria-hidden="true"><span class="tally-warmed" title="Verkend in totaal">✓ ${covered}</span> · <span class="tally-fresh" title="Verkend, nog geen oordeel">+${inflight}</span> · <span class="tally-again" title="Opnieuw">${groups[1]}</span> · <span class="tally-hard" title="Moeilijk">${groups[2]}</span> · <span class="tally-good" title="Goed">${groups[3]}</span> · <span class="tally-easy" title="Makkelijk">${groups[4]}</span></span></p>`;
   }
   content += `<section class="study-card">${header}`;
   if (session.phase === "orient")
