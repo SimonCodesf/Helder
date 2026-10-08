@@ -1,0 +1,26 @@
+{
+  "id": "./",
+  "name": "Helder — leren dat blijft",
+  "short_name": "Helder",
+  "description": "Flashcards en gespreid leren. Helemaal lokaal, zonder abonnement.",
+  "start_url": "./#/today",
+  "scope": "./",
+  "display": "standalone",
+  "lang": "nl-BE",
+  "background_color": "#f9f8f7",
+  "theme_color": "#f9f8f7",
+  "icons": [
+    {
+      "src": "./icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+import { icon } from "./icons.js";
+import { escapeHTML } from "./utils.js";
+const example = `# Kennisleer
+map: Filosofie::Lesnotities
+beschrijving: Mijn eigen basisbegrippen.
+
+## Wat is epistemologie?
+tags: kennisleer, niveau::1
+hint: Hoe weet je dat iets waar is?
+
+Epistemologie onderzoekt **kennis**: wat je weet,
+hoe je het weet en waarom je overtuiging goed onderbouwd is.
+
+---
+
+## Ervaringskennis heet {{c1::a posteriori}}.
+type: cloze
+tags: kennisleer, Latijn
+
+Je weet dat het regent doordat je naar buiten kijkt.`;
+export function guideView() {
+  return `<div class="page narrow"><div class="page-head"><div><div class="eyebrow">Klein systeem. Stevige basis.</div><h1>Zo werkt Helder</h1><p>Twee modi, geen abonnement. De app draait in je browser en bewaart je collectie op dit apparaat.</p></div></div><div class="readable">
+<h2>1. Flashcards: vrij verkennen</h2><p>Draai kaarten om, blader, hussel en zet een ster bij kaarten die je wilt terugvinden. Flashcards veranderen je herhalingsplanning <strong>niet</strong>. Gebruik ze om nieuwe stof te verkennen of buiten je planning te oefenen.</p>
+<h2>2. Leren: eerst ophalen, dan controleren</h2><ol><li>De app kiest herhalingen die nu aan de beurt zijn en voegt een beperkt aantal nieuwe kaarten toe.</li><li>Typ je antwoord, of leg het in je hoofd/hardop uit. Een nieuwe kaart mag je eerst rustig lezen via <strong>Eerst kennismaken</strong>.</li><li>Bekijk het modelantwoord. Vergelijk de inhoud, niet de precieze woorden.</li><li>Beoordeel eerlijk. De echte FSRS-planner berekent wanneer de kaart terugkomt.</li></ol>
+<div class="help-card"><h3>De vier knoppen</h3><p><strong>Opnieuw:</strong> vergeten, verkeerd of een belangrijk deel gemist.</p><p><strong>Moeilijk:</strong> wel correct, maar met veel moeite. Niet gebruiken voor een fout antwoord.</p><p><strong>Goed:</strong> zelfstandig en voldoende volledig.</p><p><strong>Makkelijk:</strong> direct en overtuigend correct, zonder hulp.</p></div>
+<p>Met een hint kies je <strong>Opnieuw</strong>: het zelfstandig ophalen is dan nog niet gelukt. De app keurt open filosofische antwoorden niet automatisch goed of fout; een synoniem is niet automatisch een fout, en dezelfde trefwoorden bewijzen nog geen begrip.</p>
+<p>Korte herhalingen komen na ongeveer 1 of 10 minuten terug. Helder haalt die niet kunstmatig naar voren om een sessie te vullen. Ga verder met andere stof; een afgeronde ronde is niet hetzelfde als blijvende beheersing.</p>
+<h2>3. Mappen, sets en tags</h2><p>Een <strong>map</strong> bevat sets en andere mappen. Een <strong>set</strong> bevat notities. Uit een notitie ontstaan één of meer oefenkaarten. Elke kaart heeft haar eigen herhalingsplanning.</p><p>Gebruik brede mappen zoals <code>Filosofie::Vakken</code>. Zet hoofdstukken, auteurs en niveaus in tags, bijvoorbeeld <code>hoofdstuk::H1</code> en <code>niveau::1</code>. Een notitie mag meerdere tags hebben. Via een bovenliggende map kun je alle onderliggende sets samen oefenen.</p><p>De filters <strong>Met ster</strong>, <strong>Moeilijke kaarten</strong> en tags zijn dynamische verzamelingen; kaarten worden niet gekopieerd. Moeilijk betekent hier: minstens drie keer vergeten of een geschatte moeilijkheid van 7 of hoger. Dat is een signaal om de kaart te verduidelijken, geen oordeel over jou.</p>
+<h2>4. Sets maken</h2><p>Kies <strong>Nieuwe set</strong>. Maak kaarten handmatig of plak Markdown, TSV of CSV. Controleer de importvoorvertoning voordat je opslaat. Je oorspronkelijke Quizlet-TSV-bestanden werken ook.</p><pre><code>${escapeHTML(example)}</code></pre><p>Elke kaart begint met <code>## Vraag</code>. De rest is het antwoord; <code>---</code> scheidt kaarten. Optioneel: <code>tags:</code>, <code>hint:</code>, <code>type:</code>, <code>uitleg:</code> (een begripsvraag) en <code>bron:</code> (een URL). Vet, cursief, lijstjes, code en veilige links zijn ondersteund. Geen afbeeldingen, tabellen of volledige Markdown-engine.</p><p><strong>Gewoon:</strong> vraag → antwoord. <strong>Omgekeerd:</strong> ook antwoord → vraag, met een eigen planning. <strong>Invul:</strong> <code>{{c1::antwoord::hint}}</code>. Verschillende c-nummers maken verschillende kaarten; hetzelfde nummer verbergt meerdere stukjes samen. Geen geneste invulcodes. Verwante omgekeerde/invulkaarten schuiven in de leermodus door naar morgen, zodat ze het antwoord niet direct weggeven.</p>
+<p>TSV/CSV-kolommen: <code>Term, Definitie, Tags, Hint, Type, Uitleg, Bron</code>. Alleen de eerste twee zijn verplicht; bij invulkaarten mag de tweede leeg zijn. Meerdere tags: scheiden met komma's. Type: <code>basic</code>, <code>reverse</code> of <code>cloze</code>. TSV gebruikt een tab als kolomscheiding, CSV een komma; geciteerde velden met komma's en nieuwe regels werken.</p>
+<h2>5. Wat is onderbouwd — en wat niet?</h2><p><strong>Actief ophalen en gespreid oefenen</strong> hebben een sterke onderzoeksbasis. Zelf uitleggen en onderwerpen afwisselen kunnen nuttig zijn, maar werken niet voor elk soort materiaal even goed. De app biedt daarom een optionele begripscheck en laat je de menging uitzetten.</p><p>FSRS voorspelt herinnering met een model. Het doel van 90% is <strong>geen garantie</strong> op 90% begrip of een examencijfer. Deze versie gebruikt standaardparameters; ze optimaliseert die nog niet persoonlijk op je logboek. Ze meet evenmin of een filosofisch argument inhoudelijk klopt. Voor begrip blijven cursuslectuur, eigen voorbeelden en langere redeneringen nodig.</p>
+<div class="actions"><a class="btn" href="./docs/ONDERZOEK.md" target="_blank" rel="noopener">${icon("book")} Volledig onderzoek</a><a class="btn" href="./docs/ARCHITECTUUR.md" target="_blank" rel="noopener">${icon("stack")} Technische uitleg</a></div>
+<h2>6. Je gegevens blijven bij jou</h2><p>Opslag is lokaal in IndexedDB, per browser én websiteadres. Geen account, advertenties, tracking, AI-verzoeken of cloudsynchronisatie. Verwijderde browsergegevens zijn ook verwijderde kaarten. Maak daarom regelmatig een <strong>volledige JSON-back-up</strong> via Instellingen. Die bevat kaarten, tags, mappen, planning en logboek.</p><p>Een JSON-back-up kun je op een ander apparaat herstellen; dat <strong>vervangt</strong> daar de collectie. Een TSV/Markdown-export bevat je kaartinhoud, maar geen voortgang. Markdown-export maakt meerregelige vragen en metadata één regel; gebruik TSV of JSON als je alles exact wilt bewaren.</p><p>Als dezelfde kaartinhoud wezenlijk verandert, vink in de editor <strong>Leerplanning opnieuw starten</strong> aan. Typo's verbeteren kan zonder je voortgang te wissen.</p>
+<h2>7. Op je telefoon</h2><p>Publiceer de map als statische site op HTTPS. Open de site op je telefoon en kies <strong>Toevoegen aan beginscherm</strong> (Safari op iPhone) of <strong>App installeren</strong> (Chrome op Android). Wacht na de eerste online opening op <strong>Offline gereed</strong>. Daarna werkt de gecachete app ook zonder verbinding. Desktop en telefoon delen hun voortgang niet automatisch. Bij een update: sluit na de online installatie alle Helder-tabs en open de app opnieuw.</p><p>Een server op <code>localhost</code> is alleen op je eigen computer bereikbaar. Gewone HTTP op een lokaal netwerk is niet genoeg voor de offline/PWA-installatie. Zie README voor de start- en hostinginstructies.</p>
+</div></div>`;
+}

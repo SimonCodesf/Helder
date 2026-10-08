@@ -1,0 +1,209 @@
+{
+  "version": "2.0.0",
+  "pureTests": {
+    "tests": 45,
+    "pass": 45,
+    "fail": 0
+  },
+  "browser": {
+    "tests": 28,
+    "report": [
+      {
+        "name": "Starter 50 + 382 cards",
+        "result": "pass"
+      },
+      {
+        "name": "Skip link keeps route and focuses content",
+        "result": "pass"
+      },
+      {
+        "name": "Live search sets",
+        "result": "pass"
+      },
+      {
+        "name": "Star persistence",
+        "result": "pass"
+      },
+      {
+        "name": "Flashcards do not reschedule",
+        "result": "pass"
+      },
+      {
+        "name": "Learn rating persisted",
+        "result": "pass"
+      },
+      {
+        "name": "Undo restores schedule and review log",
+        "result": "pass"
+      },
+      {
+        "name": "Progress survives reload",
+        "result": "pass"
+      },
+      {
+        "name": "Manual editor saves last pending card",
+        "result": "pass"
+      },
+      {
+        "name": "Hint requires Again; future learning not forced early",
+        "result": "pass"
+      },
+      {
+        "name": "Markdown import + cloze + reverse templates",
+        "result": "pass"
+      },
+      {
+        "name": "Note edit",
+        "result": "pass"
+      },
+      {
+        "name": "Rename set",
+        "result": "pass"
+      },
+      {
+        "name": "Folder create and rename",
+        "result": "pass"
+      },
+      {
+        "name": "Folder delete",
+        "result": "pass"
+      },
+      {
+        "name": "Cross-set tag filter",
+        "result": "pass"
+      },
+      {
+        "name": "Pause and resume templates",
+        "result": "pass"
+      },
+      {
+        "name": "TSV file import and duplicate skip",
+        "result": "pass"
+      },
+      {
+        "name": "Settings persist",
+        "result": "pass"
+      },
+      {
+        "name": "Backup export contains schedule and cards",
+        "result": "pass"
+      },
+      {
+        "name": "Backup restore validated and applied",
+        "result": "pass"
+      },
+      {
+        "name": "Dark theme",
+        "result": "pass"
+      },
+      {
+        "name": "Service worker offline reload and editor",
+        "result": "pass"
+      },
+      {
+        "name": "Mobile navigation",
+        "result": "pass"
+      },
+      {
+        "name": "Mobile learning layout",
+        "result": "pass"
+      },
+      {
+        "name": "Concurrent tab refuses stale overwrite",
+        "result": "pass"
+      },
+      {
+        "name": "file:// startup help",
+        "result": "pass"
+      },
+      {
+        "name": "No JavaScript runtime errors",
+        "result": "pass"
+      }
+    ],
+    "errors": []
+  },
+  "mobile": {
+    "tests": 13,
+    "report": [
+      {
+        "name": "Offline status follows successful worker activation",
+        "result": "pass"
+      },
+      {
+        "name": "No horizontal overflow; navigation targets at 320 / 390 / 430 / 768",
+        "result": "pass"
+      },
+      {
+        "name": "Mobile drawer traps focus; Escape restores the More button",
+        "result": "pass"
+      },
+      {
+        "name": "Selecting the current route closes the drawer",
+        "result": "pass"
+      },
+      {
+        "name": "Set title and compact management actions remain separate",
+        "result": "pass"
+      },
+      {
+        "name": "Focus mode + thumb dock + fully scrollable answer",
+        "result": "pass"
+      },
+      {
+        "name": "Small-phone grading falls back to two rows",
+        "result": "pass"
+      },
+      {
+        "name": "System dark mode and reduced motion",
+        "result": "pass"
+      },
+      {
+        "name": "Flashcards retain full-screen touch controls",
+        "result": "pass"
+      },
+      {
+        "name": "Progressive editor options + anchored save controls",
+        "result": "pass"
+      },
+      {
+        "name": "Offline reload works with versioned entry assets; badge reflects connection",
+        "result": "pass"
+      },
+      {
+        "name": "Desktop keeps sidebar, without mobile-only close control",
+        "result": "pass"
+      },
+      {
+        "name": "No runtime errors in the V2 mobile interaction flow",
+        "result": "pass"
+      }
+    ],
+    "errors": []
+  },
+  "extra": {
+    "checks": 7,
+    "results": [
+      "niveau::1 filter",
+      "kennismaking + easy restriction + expanded explanation",
+      "starred route",
+      "extra practice without review scheduling",
+      "missing route state",
+      "invalid import with readable error",
+      "mobile flashcards and set management"
+    ],
+    "errors": []
+  },
+  "upgrade": {
+    "tests": 3,
+    "pass": 3,
+    "collectionPreserved": true,
+    "offlineAfterActivation": true,
+    "reviewLogPreserved": true,
+    "fixtureIncludedRatedCard": true
+  },
+  "limitations": [
+    "Chromium viewport/touch emulation; no physical iOS/Android device test",
+    "No public deployment or cloud synchronization"
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "name": "helder-flashcards",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Lokale, offline-first flashcards en leren met FSRS. Geen build nodig.",
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test tests/*.test.mjs",
+    "check": "node --check src/app.js"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

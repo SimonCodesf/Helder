@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#f9f8f7" />
+    <meta
+      name="description"
+      content="Helder: rustige flashcards, actief leren en herhalen met FSRS. Helemaal lokaal, zonder abonnement."
+    />
+    <title>Helder — leren dat blijft</title>
+    <link rel="icon" href="./icons/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./icons/icon-192.png" />
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="stylesheet" href="./styles.css?v=2.0.0" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main" data-action="skip-main">Naar de inhoud</a>
+    <header class="mobile-bar">
+      <a class="wordmark" href="#/today" aria-label="Helder, naar Vandaag"
+        >helder<span>.</span></a
+      >
+      <div class="mobile-bar-actions">
+        <button
+          class="status-button compact"
+          data-action="connection-info"
+          data-connection-status
+          aria-label="Opslag en offline gebruik"
+        >
+          <span class="status-glyph"></span
+          ><span class="status-copy">Dit apparaat</span>
+        </button>
+        <button
+          class="icon-button create-button"
+          data-action="new-set"
+          aria-label="Nieuwe set"
+        ></button>
+      </div>
+    </header>
+    <button
+      class="nav-scrim"
+      id="nav-scrim"
+      aria-label="Navigatie sluiten"
+      hidden
+    ></button>
+    <aside id="sidebar" class="sidebar" aria-label="Hoofdnavigatie"></aside>
+    <main id="main" class="main" tabindex="-1">
+      <div class="boot-screen">
+        <div class="brand-mark">h.</div>
+        <h1>Even helder krijgen.</h1>
+        <p>Je lokale bibliotheek wordt geopend…</p>
+      </div>
+    </main>
+    <nav class="bottom-nav" id="bottom-nav" aria-label="Mobiele hoofdnavigatie">
+      <a class="bottom-tab" data-tab="today" href="#/today"
+        ><span class="tab-icon" data-icon="today"></span><span>Vandaag</span
+        ><span class="tab-count" hidden></span
+      ></a>
+      <a class="bottom-tab" data-tab="library" href="#/library"
+        ><span class="tab-icon" data-icon="stack"></span
+        ><span>Bibliotheek</span></a
+      >
+      <a class="bottom-tab" data-tab="starred" href="#/starred"
+        ><span class="tab-icon" data-icon="star"></span><span>Met ster</span></a
+      >
+      <button
+        class="bottom-tab"
+        data-tab="more"
+        id="menu-toggle"
+        aria-label="Meer navigatie"
+        aria-expanded="false"
+        aria-controls="sidebar"
+      >
+        <span class="tab-icon" data-icon="more"></span><span>Meer</span>
+      </button>
+    </nav>
+    <dialog id="modal" class="modal" aria-labelledby="modal-title"></dialog>
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+    <script src="./src/start-check.js"></script>
+    <script type="module" src="./src/app.js?v=2.0.0"></script>
+    <noscript
+      ><p>
+        Helder heeft JavaScript nodig. Schakel het in om je flashcards te
+        openen.
+      </p></noscript
+    >
+  </body>
+</html>

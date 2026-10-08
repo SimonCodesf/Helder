@@ -1,0 +1,7 @@
+node_modules/
+.DS_Store
+*.log
+helder-backup-*.json
+backups/
+test-results/
+playwright-report/

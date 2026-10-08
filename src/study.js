@@ -1,0 +1,57 @@
+import { queueFor } from "./model.js";
+import { shuffle, uid } from "./utils.js";
+// Sessions are a UI concern, not a second scheduling algorithm. Only FSRS changes due dates.
+export function createSession(
+  state,
+  scope,
+  { mode = "learn", practice = false } = {},
+) {
+  let queue = queueFor(state, scope, Date.now(), {
+    practice: mode === "flash" || practice,
+  });
+  if (mode === "flash" || practice) queue = shuffle(queue);
+  else if (state.settings.mix) {
+    queue = queue.slice(0, state.settings.sessionSize); // Select urgent cards BEFORE mixing.
+    // Mix reviews without randomly pulling advanced new material ahead of beginners' cards.
+    const fresh = queue.filter(
+      (id) => state.cards.find((c) => c.id === id).schedule.state === 0,
+    );
+    const review = queue.filter((id) => !fresh.includes(id));
+    queue = [...shuffle(review), ...fresh];
+  }
+  return {
+    id: uid(),
+    scope,
+    mode,
+    practice,
+    queue: queue.slice(
+      0,
+      mode === "flash" ? queue.length : state.settings.sessionSize,
+    ),
+    total: Math.min(
+      queue.length,
+      mode === "flash" ? queue.length : state.settings.sessionSize,
+    ),
+    completed: [],
+    revealed: false,
+    hintUsed: false,
+    answer: "",
+    index: 0,
+    startedAt: Date.now(),
+    cardStartedAt: Date.now(),
+    lastUndo: null,
+  };
+}
+export function currentCardId(session) {
+  return session.mode === "flash"
+    ? session.queue[session.index]
+    : session.queue[0];
+}
+export function advanceSession(session, cardId, rating) {
+  session.completed.push({ cardId, rating });
+  session.queue.shift();
+  session.revealed = false;
+  session.answer = "";
+  session.hintUsed = false;
+  session.cardStartedAt = Date.now();
+}
