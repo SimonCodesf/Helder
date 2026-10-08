@@ -1,4 +1,4 @@
-import { escapeHTML as e } from "./utils.js?v=3.1.2";
+import { escapeHTML as e } from "./utils.js?v=3.1.3";
 export function emailView(mode = "login", email = "") {
   const resetting = mode === "update",
     registering = mode === "register",
