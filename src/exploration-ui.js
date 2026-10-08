@@ -1,7 +1,7 @@
-import { escapeHTML as e } from "./utils.js?v=3.1.5";
-import { markdown } from "./markdown.js?v=3.1.5";
-import { icon } from "./icons.js?v=3.1.5";
-import { faces } from "./model.js?v=3.1.5";
+import { escapeHTML as e } from "./utils.js?v=3.1.6";
+import { markdown } from "./markdown.js?v=3.1.6";
+import { icon } from "./icons.js?v=3.1.6";
+import { faces } from "./model.js?v=3.1.6";
 
 export function explorationScreen(state, session, { button, scopeTitle }) {
   const warm = session.exploration,
@@ -33,7 +33,7 @@ export function explorationScreen(state, session, { button, scopeTitle }) {
   } else if (task.kind === "reverse") {
     body = !warm.revealed
       ? `<div class="flip-surface" role="button" tabindex="0" data-action="explore-reveal" aria-label="Tik om de term te tonen"><div class="definition-cue answer-text">${markdown(task.definition)}</div><p class="flip-hint">Tik om de term te tonen</p></div>`
-      : `<div class="question">${e(task.term)}</div><p class="flip-hint">Swipe: rechts is herkend · links nog niet</p>`;
+      : `<div class="definition-cue answer-text">${markdown(task.definition)}</div><hr class="answer-divider"><div class="question">${e(task.term)}</div><p class="flip-hint">Swipe: rechts is herkend · links nog niet</p>`;
     controls = !warm.revealed
       ? button("Toon term", "explore-reveal", "primary large", "", "arrow")
       : `<div class="swipe-actions">${button("Nog niet", "explore-rate", "", 'data-success="false"', "refresh")}${button("Herkend", "explore-rate", "primary", 'data-success="true"', "check")}</div>`;

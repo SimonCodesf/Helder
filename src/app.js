@@ -10,9 +10,9 @@ import {
   shuffle,
   downloadText,
   safeURL,
-} from "./utils.js?v=3.1.5";
-import { icon } from "./icons.js?v=3.1.5";
-import { markdown } from "./markdown.js?v=3.1.5";
+} from "./utils.js?v=3.1.6";
+import { icon } from "./icons.js?v=3.1.6";
+import { markdown } from "./markdown.js?v=3.1.6";
 import {
   parseImport,
   splitTags,
@@ -20,7 +20,7 @@ import {
   toMarkdown,
   toTSV,
   noteImportKey,
-} from "./parser.js?v=3.1.5";
+} from "./parser.js?v=3.1.6";
 import {
   emptyCollection,
   validateCollection,
@@ -38,21 +38,21 @@ import {
   isAvailable,
   faces,
   burySiblings,
-} from "./model.js?v=3.1.5";
+} from "./model.js?v=3.1.6";
 import {
   loadCollection,
   saveCollection,
   requestPersistentStorage,
   getDeviceValue,
   setDeviceValue,
-} from "./storage.js?v=3.1.5";
-import { previewRatings, scheduleRating, State } from "./scheduler.js?v=3.1.5";
+} from "./storage.js?v=3.1.6";
+import { previewRatings, scheduleRating, State } from "./scheduler.js?v=3.1.6";
 import {
   createSession,
   currentCardId,
   advanceSession,
-} from "./study.js?v=3.1.5";
-import { guideView } from "./guide.js?v=3.1.5";
+} from "./study.js?v=3.1.6";
+import { guideView } from "./guide.js?v=3.1.6";
 import {
   prepareStep,
   startExploration,
@@ -62,7 +62,7 @@ import {
   beginRecall,
   recognitionOptions,
   shouldApply,
-} from "./learning.js?v=3.1.5";
+} from "./learning.js?v=3.1.6";
 import {
   facet,
   structureFor,
@@ -71,19 +71,19 @@ import {
   progressFor,
   labelMap,
   mapText,
-} from "./curriculum.js?v=3.1.5";
+} from "./curriculum.js?v=3.1.6";
 import {
   progressStrip,
   courseStructure,
   folderTile,
-} from "./curriculum-ui.js?v=3.1.5";
-import { studyScreen } from "./study-ui.js?v=3.1.5";
-import { explorationScreen } from "./exploration-ui.js?v=3.1.5";
-import { emailView } from "./email-ui.js?v=3.1.5";
-import { setupSwipe } from "./swipe.js?v=3.1.5";
-import { CloudConnection } from "./cloud.js?v=3.1.5";
-import { cloudPanel, conflictBody } from "./cloud-ui.js?v=3.1.5";
-import { LocalChangedError, localFromCloud } from "./sync-core.js?v=3.1.5";
+} from "./curriculum-ui.js?v=3.1.6";
+import { studyScreen } from "./study-ui.js?v=3.1.6";
+import { explorationScreen } from "./exploration-ui.js?v=3.1.6";
+import { emailView } from "./email-ui.js?v=3.1.6";
+import { setupSwipe } from "./swipe.js?v=3.1.6";
+import { CloudConnection } from "./cloud.js?v=3.1.6";
+import { cloudPanel, conflictBody } from "./cloud-ui.js?v=3.1.6";
+import { LocalChangedError, localFromCloud } from "./sync-core.js?v=3.1.6";
 import {
   setupInterface,
   syncInterface,
@@ -92,7 +92,7 @@ import {
   offlineUpdateReady,
   offlineAvailable,
   statusButton,
-} from "./interface.js?v=3.1.5";
+} from "./interface.js?v=3.1.6";
 
 let cloud;
 let state,
@@ -2021,7 +2021,7 @@ async function boot() {
     state = saved ? validateCollection(saved) : emptyCollection();
     if (!saved) {
       try {
-        const response = await fetch("./data/starter.json?v=3.1.5");
+        const response = await fetch("./data/starter.json?v=3.1.6");
         if (!response.ok) throw new Error("Starterbestand ontbreekt.");
         const starters = await response.json();
         for (const data of starters) {
