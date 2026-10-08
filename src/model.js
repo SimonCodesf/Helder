@@ -1,6 +1,6 @@
-import { uid, localDay, nextMidnight, normalize } from "./utils.js";
-import { emptySchedule, State, retrievability } from "./scheduler.js";
-import { validateNote, clozeMatches } from "./parser.js";
+import { uid, localDay, nextMidnight, normalize } from "./utils.js?v=3.0.0";
+import { emptySchedule, State, retrievability } from "./scheduler.js?v=3.0.0";
+import { validateNote, clozeMatches } from "./parser.js?v=3.0.0";
 export const SCHEMA_VERSION = 1;
 export const DEFAULT_SETTINGS = {
   newPerDay: 15,
@@ -9,6 +9,9 @@ export const DEFAULT_SETTINGS = {
   answerMode: "write",
   mix: true,
   theme: "system",
+  dailyLimit: true,
+  scaffold: true,
+  application: true,
 };
 export function emptyCollection() {
   return {
@@ -19,6 +22,7 @@ export function emptyCollection() {
     notes: [],
     cards: [],
     reviews: [],
+    activities: [],
     settings: { ...DEFAULT_SETTINGS },
     seeded: false,
     lastBackup: null,
@@ -65,15 +69,38 @@ export function ensureFolderPath(state, path) {
   }
   return parentId;
 }
-export function newSet(state, { title, description = "", folderId = null }) {
+function validateCurriculum(curriculum) {
+  if (curriculum == null) return;
+  if (typeof curriculum !== "object" || Array.isArray(curriculum))
+    throw new Error("Ongeldige vakstructuur.");
+  for (const map of [curriculum.levels ?? {}, curriculum.chapters ?? {}])
+    if (
+      typeof map !== "object" ||
+      Array.isArray(map) ||
+      Object.entries(map).some(
+        ([key, value]) =>
+          ["__proto__", "constructor", "prototype"].includes(key) ||
+          typeof value !== "string" ||
+          value.length > 200 ||
+          key.length > 100,
+      )
+    )
+      throw new Error("Ongeldige niveau- of hoofdstuknamen.");
+}
+export function newSet(
+  state,
+  { title, description = "", folderId = null, curriculum },
+) {
   if (!title.trim()) throw new Error("Geef je set een naam.");
   if (title.trim().length > 200)
     throw new Error("Een setnaam mag maximaal 200 tekens bevatten.");
   if (folderId && !state.folders.some((f) => f.id === folderId))
     throw new Error("De gekozen map bestaat niet meer.");
+  validateCurriculum(curriculum);
   const set = {
     id: uid(),
     title: title.trim(),
+    ...(curriculum ? { curriculum: structuredClone(curriculum) } : {}),
     description: description.trim(),
     folderId,
     createdAt: Date.now(),
@@ -108,6 +135,9 @@ export function upsertNote(
     explain: input.explain?.trim() ?? "",
     source: input.source?.trim() ?? "",
     kind: input.kind,
+    ...(input.learning && Object.keys(input.learning).length
+      ? { learning: structuredClone(input.learning) }
+      : { learning: undefined }),
     tags: [...new Set(input.tags ?? [])],
     starred: input.starred ?? existing?.starred ?? false,
     createdAt: existing?.createdAt ?? Date.now(),
@@ -121,6 +151,9 @@ export function upsertNote(
       .map((c) => c.id);
   state.cards = state.cards.filter((c) => !obsolete.includes(c.id));
   state.reviews = state.reviews.filter((r) => !obsolete.includes(r.cardId));
+  state.activities = (state.activities ?? []).filter(
+    (a) => !obsolete.includes(a.cardId),
+  );
   for (const template of templates) {
     const card = state.cards.find(
       (c) => c.noteId === note.id && c.template === template,
@@ -138,6 +171,11 @@ export function upsertNote(
       card.schedule = emptySchedule();
       card.buriedUntil = 0;
       state.reviews = state.reviews.filter((r) => r.cardId !== card.id);
+      state.activities = (state.activities ?? []).filter(
+        (a) => a.cardId !== card.id,
+      );
+      delete card.practiceMark;
+      delete card.practiceAt;
     }
   }
   const set = state.sets.find((s) => s.id === setId);
@@ -152,6 +190,9 @@ export function deleteNotes(state, ids) {
   state.notes = state.notes.filter((n) => !wanted.has(n.id));
   state.cards = state.cards.filter((c) => !cards.has(c.id));
   state.reviews = state.reviews.filter((r) => !cards.has(r.cardId));
+  state.activities = (state.activities ?? []).filter(
+    (a) => !cards.has(a.cardId),
+  );
 }
 export function scopeNotes(state, scope = { type: "all" }) {
   let notes = state.notes;
@@ -169,6 +210,7 @@ export function scopeNotes(state, scope = { type: "all" }) {
       state.cards
         .filter(
           (c) =>
+            c.practiceMark === "unknown" ||
             c.schedule.lapses >= 3 ||
             (c.schedule.reps > 0 && c.schedule.difficulty >= 7),
         )
@@ -179,6 +221,14 @@ export function scopeNotes(state, scope = { type: "all" }) {
   if (scope.type === "tag")
     notes = notes.filter((n) =>
       n.tags.some((t) => t === scope.id || t.startsWith(scope.id + "::")),
+    );
+  if (scope.level)
+    notes = notes.filter((n) => n.tags.includes("niveau::" + scope.level));
+  if (scope.chapter)
+    notes = notes.filter((n) =>
+      scope.chapter === "__none"
+        ? !n.tags.some((t) => t.startsWith("hoofdstuk::"))
+        : n.tags.includes("hoofdstuk::" + scope.chapter),
     );
   if (scope.tag)
     notes = notes.filter((n) =>
@@ -202,7 +252,9 @@ export function isAvailable(card, now = Date.now()) {
 export function stats(state, scope = { type: "all" }, now = Date.now()) {
   const cards = scopeCards(state, scope),
     available = cards.filter((c) => isAvailable(c, now));
-  const today = state.reviews.filter((r) => r.day === localDay(now));
+  const today = state.reviews.filter(
+    (r) => !r.inactive && r.day === localDay(now),
+  );
   const introduced = new Set(today.filter((r) => r.wasNew).map((r) => r.cardId))
     .size;
   const fresh = available.filter((c) => c.schedule.state === State.New);
@@ -221,7 +273,9 @@ export function stats(state, scope = { type: "all" }, now = Date.now()) {
     new: fresh.length,
     newToday: Math.min(
       freshNotes.size,
-      Math.max(0, state.settings.newPerDay - introduced),
+      state.settings.dailyLimit === false
+        ? freshNotes.size
+        : Math.max(0, state.settings.newPerDay - introduced),
     ),
     introduced,
     done: today.length,
@@ -254,9 +308,23 @@ export function queueFor(
           retrievability(b, state.settings.retention, now);
   });
   const order = new Map(state.notes.map((n, i) => [n.id, i]));
+  const noteById = new Map(state.notes.map((n) => [n.id, n]));
+  const setOrder = new Map(state.sets.map((set, i) => [set.id, i]));
+  const level = (note) => {
+    const t = note.tags.find((t) => t.startsWith("niveau::"));
+    return t ? t.slice(8) : "";
+  };
   const fresh = available
     .filter((c) => c.schedule.state === State.New)
-    .sort((a, b) => order.get(a.noteId) - order.get(b.noteId));
+    .sort((a, b) => {
+      const na = noteById.get(a.noteId),
+        nb = noteById.get(b.noteId);
+      return (
+        setOrder.get(na.setId) - setOrder.get(nb.setId) ||
+        level(na).localeCompare(level(nb), "nl", { numeric: true }) ||
+        order.get(a.noteId) - order.get(b.noteId)
+      );
+    });
   const seenNotes = new Set();
   const distinct = (cards) =>
     cards.filter((c) => {
@@ -326,6 +394,8 @@ export function validateCollection(raw) {
     sets = requireUnique(raw.sets, "sets"),
     notes = requireUnique(raw.notes, "notities"),
     cards = requireUnique(raw.cards, "kaarten");
+  requireUnique(raw.reviews, "beoordelingen");
+  requireUnique(raw.activities ?? [], "oefenlogboek");
   for (const f of raw.folders) {
     if (
       typeof f.name !== "string" ||
@@ -351,6 +421,7 @@ export function validateCollection(raw) {
       (s.folderId && !folders.has(s.folderId))
     )
       throw new Error("Ongeldige set of mapverwijzing.");
+  for (const s of raw.sets) validateCurriculum(s.curriculum);
   for (const n of raw.notes) {
     if (
       !sets.has(n.setId) ||
@@ -406,6 +477,26 @@ export function validateCollection(raw) {
     for (const t of templatesFor(n))
       if (!templateKeys.has(`${n.id}|${t}`))
         throw new Error("Er ontbreekt een kaart bij een notitie.");
+  if (
+    raw.activities != null &&
+    (!Array.isArray(raw.activities) || raw.activities.length > 1000000)
+  )
+    throw new Error("Ongeldig oefenlogboek.");
+  for (const a of raw.activities ?? [])
+    if (
+      !cards.has(a.cardId) ||
+      typeof a.id !== "string" ||
+      !Number.isFinite(a.time) ||
+      !["recognition", "application", "practice"].includes(a.form) ||
+      typeof a.success !== "boolean"
+    )
+      throw new Error("Ongeldig oefenlogboek.");
+  for (const c of raw.cards)
+    if (
+      (c.practiceMark && !["known", "unknown"].includes(c.practiceMark)) ||
+      !Number.isFinite(c.practiceAt ?? 0)
+    )
+      throw new Error("Ongeldige swipe-markering.");
   for (const r of raw.reviews)
     if (
       !cards.has(r.cardId) ||
@@ -418,7 +509,7 @@ export function validateCollection(raw) {
   if (
     !Number.isInteger(settings.newPerDay) ||
     settings.newPerDay < 0 ||
-    settings.newPerDay > 200 ||
+    settings.newPerDay > 100000 ||
     !Number.isInteger(settings.sessionSize) ||
     settings.sessionSize < 5 ||
     settings.sessionSize > 200 ||
@@ -427,11 +518,15 @@ export function validateCollection(raw) {
     settings.retention > 0.95 ||
     !["think", "write"].includes(settings.answerMode) ||
     !["system", "light", "dark"].includes(settings.theme) ||
-    typeof settings.mix !== "boolean"
+    typeof settings.mix !== "boolean" ||
+    typeof settings.dailyLimit !== "boolean" ||
+    typeof settings.scaffold !== "boolean" ||
+    typeof settings.application !== "boolean"
   )
     throw new Error("Ongeldige instellingen.");
   return {
     ...raw,
+    activities: raw.activities ?? [],
     settings,
     revision: Number.isInteger(raw.revision) ? raw.revision : 0,
   };

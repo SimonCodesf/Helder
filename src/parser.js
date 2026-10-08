@@ -1,4 +1,5 @@
-import { normalize } from "./utils.js";
+import { normalize } from "./utils.js?v=3.0.0";
+import { validateLearning } from "./learning.js?v=3.0.0";
 export class ImportError extends Error {
   constructor(message) {
     super(message);
@@ -17,6 +18,7 @@ export const clozeMatches = (text) => [
   ...String(text).matchAll(/\{\{c([1-9]\d*)::([^{}]+?)\}\}/g),
 ];
 export function validateNote(note) {
+  validateLearning(note.learning);
   if (!String(note.front ?? "").trim())
     throw new ImportError("Een kaart mist een vraag of term.");
   if (!["basic", "reverse", "cloze"].includes(note.kind))
@@ -101,9 +103,9 @@ export function parseTable(text, format = "tsv") {
   )
     rows = rows.slice(1);
   const notes = rows.map((row, index) => {
-    if (row.length < 2 || row.length > 7)
+    if (row.length < 2 || row.length > 8)
       throw new ImportError(
-        `Regel ${index + 1}: verwacht 2 tot 7 kolommen. Gebruik een tab tussen term en antwoord, of kies CSV.`,
+        `Regel ${index + 1}: verwacht 2 tot 8 kolommen. Gebruik een tab tussen term en antwoord, of kies CSV.`,
       );
     return validateNote({
       front: row[0].trim(),
@@ -113,13 +115,16 @@ export function parseTable(text, format = "tsv") {
       kind: row[4]?.trim() || "basic",
       explain: row[5]?.trim() ?? "",
       source: row[6]?.trim() ?? "",
+      ...(row[7]?.trim() ? { learning: parseLearningJSON(row[7]) } : {}),
     });
   });
   return { title: "", description: "", folderPath: "", notes };
 }
 export function parseMarkdown(text) {
   const result = { title: "", description: "", folderPath: "", notes: [] };
-  let card = null,
+  let exercise = null,
+    exerciseLines = [],
+    card = null,
     answer = [],
     inCode = false;
   const finish = () => {
@@ -134,6 +139,23 @@ export function parseMarkdown(text) {
     .replace(/^\uFEFF/, "")
     .replace(/\r\n?/g, "\n")
     .split("\n")) {
+    if (!inCode && exercise) {
+      if (raw.trim() === ":::") {
+        card.learning ??= {};
+        card.learning[exercise === "herkennen" ? "choice" : "application"] =
+          parseExercise(exercise, exerciseLines);
+        exercise = null;
+        exerciseLines = [];
+      } else exerciseLines.push(raw);
+      continue;
+    }
+    const exerciseStart = !inCode && /^:::(herkennen|toepassen)\s*$/.exec(raw);
+    if (exerciseStart) {
+      if (!card)
+        throw new ImportError("Een oefening hoort onder een kaart (## Vraag).");
+      exercise = exerciseStart[1];
+      continue;
+    }
     if (/^```/.test(raw)) {
       inCode = !inCode;
       if (card) answer.push(raw);
@@ -164,12 +186,22 @@ export function parseMarkdown(text) {
         continue;
       }
       const meta =
-        /^(map|beschrijving|tags|hint|type|uitleg|bron):\s*(.*)$/i.exec(raw);
+        /^(map|beschrijving|structuur|tags|hint|type|uitleg|bron):\s*(.*)$/i.exec(
+          raw,
+        );
       if (meta) {
         const key = meta[1].toLowerCase(),
           value = meta[2].trim();
         if (!card) {
-          if (key === "map") result.folderPath = value;
+          if (key === "structuur") {
+            try {
+              result.curriculum = JSON.parse(value);
+            } catch {
+              throw new ImportError(
+                "Structuur: gebruik een geldig JSON-object.",
+              );
+            }
+          } else if (key === "map") result.folderPath = value;
           else if (key === "beschrijving") result.description = value;
           else throw new ImportError(`${key}: staat buiten een kaart.`);
         } else if (key === "tags") card.tags = splitTags(value);
@@ -190,6 +222,7 @@ export function parseMarkdown(text) {
         "Begin een kaart met ## Vraag. Een setnaam begint met # Setnaam.",
       );
   }
+  if (exercise) throw new ImportError("Sluit je extra oefening af met :::.");
   if (inCode)
     throw new ImportError(
       "Sluit het codeblok af met ``` voordat je importeert.",
@@ -219,11 +252,7 @@ export function parseImport(text, format = "auto") {
   const seen = new Set();
   let duplicates = 0;
   result.notes = result.notes.filter((note) => {
-    const key = JSON.stringify([
-      note.kind,
-      note.front.trim(),
-      note.back.trim(),
-    ]);
+    const key = noteImportKey(note);
     if (seen.has(key)) {
       duplicates++;
       return false;
@@ -236,11 +265,11 @@ export function parseImport(text, format = "auto") {
 }
 export function toMarkdown(set, notes, folderPath = "") {
   return (
-    `# ${set.title}\n${folderPath ? `map: ${folderPath}\n` : ""}${set.description ? `beschrijving: ${set.description.replace(/\n/g, " ")}\n` : ""}\n` +
+    `# ${set.title}\n${folderPath ? `map: ${folderPath}\n` : ""}${set.description ? `beschrijving: ${set.description.replace(/\n/g, " ")}\n` : ""}${set.curriculum ? `structuur: ${JSON.stringify(set.curriculum)}\n` : ""}\n` +
     notes
       .map(
         (n) =>
-          `## ${n.front.replace(/\n/g, " ")}\n${n.kind !== "basic" ? `type: ${n.kind}\n` : ""}${n.tags.length ? `tags: ${n.tags.join(", ")}\n` : ""}${n.hint ? `hint: ${n.hint.replace(/\n/g, " ")}\n` : ""}${n.explain ? `uitleg: ${n.explain.replace(/\n/g, " ")}\n` : ""}${n.source ? `bron: ${n.source}\n` : ""}\n${n.back}\n`,
+          `## ${n.front.replace(/\n/g, " ")}\n${n.kind !== "basic" ? `type: ${n.kind}\n` : ""}${n.tags.length ? `tags: ${n.tags.join(", ")}\n` : ""}${n.hint ? `hint: ${n.hint.replace(/\n/g, " ")}\n` : ""}${n.explain ? `uitleg: ${n.explain.replace(/\n/g, " ")}\n` : ""}${n.source ? `bron: ${n.source}\n` : ""}\n${n.back}\n${exerciseMarkdown(n.learning)}`,
       )
       .join("\n---\n\n")
   );
@@ -249,11 +278,101 @@ export function toTSV(notes) {
   const quote = (value) =>
     /[\t\n"]/.test(value) ? `"${value.replaceAll('"', '""')}"` : value;
   return [
-    "Term\tDefinitie\tTags\tHint\tType\tUitleg\tBron",
+    "Term\tDefinitie\tTags\tHint\tType\tUitleg\tBron\tOefeningen",
     ...notes.map((n) =>
-      [n.front, n.back, n.tags.join(", "), n.hint, n.kind, n.explain, n.source]
+      [
+        n.front,
+        n.back,
+        n.tags.join(", "),
+        n.hint,
+        n.kind,
+        n.explain,
+        n.source,
+        n.learning ? JSON.stringify(n.learning) : "",
+      ]
         .map((v) => quote(v ?? ""))
         .join("\t"),
     ),
   ].join("\n");
+}
+
+function parseExercise(type, lines) {
+  if (type === "herkennen") {
+    const choice = { prompt: "", options: [], correct: -1, feedback: "" };
+    for (const line of lines) {
+      const item = /^- \[([ xX])\] (.+)$/.exec(line);
+      if (item) {
+        if (item[1].toLowerCase() === "x") {
+          if (choice.correct >= 0)
+            throw new ImportError("Kies één juist antwoord met [x].");
+          choice.correct = choice.options.length;
+        }
+        choice.options.push(item[2].trim());
+      } else if (line.startsWith("vraag:"))
+        choice.prompt = line.slice(6).trim();
+      else if (line.startsWith("uitleg:"))
+        choice.feedback = line.slice(7).trim();
+      else if (line.trim())
+        throw new ImportError(
+          "Herkennen: gebruik vraag:, - [x] juist, - [ ] afleider en uitleg:.",
+        );
+    }
+    validateLearning({ choice });
+    return choice;
+  }
+  const application = { prompt: "", answer: "", rubric: [] };
+  let section = "";
+  const answer = [];
+  for (const line of lines) {
+    if (line.startsWith("vraag:")) application.prompt = line.slice(6).trim();
+    else if (line.startsWith("antwoord:")) {
+      section = "answer";
+      if (line.slice(9).trim()) answer.push(line.slice(9).trim());
+    } else if (line.trim() === "kernpunten:") section = "rubric";
+    else if (section === "rubric" && line.startsWith("- "))
+      application.rubric.push(line.slice(2).trim());
+    else if (section === "answer") answer.push(line);
+    else if (line.trim())
+      throw new ImportError(
+        "Toepassen: gebruik vraag:, antwoord: en optioneel kernpunten:.",
+      );
+  }
+  application.answer = answer.join("\n").trim();
+  validateLearning({ application });
+  return application;
+}
+function exerciseMarkdown(learning) {
+  if (!learning) return "";
+  let out = "";
+  if (learning.choice) {
+    const c = learning.choice;
+    out += `\n:::herkennen\nvraag: ${c.prompt}\n${c.options.map((v, i) => "- [" + (i === c.correct ? "x" : " ") + "] " + v).join("\n")}\n${c.feedback ? "uitleg: " + c.feedback + "\n" : ""}:::\n`;
+  }
+  if (learning.application) {
+    const a = learning.application;
+    out += `\n:::toepassen\nvraag: ${a.prompt}\nantwoord:\n${a.answer}\n${a.rubric?.length ? "kernpunten:\n" + a.rubric.map((v) => "- " + v).join("\n") + "\n" : ""}:::\n`;
+  }
+  return out;
+}
+
+function parseLearningJSON(text) {
+  try {
+    const value = JSON.parse(text);
+    validateLearning(value);
+    return value;
+  } catch (error) {
+    throw new ImportError("Oefeningen-kolom: " + error.message);
+  }
+}
+export function noteImportKey(n) {
+  return JSON.stringify([
+    n.kind,
+    n.front.trim(),
+    n.back?.trim() ?? "",
+    (n.tags ?? []).slice().sort(),
+    n.hint ?? "",
+    n.explain ?? "",
+    n.source ?? "",
+    n.learning ?? null,
+  ]);
 }

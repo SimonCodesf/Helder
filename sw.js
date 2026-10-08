@@ -1,33 +1,44 @@
 /* All application assets are local. First successful online visit primes offline use. */
-const CACHE = "helder-v2.0.0";
+const CACHE = "helder-v3.0.0";
 const ASSETS = [
   "./",
   "./index.html",
-  "./styles.css",
-  "./styles.css?v=2.0.0",
+  "./styles.css?v=3.0.0",
+  "./product.css?v=3.0.0",
   "./manifest.webmanifest",
-  "./src/app.js",
-  "./src/app.js?v=2.0.0",
-  "./src/interface.js",
-  "./src/start-check.js",
-  "./src/icons.js",
-  "./src/utils.js",
-  "./src/markdown.js",
-  "./src/parser.js",
-  "./src/scheduler.js",
-  "./src/model.js",
-  "./src/storage.js",
-  "./src/study.js",
-  "./src/guide.js",
-  "./vendor/fsrs.mjs",
-  "./data/starter.json",
-  "./data/voorbeeld.md",
+  "./config.json",
+  "./src/app.js?v=3.0.0",
+  "./src/cloud-ui.js?v=3.0.0",
+  "./src/cloud.js?v=3.0.0",
+  "./src/curriculum-ui.js?v=3.0.0",
+  "./src/curriculum.js?v=3.0.0",
+  "./src/guide.js?v=3.0.0",
+  "./src/icons.js?v=3.0.0",
+  "./src/interface.js?v=3.0.0",
+  "./src/learning.js?v=3.0.0",
+  "./src/markdown.js?v=3.0.0",
+  "./src/model.js?v=3.0.0",
+  "./src/parser.js?v=3.0.0",
+  "./src/scheduler.js?v=3.0.0",
+  "./src/start-check.js?v=3.0.0",
+  "./src/storage.js?v=3.0.0",
+  "./src/study-ui.js?v=3.0.0",
+  "./src/study.js?v=3.0.0",
+  "./src/swipe.js?v=3.0.0",
+  "./src/sync-core.js?v=3.0.0",
+  "./src/utils.js?v=3.0.0",
+  "./vendor/fsrs.mjs?v=3.0.0",
+  "./vendor/supabase.mjs?v=3.0.0",
+  "./data/starter.json?v=3.0.0",
+  "./data/voorbeeld.md?v=3.0.0",
   "./icons/icon.svg",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
-  "./docs/ONDERZOEK.md",
-  "./docs/ARCHITECTUUR.md",
-  "./docs/ONTWERP.md",
+  "./README.md?v=3.0.0",
+  "./docs/ONDERZOEK.md?v=3.0.0",
+  "./docs/ARCHITECTUUR.md?v=3.0.0",
+  "./docs/ONTWERP.md?v=3.0.0",
+  "./docs/SYNC.md?v=3.0.0",
 ];
 self.addEventListener("install", (event) =>
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(ASSETS))),
@@ -52,6 +63,18 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
   if (event.request.method !== "GET" || url.origin !== self.location.origin)
     return;
+  if (url.pathname.endsWith("/config.json")) {
+    event.respondWith(
+      fetch(event.request)
+        .then(async (response) => {
+          if (response.ok)
+            (await caches.open(CACHE)).put(event.request, response.clone());
+          return response;
+        })
+        .catch(() => caches.match(event.request)),
+    );
+    return;
+  }
   if (event.request.mode === "navigate") {
     event.respondWith(
       fetch(event.request).catch(() => caches.match("./index.html")),

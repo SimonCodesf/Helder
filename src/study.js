@@ -1,5 +1,5 @@
-import { queueFor } from "./model.js";
-import { shuffle, uid } from "./utils.js";
+import { queueFor } from "./model.js?v=3.0.0";
+import { shuffle, uid } from "./utils.js?v=3.0.0";
 // Sessions are a UI concern, not a second scheduling algorithm. Only FSRS changes due dates.
 export function createSession(
   state,

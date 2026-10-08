@@ -1,289 +1,219 @@
-// V2 interaction and layout tests. Run the local server before this optional script.
-const { chromium } = await import(
-  process.env.PLAYWRIGHT_MODULE || "playwright"
-);
-import { mkdir, writeFile } from "node:fs/promises";
+import {
+  chromium,
+  launchOptions,
+  TEST_URL,
+  EXAMPLE_FILE,
+  outputFile,
+} from "./browser-environment.mjs";
+import fs from "node:fs/promises";
 import assert from "node:assert/strict";
-import { fileURLToPath } from "node:url";
-const base = process.env.TEST_URL || "http://127.0.0.1:4173";
-const output =
-  process.env.TEST_OUTPUT ||
-  fileURLToPath(new URL("../test-results/", import.meta.url));
-await mkdir(output, { recursive: true });
-const browser = await chromium.launch({
-  executablePath: process.env.CHROMIUM_BIN,
-  headless: true,
-  args: ["--no-sandbox"],
-});
+const browser = await chromium.launch(launchOptions);
 const context = await browser.newContext({
-  viewport: { width: 390, height: 844 },
-  colorScheme: "light",
-  hasTouch: true,
-  isMobile: true,
-});
-const page = await context.newPage(),
-  errors = [],
-  report = [];
+    viewport: { width: 390, height: 844 },
+    hasTouch: true,
+    isMobile: true,
+    reducedMotion: "reduce",
+    colorScheme: "light",
+  }),
+  page = await context.newPage(),
+  errors = [];
 page.on("pageerror", (e) => errors.push(e.message));
-const click = (action) =>
-  page
-    .locator(`[data-action="${action}"]`)
-    .filter({ visible: true })
-    .first()
-    .click();
-const wait = () => page.waitForTimeout(180);
-const shot = async (name) => {
-  await wait();
-  await page.screenshot({ path: `${output}/v2-${name}.png` });
+const click = (a) => page.locator(`[data-action="${a}"]`).first().click();
+const capture = async (name) => {
+  await page.waitForTimeout(250);
+  await page.locator("#toast").evaluate((el) => (el.hidden = true));
+  await page.screenshot({ path: outputFile(`${name}.png`) });
 };
-const check = (name) => {
-  report.push({ name, result: "pass" });
-  console.log("PASS", name);
-};
-const overflow = async () =>
-  assert.ok(
-    await page.evaluate(
-      () => document.documentElement.scrollWidth <= innerWidth + 1,
-    ),
-    "Horizontal overflow",
-  );
-const rect = (selector) => page.locator(selector).boundingBox();
-const ratingDock = async () => {
-  const dock = await rect(".study-dock"),
-    box = await rect('[data-rating="3"]');
-  assert.ok(
-    dock && box && box.y >= dock.y && box.y + box.height <= 844,
-    "Rating controls must be inside the viewport dock",
-  );
-  assert.ok(
-    box.height >= 44 && box.width >= 44,
-    "Rating targets must be 44px or larger",
-  );
-};
-try {
-  await page.goto(base);
-  await page.waitForSelector(".today-hero");
-  await page.evaluate(async () => {
-    await navigator.serviceWorker.ready;
+const read = () =>
+  page.evaluate(async () => {
+    const r = indexedDB.open("helder-v1");
+    const db = await new Promise(
+      (resolve) => (r.onsuccess = () => resolve(r.result)),
+    );
+    return new Promise((resolve) => {
+      const g = db.transaction("state").objectStore("state").get("collection");
+      g.onsuccess = () => resolve(g.result);
+    });
   });
-  await page.waitForFunction(
-    () =>
-      document.querySelector(".mobile-bar .status-copy").textContent ===
-      "Offline gereed",
-  );
-  check("Offline status follows successful worker activation");
-  await shot("01-vandaag-390");
-  for (const width of [320, 390, 430, 768]) {
-    await page.setViewportSize({ width, height: 844 });
-    await overflow();
-    for (const tab of await page.locator(".bottom-tab").all()) {
-      const b = await tab.boundingBox();
-      assert.ok(
-        b.width >= 44 && b.height >= 44,
-        `Navigation touch area at ${width}`,
-      );
-    }
-    if (width === 320) await shot("02-vandaag-320");
-    if (width === 768) await shot("03-tablet");
-  }
-  check("No horizontal overflow; navigation targets at 320 / 390 / 430 / 768");
-  await page.setViewportSize({ width: 390, height: 844 });
+try {
+  await page.goto(TEST_URL);
+  await page.locator(".welcome-card").waitFor();
   await page.locator("#menu-toggle").click();
-  assert.equal(await page.locator("#main").evaluate((el) => el.inert), true);
-  assert.equal(
-    await page.locator("#sidebar").getAttribute("aria-modal"),
-    "true",
-  );
-  await page.locator("#sidebar .status-button").focus();
+  await capture("11-drawer-mobile");
   await page.keyboard.press("Tab");
-  assert.ok(
-    await page
-      .locator("#sidebar .wordmark")
-      .evaluate((el) => el === document.activeElement),
+  assert.equal(
+    await page.evaluate(() =>
+      document.querySelector("#sidebar").contains(document.activeElement),
+    ),
+    true,
   );
   await page.keyboard.press("Escape");
-  assert.equal(await page.locator("#main").evaluate((el) => el.inert), false);
-  assert.ok(
-    await page
-      .locator("#menu-toggle")
-      .evaluate((el) => el === document.activeElement),
+  assert.equal(
+    await page.locator("#menu-toggle").getAttribute("aria-expanded"),
+    "false",
   );
-  check("Mobile drawer traps focus; Escape restores the More button");
-  await page.locator("#menu-toggle").click();
-  await page.locator('#sidebar .nav-item[href="#/today"]').click();
+  console.log("PASS drawer focus trap and Escape return");
+  await click("new-import");
+  await page.locator("#import-text").fill("Dit is geen goede kaart");
+  await page.locator("#import-preview .inline-error").waitFor();
+  assert.equal(
+    await page.locator("#import-text").getAttribute("aria-invalid"),
+    "true",
+  );
+  await page.locator("#import-error").scrollIntoViewIfNeeded();
+  await capture("12-import-error-mobile");
+  await click("close-modal");
+  assert.equal((await read()).notes.length, 0);
+  console.log("PASS invalid import is explained and does not write data");
+  await click("new-import");
+  await page
+    .locator("#import-text")
+    .fill(await fs.readFile(EXAMPLE_FILE, "utf8"));
+  await page
+    .locator("#builder-status")
+    .filter({ hasText: "5 kaarten klaar" })
+    .waitFor();
+  await click("builder-save");
+  await page.locator("#modal").waitFor({ state: "hidden" });
+  await page.locator("#structure-title").waitFor();
+  await page.locator('[data-action="course-tab"][data-view="cards"]').click();
   assert.equal(
     await page
-      .locator("body")
-      .evaluate((el) => el.classList.contains("nav-open")),
+      .locator(".note-row")
+      .first()
+      .evaluate((el) => parseFloat(getComputedStyle(el).paddingLeft) >= 20),
+    true,
+  );
+  await page.locator(".note-row").first().scrollIntoViewIfNeeded();
+  await capture("13-cards-mobile");
+  await page.locator("#level-filter").selectOption("2");
+  assert.equal(await page.locator(".note-row").count(), 1);
+  await page.locator("#chapter-filter").selectOption("H3");
+  assert.equal(await page.locator(".note-row").count(), 0);
+  await page.locator("#chapter-filter").selectOption("");
+  await page.locator("#level-filter").selectOption("");
+  console.log(
+    "PASS visible card filters intersect and empty selection is safe",
+  );
+  await page.locator('[data-action="edit-note"]').first().click();
+  const recognition = page
+    .locator("details")
+    .filter({ has: page.locator("#choice-prompt") });
+  if (!(await recognition.evaluate((el) => el.open)))
+    await recognition.locator("summary").click();
+  assert.equal(
+    await page.evaluate(() =>
+      [
+        "#note-level",
+        "#note-chapter",
+        "#note-tags",
+        "#note-source",
+        "#choice-prompt",
+        "#choice-correct",
+        "#choice-feedback",
+        "#apply-prompt",
+      ].every((selector) => {
+        const style = getComputedStyle(document.querySelector(selector));
+        return (
+          parseFloat(style.minHeight) >= 48 && parseFloat(style.fontSize) >= 16
+        );
+      }),
+    ),
+    true,
+  );
+  await recognition.locator("summary").scrollIntoViewIfNeeded();
+  await capture("14-editor-mobile");
+  await page
+    .locator("#note-back")
+    .fill(
+      "25% is een kwart: 25 van de 100. Deel het totaal door vier. Een percentage hoort altijd bij een basisbedrag.\n\n".repeat(
+        12,
+      ),
+    );
+  await click("save-note");
+  await page.locator("#modal").waitFor({ state: "hidden" });
+  await click("start-learn");
+  await click("intro-skip");
+  await page.locator("#study-answer").fill("Een kwart.");
+  await click("reveal");
+  await page.locator(".understanding summary").scrollIntoViewIfNeeded();
+  await page.waitForTimeout(150);
+  const summary = await page.locator(".understanding summary").boundingBox(),
+    dock = await page.locator(".study-dock").boundingBox();
+  assert.ok(summary.y + summary.height <= dock.y + 1);
+  await capture("15-long-answer-mobile");
+  console.log("PASS end of long answer stays reachable above fixed dock");
+  await click("end-study");
+  await click("start-flash");
+  const cdp = await context.newCDPSession(page);
+  const box = await page.locator(".flip-surface").boundingBox(),
+    x = box.x + box.width / 2,
+    y = Math.max(200, box.y + 100);
+  await cdp.send("Input.dispatchTouchEvent", {
+    type: "touchStart",
+    touchPoints: [{ x, y }],
+  });
+  for (let i = 1; i <= 6; i++)
+    await cdp.send("Input.dispatchTouchEvent", {
+      type: "touchMove",
+      touchPoints: [{ x: x + 15 * i, y }],
+    });
+  await cdp.send("Input.dispatchTouchEvent", {
+    type: "touchEnd",
+    touchPoints: [],
+  });
+  await page.waitForTimeout(250);
+  assert.equal(
+    (await read()).cards.filter((c) => c.practiceMark === "known").length,
+    1,
+  );
+  console.log("PASS actual Chromium touch event swipes horizontally");
+  await click("end-study");
+  await page.goto(TEST_URL + "/#/settings");
+  await page.locator("#theme").selectOption("dark");
+  await click("submit-settings");
+  await page.waitForFunction(
+    () => document.documentElement.dataset.theme === "dark",
+  );
+  await page.locator("#cloud-panel").scrollIntoViewIfNeeded();
+  await capture("16-sync-unconfigured-dark");
+  await page.locator("#theme").selectOption("light");
+  await click("submit-settings");
+  await page.waitForFunction(
+    () => document.documentElement.dataset.theme === "light",
+  );
+  await page.goto(TEST_URL + "/#/today");
+  await capture("17-today-mobile");
+  const set = (await read()).sets[0];
+  await page.goto(TEST_URL + "/#/set/" + set.id);
+  await page.locator('[data-action="select-level"][data-level="2"]').click();
+  await capture("18-selected-level-mobile");
+  await page.setViewportSize({ width: 768, height: 1024 });
+  await capture("19-course-tablet");
+  await page.setViewportSize({ width: 320, height: 844 });
+  assert.equal(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth > innerWidth,
+    ),
     false,
   );
-  check("Selecting the current route closes the drawer");
-  await page.locator('.bottom-tab[data-tab="library"]').click();
-  await page.waitForSelector(".set-grid");
-  await page.waitForFunction(() => document.body.dataset.route === "library");
-  assert.equal(
-    await page
-      .locator('.bottom-tab[data-tab="library"]')
-      .getAttribute("aria-current"),
-    "page",
+  console.log(
+    "PASS dark/light, selected level, tablet and 320px without horizontal overflow",
   );
-  await shot("04-bibliotheek");
-  await page
-    .locator(".set-card h3 a")
-    .filter({ hasText: "Algemene filosofie" })
-    .click();
-  await page.waitForSelector(".card-row");
-  await overflow();
-  const title = await rect("main h1"),
-    add = await rect('[data-action="add-cards"]');
-  assert.ok(
-    add.y + add.height <= title.y + 1,
-    "Detail actions should not crowd the title",
+  await page.waitForFunction(
+    () =>
+      document.querySelector(".status-copy").textContent === "Offline gereed",
   );
-  await shot("05-set");
-  check("Set title and compact management actions remain separate");
-  await click("start-learn");
-  await page.waitForSelector("#study-answer");
-  assert.ok(!(await page.locator(".bottom-nav").isVisible()));
-  assert.ok(!(await page.locator(".mobile-bar").isVisible()));
-  const reveal = await rect('[data-action="reveal"]');
-  assert.ok(
-    reveal.y + reveal.height <= 844 && reveal.height >= 44,
-    "Reveal dock remains reachable",
-  );
-  await page.fill(
-    "#study-answer",
-    "Premissen zijn de uitgangspunten. De conclusie is wat daaruit volgt.",
-  );
-  await shot("06-leren-vraag");
-  await click("reveal");
-  await ratingDock();
-  const allButtons = await page
-    .locator(".grade")
-    .evaluateAll((els) => els.map((el) => el.getBoundingClientRect().y));
-  assert.equal(
-    new Set(allButtons).size,
-    1,
-    "Four ratings fit in one row at 390px",
-  );
-  await page.locator(".understanding summary").click();
-  await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight));
-  await wait();
-  const explanation = await rect(".understanding p"),
-    dock = await rect(".study-dock");
-  assert.ok(
-    explanation.y + explanation.height < dock.y,
-    "Long answers can scroll fully above the fixed dock",
-  );
-  await shot("07-leren-antwoord-scroll");
-  await page.evaluate(() => scrollTo(0, 0));
-  await page.locator(".understanding summary").click();
-  await page.evaluate(() => scrollTo(0, 0));
-  await shot("08-leren-antwoord");
-  check("Focus mode + thumb dock + fully scrollable answer");
-  await page.setViewportSize({ width: 320, height: 844 });
-  await overflow();
-  const rows = await page
-    .locator(".grade")
-    .evaluateAll((els) => els.map((el) => el.getBoundingClientRect().y));
-  assert.equal(
-    new Set(rows).size,
-    2,
-    "Compact phones use a 2x2 grading layout",
-  );
-  await shot("09-leren-320");
-  check("Small-phone grading falls back to two rows");
-  await page.setViewportSize({ width: 390, height: 844 });
-  await page.emulateMedia({ colorScheme: "dark" });
-  await shot("10-leren-donker");
-  assert.notEqual(
-    await page
-      .locator("body")
-      .evaluate((el) => getComputedStyle(el).backgroundColor),
-    "rgb(249, 248, 247)",
-  );
-  await page.emulateMedia({ colorScheme: "light", reducedMotion: "reduce" });
-  assert.equal(
-    await page
-      .locator(".study-card")
-      .evaluate((el) => getComputedStyle(el).animationName),
-    "none",
-  );
-  check("System dark mode and reduced motion");
-  await click("end-study");
-  await page.waitForSelector(".card-row");
-  await click("start-flash");
-  await page.waitForSelector(".flash-card");
-  await shot("11-flash-vraag");
-  await click("flip");
-  await overflow();
-  await shot("12-flash-antwoord");
-  await click("end-study");
-  check("Flashcards retain full-screen touch controls");
-  await page.locator('.mobile-bar [data-action="new-set"]').click();
-  await page.waitForSelector("#set-title");
-  assert.ok(!(await page.locator("#note-hint").isVisible()));
-  await shot("13-editor");
-  await page.locator(".editor-extras:not(.set-options) summary").click();
-  await page.fill("#note-hint", "Een aanwijzing.");
-  await page
-    .locator(".modal-body")
-    .evaluate((el) => (el.scrollTop = el.scrollHeight));
-  const footBefore = await rect(".modal-foot");
-  await page.fill("#note-explain", "Geef een eigen voorbeeld.");
-  const footAfter = await rect(".modal-foot");
-  assert.equal(footBefore.y, footAfter.y);
-  assert.ok(
-    footAfter.y + footAfter.height <= 844,
-    "Save controls stay visible while the editor scrolls",
-  );
-  await shot("14-editor-opties");
-  await click("close-modal");
-  check("Progressive editor options + anchored save controls");
-  await click("connection-info");
-  await page.waitForSelector(".connection-intro");
-  await shot("15-onderweg");
-  await click("close-modal");
   await context.setOffline(true);
-  await page.waitForFunction(
-    () =>
-      document.querySelector(".mobile-bar .status-copy").textContent ===
-      "Je bent offline",
-  );
   await page.reload();
-  await page.waitForSelector(".card-row");
-  await page.waitForFunction(
-    () =>
-      document.querySelector(".mobile-bar .status-copy").textContent ===
-      "Je bent offline",
-  );
-  await context.setOffline(false);
-  check(
-    "Offline reload works with versioned entry assets; badge reflects connection",
-  );
-  await page.setViewportSize({ width: 1440, height: 1000 });
-  assert.ok(!(await page.locator(".drawer-close").isVisible()));
-  await page.goto(`${base}/#/today`);
-  await page.waitForSelector(".today-hero");
-  await overflow();
-  await shot("16-desktop");
-  check("Desktop keeps sidebar, without mobile-only close control");
+  await page.locator("#structure-title").waitFor();
+  assert.equal((await read()).notes.length, 5);
+  console.log("PASS actual offline reload with full versioned module cache");
   assert.deepEqual(errors, []);
-  check("No runtime errors in the V2 mobile interaction flow");
-  await writeFile(
-    `${output}/mobile-results.json`,
-    JSON.stringify({ tests: report.length, report, errors }, null, 2),
-  );
-  console.log(`\n${report.length} mobile/UI checks passed.`);
-  await browser.close();
-  process.exit(0);
-} catch (e) {
-  console.error(e);
-  await page.screenshot({ path: `${output}/v2-failure.png` });
-  await writeFile(
-    `${output}/mobile-results.json`,
-    JSON.stringify({ report, errors, failure: e.message }, null, 2),
-  );
-  await browser.close();
-  process.exit(1);
+} catch (error) {
+  console.error(error);
+  await page.screenshot({ path: outputFile("EXTRA-FAIL.png") });
+  process.exitCode = 1;
 }
+await browser.close();
+process.exit(process.exitCode ?? 0);

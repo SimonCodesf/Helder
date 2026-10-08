@@ -1,92 +1,128 @@
-# Testresultaten — Helder 2.0
+# Testresultaten — Helder 3.0
 
-## Samenvatting
+## Wat daadwerkelijk is gecontroleerd
 
-- **45 pure Node-tests: geslaagd.**
-- **28 geïntegreerde browsercontroles: geslaagd.**
-- **7 aanvullende UI-controles: geslaagd.**
-- **13 nieuwe mobiele/UI-controles: geslaagd.**
-- **3 upgradecontroles tegen de werkelijke v1-broncode: geslaagd.**
-- Geen ongehanteerde JavaScript-runtimefouten in de geteste appflows.
-- Alle moduleverwijzingen en offline-cachebestanden bestaan.
-- Startmateriaal: precies 432 oefenkaarten (50 + 382).
-- Visuele controle van desktop (1440 × 1000), telefoon (390 × 844 en 320 × 844) en tablet (768 × 844), inclusief sheets, drawer, lege schermen, importfouten, beide oefenmodi en donker thema. De desktop-only sluitknop en titel-/beheerknopuitlijning zijn daarbij gecorrigeerd en opnieuw bekeken.
-- Twaalf concrete kleurparen voldoen aan de gebruikte WCAG-AA-contrastdrempels (tekst 4,5:1; invoerveldgrenzen 3:1). Dit is geen certificering van de gehele app.
+- **69 pure Node-tests: geslaagd, geen overgeslagen tests.**
+- **Browser-smoke:** 7 geslaagde controlegroepen, met meerdere assertions per groep.
+- **Aanvullende mobiele browsercontroles:** 7 geslaagde controlegroepen.
+- **Sync-integratie:** 8 geslaagde controlegroepen tegen nagebootste REST/Auth-responses, met de echte gebundelde Supabase SDK.
+- **Database:** 7 geslaagde controlegroepen in echte lokale Postgres via PGlite.
+- **V2 → V3:** 3 geslaagde upgradecontroles tegen de bestaande V2-broncode en bibliotheek op hetzelfde websiteadres.
+- **Herimport:** 50 + 382 eerdere kaarten behouden hun zeven inhoudsvelden exact; beide Markdown-bestanden en de JSON-back-up worden door V3 geaccepteerd. De private export is niet onderdeel van dit publieke apppakket.
+- **Publicatie:** starter is `[]`, config bevat geen project of secrets en geen bekende private exportbestanden zijn aanwezig.
+- **Offlinebestanden:** alle 37 unieke cacheverwijzingen geven HTTP 200; scripts hebben het juiste JavaScript-contenttype. Transitive browsermodule-imports zijn versiegebonden.
 
-## De pure tests
+Deze aantallen zijn **geen opgeteld totaal van onafhankelijke tests**: browsercontrolegroepen bevatten verschillende assertions. Alle hieronder beschreven succesvolle browserflows eindigden zonder ongehanteerde JavaScript-runtimefouten. Dit is geen volledige security-, toegankelijkheids- of schaalbaarheidscertificering.
 
-Parser: TSV, CSV met komma's/quotes/meerdere regels, BOM/CRLF, Markdownmetadata, codeblokken, duplicaten, invulcodes, veilige URL's, HTML-escaping en exports.
+## Pure tests
 
-Model: mappen/submappen, scopes, tags, sterren, moeilijke kaarten, notities versus onafhankelijke oefenkaarten, sibling-burying, globale daglimiet, pauzeren, wijzigingen met behoud van planning, expliciete reset, verwijderen en validatie van herstelbestanden.
+`tests/model.test.mjs`, `tests/parser.test.mjs`, `tests/v3.test.mjs`.
 
-Scheduler: serialize/hydrate van datums, overeenkomst van intervalvoorvertoning met werkelijk toegepaste ratings, leren/afstuderen/herleren, toekomstige korte herhalingen en geldige herinneringskans.
+Bestaande parser-/model-/FSRS-tests zijn behouden: Markdown/TSV/CSV, quotes en meerdere regels, BOM/CRLF, metadata, duplicaten, invulcodes, veilige tekstweergave, roundtrip, mappen, scopes, sterren, daglimieten, sibling-burying, reset en serialized schedules.
 
-## Browsercontroles
+V3 voegt onder meer toe:
 
-- Starter 50 + 382 cards: geslaagd.
-- Skip link keeps route and focuses content: geslaagd.
-- Live search sets: geslaagd.
-- Star persistence: geslaagd.
-- Flashcards do not reschedule: geslaagd.
-- Learn rating persisted: geslaagd.
-- Undo restores schedule and review log: geslaagd.
-- Progress survives reload: geslaagd.
-- Manual editor saves last pending card: geslaagd.
-- Hint requires Again; future learning not forced early: geslaagd.
-- Markdown import + cloze + reverse templates: geslaagd.
-- Note edit: geslaagd.
-- Rename set: geslaagd.
-- Folder create and rename: geslaagd.
-- Folder delete: geslaagd.
-- Cross-set tag filter: geslaagd.
-- Pause and resume templates: geslaagd.
-- TSV file import and duplicate skip: geslaagd.
-- Settings persist: geslaagd.
-- Backup export contains schedule and cards: geslaagd.
-- Backup restore validated and applied: geslaagd.
-- Dark theme: geslaagd.
-- Service worker offline reload and editor: geslaagd.
-- Mobile navigation: geslaagd.
-- Mobile learning layout: geslaagd.
-- Concurrent tab refuses stale overwrite: geslaagd.
-- file:// startup help: geslaagd.
-- No JavaScript runtime errors: geslaagd.
+- lege publicatie, optionele eigen herkennings- en toepassingsvragen;
+- validatie van vraagopties, ontbrekende afsluiters en vakmetadata vóór opslag;
+- numerieke niveauvolgorde, niveau/hoofdstuk/scopeselecties en onbeperkte nieuwe kaarten;
+- kennismaken versus ophalen en aparte oefenlogs;
+- gespreide aanwijzingen: alleen zelfstandige, actieve herhalingen, op verschillende dagen én minstens 24 uur uit elkaar; niet alleen een kalender-middernacht;
+- geen prototype-keys in niveau-/hoofdstuknamen;
+- tokens en apparaatspecifieke instellingen niet in cloudsnapshots;
+- onafhankelijke wijzigingen samenvoegen, timestampmetadata zonder valse conflicten;
+- FSRS-planning als atomair conflict, behoud van niet-actieve logtakken;
+- ongeldige samengevoegde verwijzingen/cycli en accountwissels blokkeren;
+- CAS-revisioncontrole op twee apparaten;
+- late netwerkresponses kunnen een afgemelde collectie niet herstellen.
 
-## Aanvullende UI-controles
+## Browser: normale leer- en beheerflows
 
-- niveau::1 filter: geslaagd.
-- kennismaking + easy restriction + expanded explanation: geslaagd.
-- starred route: geslaagd.
-- extra practice without review scheduling: geslaagd.
-- missing route state: geslaagd.
-- invalid import with readable error: geslaagd.
-- mobile flashcards and set management: geslaagd.
+`tests/browser-smoke.mjs`:
 
-## Wat is niet getest?
+1. Nieuwe browser begint leeg; optioneel voorbeeldvak importeert vijf kaarten met extra oefeningen.
+2. Niveaus en hoofdstukken hebben eigen velden en leesbare labels; selectie werkt.
+3. Horizontaal slepen markeert gekend/nog niet, ongedaan maken werkt en FSRS blijft exact gelijk.
+4. Kennismaken → herkenning met feedback → ophalen. Herkenning schrijft geen FSRS-beoordeling; hulp wordt bij de ophaalpoging geregistreerd.
+5. Toepassingszelfcheck heeft een apart log en verandert de geheugenplanning niet.
+6. Nieuwe-kaartlimiet kan uit; kennismakingssteun kan ook uit.
+7. 320-pixelweergave heeft geen horizontale pagina-overflow; geen runtimefouten.
 
-- Geen fysieke iPhone-/Androidinstallatie; mobiele Chromium-viewporttests zijn niet hetzelfde.
-- Geen aparte Safari-, Firefox-, screenreader- of volledige accessibility-audit.
-- Geen wetenschappelijk gebruikersonderzoek naar deze specifieke app of haar leerresultaten.
-- Geen stress-/performancegarantie voor 100.000 kaarten of miljoenen beoordelingen.
-- Geen cloudsynchronisatie of .apkg-import: die functies bestaan niet in deze versie.
+`tests/browser-mobile.mjs`:
 
-De lokaal meegedraaide browser gebruikte Chromium, headless. Node-testresultaten en uitgevoerde browserchecks staan ook in `docs/test-results.json`. Tests kunnen worden herhaald met de opdrachten in README; de app zelf heeft geen testdependencies nodig.
+1. Drawer houdt toetsenbordfocus binnen en Escape sluit hem met focusherstel.
+2. Ongeldige import toont een fout en schrijft geen kaarten.
+3. Niveau- en hoofdstukfilters snijden elkaar; lege selectie blijft bruikbaar.
+4. Einde van een lang modelantwoord is bereikbaar **boven** de vaste actiebalk.
+5. Chromium-touch-events voeren daadwerkelijk een horizontale swipe uit.
+6. Donker/licht thema, geselecteerd niveau, tablet en 320 px worden gecontroleerd.
+7. Na offlinecache-opbouw werkt een echte offline reload met de geïmporteerde inhoud.
 
+Nieuwe editorvelden worden ook gecontroleerd op minimaal 48 px veldhoogte en 16 px tekst. Kaartlijstpadding en de toegankelijke importfoutstatus worden eveneens geassert. Tijdens visuele controle is de styling van ongetypeerde tekstvelden en URL-velden gecorrigeerd en opnieuw getest.
 
-## Nieuwe mobiele/UI-controles
+## Sync: geïntegreerde client, nagebootste dienst
 
-13 aanvullende controles met Chromium en Playwright: offline-status na werkelijke cache/worker-installatie; horizontale overflow en raakvlakken op 320/390/430/768 px; drawerfocus en Escape; huidige route kiezen; actieve bottom tab; compacte setbeheeracties naast de breadcrumb; focusmodus en vaste leerbediening; uitgeklapte uitleg volledig boven die bediening scrollen; 2×2-ratings op 320 px; system-dark en reduced motion; flashcontrols; uitklapbare kaartopties en zichtbare opslaanknop; offline herladen met versieparameters; en geen runtimefouten. Sommige controles bevatten meerdere assertions.
+`tests/browser-sync.mjs` gebruikt twee gescheiden browsercontexten voor dezelfde testaccount en een derde voor een andere account. De officiële SDK is echt; config, OAuth-session en REST-responses zijn lokaal nagebootst. Er zijn geen echte accounts, projecten of keys gebruikt.
 
-## Upgradecontrole
+Gecontroleerd: expliciet verbinden vóór upload; downloaden op apparaat twee; lege andere account; offline wijzigingen aan verschillende kaarten samenvoegen; conflict op dezelfde tekst stoppen en bewust oplossen; tokens ontbreken in collectie/cloudpayload; afmelden wist lokaal maar verwijdert niet de cloudcollectie; geen runtimefouten.
 
-De echte v1-broncode werd op een lokaal testadres geladen, met geactiveerde v1-Service Worker, bestaande kaarten/instellingen en een werkelijk beoordeelde kaart met FSRS-leerplanning en reviewlog. De server is daarna op hetzelfde origin omgeschakeld naar v2:
+**Dit bewijst niet dat een live OAuth-provider, redirects, RLS in jouw project of tokenvernieuwing op een echte telefoon juist zijn ingesteld.** Voer de acceptatielijst in [SYNC.md](SYNC.md) uit na configuratie.
 
-1. Kaarten, notities, FSRS-schedules, reviewlog, instellingen en revision blijven exact behouden.
-2. De v2-shell krijgt meteen v2-CSS en de v2-entrymodule, ook zolang v1 de actieve worker is. ‘Update klaar’ verschijnt pas wanneer de nieuwe installatie gereed is.
-3. Na het sluiten van alle appvensters wordt v2 actief. Offline herladen werkt en bewaart de oorspronkelijke collectie.
+## Database: echte lokale Postgres
 
-De broncode van het oude project is niet nogmaals in dit pakket opgenomen. De pure en reguliere browsertests zijn wel meegeleverd.
+`tests/database-security.mjs` voert het geleverde `backend/supabase.sql` uit in PGlite 0.3.14. `auth.uid()` gebruikt gecontroleerde testclaims. Gecontroleerd:
 
-## UI-testgrenzen
+1. Eerste geauthenticeerde RPC-write.
+2. Oude revision weigert overschrijven.
+3. Directe tabelwrite is niet toegestaan.
+4. Andere account ziet de rij van de eigenaar niet.
+5. Andere account krijgt een eigen lege collectie.
+6. Anonieme reads en writes worden geweigerd.
+7. Ongeldige payload wordt geweigerd.
 
-Getest in Chromium, met gesimuleerde mobiele viewport/touch en netwerkstatus. Dit is **geen echte iPhone-/Android-test** en geen volledige WCAG-audit. Safari, mobiele browserchrome, toetsenbord en notch/safe-area-interactie moeten op fysieke toestellen worden geverifieerd vóór productiegebruik. Er is geen publieke hosting of automatische synchronisatie opgezet.
+Dit is een databaseprivilegetest, **geen test van live JWT-verificatie, Supabase-infrastructuur of een volledige externe security-audit**.
+
+## Upgrade, export en visuele inspectie
+
+De bestaande V2-app werd eerst gebruikt om instellingen te wijzigen en één kaart te beoordelen. Daarna serveerde hetzelfde lokale websiteadres V3. Kaarten, notities, FSRS-schedules, beoordelingen, instelling en revision bleven gelijk. V3 werd correct weergegeven terwijl de V2-worker nog actief was; na het sluiten van de tabs werd de nieuwe cache actief en werkte offline herladen met dezelfde bibliotheek.
+
+De private herimport werd apart met de V3-parser en het model gecontroleerd: twee sets, 432 kaarten, geen beoordelingen, verse planning; geen inhoudsverlies in kind/front/back/tags/hint/explain/source.
+
+Screenshots zijn individueel bekeken voor leeg beginnen, vakoverzicht, kaartlijst, kennismaken, herkenningsvraag, ophalen, toepassen, swipen, editor, importfout, drawer, lang antwoord, syncconflict en ongeconfigureerde sync in donker thema. Formaten: 390 × 844, 320 × 844, desktop 1440 × 1000 en tablet 768 × 1024. Het screenshots-voorbeeldvak is openbaar demonstratiemateriaal, niet de eerdere private kaarten.
+
+## Zelf uitvoeren
+
+De app en pure tests vereisen alleen Node ≥ 20; geen dependency-installatie of frontendbuild:
+
+```sh
+npm test
+npm run test:public
+npm start
+```
+
+Voor de optionele browser-/Postgres-tests, in een tweede terminal:
+
+```sh
+npm install --no-save playwright @electric-sql/pglite
+npx playwright install chromium
+npm run test:browser
+npm run test:sync
+npm run test:database
+```
+
+Testtools zijn geen runtime-dependencies van de app. `test:sync` is een mocktest en meldt je niet aan bij een externe dienst. Gebruik een lokale ontwikkelserver met lege `starter.json`.
+
+Optionele omgevingsvariabelen:
+
+- `TEST_URL`: standaard `http://127.0.0.1:4173`, andere poort/submap mogelijk.
+- `TEST_OUTPUT`: standaard `test-output/`; screenshots en alleen testdiagnostiek.
+- `CHROMIUM_BIN`: bestaande Chromium-binary in plaats van de Playwright-installatie.
+- `PLAYWRIGHT_MODULE` / `PGLITE_MODULE`: alternatieve geïnstalleerde modulepaden.
+- `CHROMIUM_NO_SANDBOX=1`: alleen voor een afgeschermde testcontainer die dat nodig heeft; niet als normale desktopinstelling.
+
+## Nog niet getest
+
+- Live Supabase OAuth-aanmelding, echte productieconfiguratie en netwerkquota.
+- Fysieke iPhone/Android, hun virtuele toetsenborden en geïnstalleerde PWA-gedrag.
+- Alle schermlezers/browsercombinaties of een volledige WCAG-audit.
+- Grote gebruikersaantallen, schadelijke belasting en externe security-penetratietests.
+- Onderwijseffect van deze gehele app. De bronnen onderbouwen onderdelen; een gebruikstest en uitgestelde kennis-/transfertoets zijn nog nodig.

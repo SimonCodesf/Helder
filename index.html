@@ -6,16 +6,22 @@
       name="viewport"
       content="width=device-width,initial-scale=1,viewport-fit=cover"
     />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https: wss:; object-src 'none'; base-uri 'self'; form-action 'self'"
+    />
     <meta name="theme-color" content="#f9f8f7" />
     <meta
       name="description"
-      content="Helder: rustige flashcards, actief leren en herhalen met FSRS. Helemaal lokaal, zonder abonnement."
+      content="Helder: rustige flashcards, actief leren en herhalen met FSRS. Offline-first, met optionele privésynchronisatie."
     />
     <title>Helder — leren dat blijft</title>
     <link rel="icon" href="./icons/icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="./icons/icon-192.png" />
     <link rel="manifest" href="./manifest.webmanifest" />
-    <link rel="stylesheet" href="./styles.css?v=2.0.0" />
+    <link rel="stylesheet" href="./styles.css?v=3.0.0" />
+    <link rel="stylesheet" href="./product.css?v=3.0.0" />
   </head>
   <body>
     <a class="skip-link" href="#main" data-action="skip-main">Naar de inhoud</a>
@@ -24,6 +30,13 @@
         >helder<span>.</span></a
       >
       <div class="mobile-bar-actions">
+        <button
+          class="icon-button cloud-status-button"
+          data-action="cloud-status"
+          data-sync-state
+          hidden
+          aria-label="Je apparaten bekijken"
+        ></button>
         <button
           class="status-button compact"
           data-action="connection-info"
@@ -79,8 +92,8 @@
     </nav>
     <dialog id="modal" class="modal" aria-labelledby="modal-title"></dialog>
     <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
-    <script src="./src/start-check.js"></script>
-    <script type="module" src="./src/app.js?v=2.0.0"></script>
+    <script src="./src/start-check.js?v=3.0.0"></script>
+    <script type="module" src="./src/app.js?v=3.0.0"></script>
     <noscript
       ><p>
         Helder heeft JavaScript nodig. Schakel het in om je flashcards te

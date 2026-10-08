@@ -1,0 +1,5 @@
+{
+  "supabaseUrl": "",
+  "publishableKey": "",
+  "providers": ["google", "github"]
+}

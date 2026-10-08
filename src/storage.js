@@ -1,4 +1,4 @@
-import { clone } from "./utils.js";
+import { clone } from "./utils.js?v=3.0.0";
 // Atomic snapshot persistence. IndexedDB also works offline and avoids localStorage's small quota.
 const DB_NAME = "helder-v1";
 let dbPromise;
@@ -64,4 +64,29 @@ export async function saveCollection(value, expectedRevision) {
 }
 export async function requestPersistentStorage() {
   return navigator.storage?.persist ? navigator.storage.persist() : false;
+}
+
+// Device/account metadata and OAuth session are separate from exported cards.
+export async function getDeviceValue(key) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const r = db
+      .transaction("state", "readonly")
+      .objectStore("state")
+      .get("device:" + key);
+    r.onsuccess = () => resolve(r.result ?? null);
+    r.onerror = () => reject(r.error);
+  });
+}
+export async function setDeviceValue(key, value) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const t = db.transaction("state", "readwrite"),
+      s = t.objectStore("state");
+    value == null
+      ? s.delete("device:" + key)
+      : s.put(clone(value), "device:" + key);
+    t.oncomplete = () => resolve();
+    t.onerror = () => reject(t.error);
+  });
 }

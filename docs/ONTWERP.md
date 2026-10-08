@@ -1,60 +1,34 @@
-# Helder 2 — product- en UI-ontwerp
+# Productontwerp — Helder 3
 
-## Doel
+## Richting
 
-Een webapp die op een telefoon als een rustige leerplek aanvoelt, niet als een verkleinde desktopsite. Niet meer decoratie, wel een duidelijker onderscheid tussen **oriënteren**, **een set kiezen**, **zelf antwoorden** en **controleren**.
+Een rustig gereedschap, geen gamified dashboard. Eén duidelijke actie per studiecontext. Neutralen en één blauw accent; groen/oranje/rood uitsluitend voor herkenbare feedbackbetekenissen. System sans, body 16 px, bijtekst minimaal 14 px, touch targets minimaal 44 px. Geen foto’s/stockillustraties die niets aan de taak toevoegen.
 
-## 1. Navigatie die voorspelbaar blijft
+## Mobiele informatiearchitectuur
 
-Op desktop biedt de sidebar overzicht. Op mobiel staan vier stabiele bestemmingen onderaan: Vandaag, Bibliotheek, Met ster en Meer. Dat maakt hoofdacties met één hand bereikbaar. De actieve bestemming heeft een tekstlabel, kleur én een zachte achtergrond achter het icoon.
+- Lege app: een echte startpagina, niet een dashboard met zes nulstatistieken. Maak een set of importeer kaarten.
+- Vandaag: één volgende ronde, drie simpele tellers, vakken om verder te gaan.
+- Bibliotheek: vakmappen en sets. In een set: Overzicht en Kaarten, niet alle categorieën verborgen in een dropdown.
+- Overzicht: niveaukaarten, uitleg wat de selectie doet, hoofdstukken met een directe leeractie.
+- Kaarten: zoekveld, niveau/hoofdstuk en overige tags; filters gelden ook voor de oefenknoppen.
+- Onderste hoofdnavigatie blijft in duimbereik. Studie verbergt de algemene chrome en houdt stop/progress/context bovenin.
 
-Meer opent een ruime drawer voor mappen, moeilijke kaarten, uitleg en instellingen. De achtergrond wordt inert; focus blijft in de drawer. Escape en het sluiticoon brengen de focus terug. De mappen blijven dezelfde hiërarchische mappen uit versie 1 — geen tweede organisatie- of filtermodel.
+## Studie
 
-## 2. Vandaag is een startpunt, geen scorebord
+Kennismaken, herkennen en ophalen hebben eigen schermen; hulp wordt niet in een onoverzichtelijke alles-in-één-card gepropt. Herkenning heeft expliciete antwoordfeedback; daarna verdwijnen de opties. Toepassingen hebben scenario/model/kernpunten en een aparte zelfcheck. Geen impliciete "mastery percentage".
 
-De blauwe module toont de **werkelijke eerstvolgende ronde** en haar verdeling tussen nieuwe kaarten en herhalingen. De drie rustige cijfers eronder tonen de huidige dagplanning. ‘Gedaan’ telt beoordelingen, niet gegarandeerd beheerste begrippen. We gebruiken geen streaks, punten of ‘100% geleerd’-claims.
+De fixed study-dock wordt gemeten met ResizeObserver. De body reserveert die werkelijke hoogte zodat het laatste deel van een lang model scrollbaar blijft. Via visualViewport kan de dock bij een open schermtoetsenbord terug in de flow; fysieke iPhone/Android-acceptatie blijft nodig. Bij 320 px worden ratings 2×2, bij 390 px één rij. Safe-area insets zijn ondersteund.
 
-Setnamen, locatie en kaartenaantal hebben voorrang op beschrijving. In het mobiele startscherm verdwijnen herhalende beschrijvingen; de volledige bibliotheek bewaart ze. De hele set-tegel is een klik-/tapdoel.
+Swipe-kaarten gebruiken pointer-events met horizontale drempel/dominantie en `touch-action: pan-y`. Verticaal lezen mag geen markering geven. Een horizontale beweging krijgt een tekststempel, niet alleen kleur. Knoppen en toetsen doen exact dezelfde sorteeractie. Undo is zichtbaar; de status zegt dat dit geen herplanning is.
 
-## 3. Leren heeft een andere chrome
+## Editors
 
-Tijdens een ronde verdwijnen bovenbalk, bottom tabs en desktopsidebar. Stoppen, setnaam, positie en voortgang blijven duidelijk. De mobiele kop blijft tijdens scrollen bovenaan beschikbaar. Zo verandert de gebruiker niet per ongeluk van bestemming terwijl die nadenkt.
+Mobile bottom sheet, vaste kop/voettekst en eigen scrollbody. Niveau/hoofdstuk zijn gewone velden. Hint, herkenning en toepassing zijn optionele uitklapsecties: beginners worden niet gedwongen om tien extra velden in te vullen. Een tussentijdse invoer wordt bij tabwissel niet verloren. Import heeft preview en concrete foutmeldingen.
 
-De kaart heeft één taak: vraag → eigen poging → modelantwoord. De leermodus vergelijkt geen letterlijke strings en pretendeert geen filosofische antwoorden automatisch te beoordelen. De bestaande hintregels, kennismaking en FSRS-beoordeling zijn behouden.
+## Sync
 
-## 4. De vaste leerbediening mag niets verbergen
+Offline-readiness en sync zijn verschillende toestanden. De optionele apparatenknop verschijnt alleen bij backendconfiguratie. Instellingen toont echte statuses: unbound, pending, synced, offline, conflict, error of account-mismatch. Niet-geconfigureerde sync wordt niet voorgesteld als werkende live koppeling. Eerste upload is een bewuste bevestiging. Conflictvenster vergelijkt beide versies, heeft downloads en vereist een keuze.
 
-Op een normale telefoon staan de vier ratings op één rij. Onder 360 px worden het twee rijen: geen kleinere tekst of te kleine knoppen. Elke knop toont zowel een naam als het volgende interval; kleur is aanvullend. Goed krijgt de blauwe primaire stijl, maar is geen automatisch gegeven antwoord.
+## Toegankelijkheid en grenzen
 
-De bediening wordt gemeten, niet op een magisch vast getal gegokt. De leesruimte krijgt via `--study-dock-height` voldoende onderruimte. Lange uitleg, uitgeklapte begripschecks en eigen antwoorden kunnen dus volledig boven die bediening scrollen. Een toetsenbord dat via `visualViewport` zichtbaar ruimte inneemt, schakelt naar normale flow. Test dit gedrag altijd op echte telefoons vóór een productie-release.
-
-## 5. Editors zijn sheets met geleidelijke opties
-
-De mobiele editor gebruikt de breedte van het scherm, met afgeronde bovenrand en een vaste header en footer. Alleen de formulierinhoud scrollt. Eerst komen naam, invoermethode, kaarttype en vraag/antwoord. Map/beschrijving en hint/bron/extra begripsvraag zijn uitklapbaar. Bestaande extra waarden openen hun sectie automatisch bij het bewerken.
-
-Het oorspronkelijke importcontract blijft geldig: Markdown, TSV/Quizlet en CSV, met dezelfde foutmeldingen en preview. Opslaan bewaart ook de laatste kaart die nog niet expliciet aan het concept is toegevoegd.
-
-## 6. Eén visuele taal
-
-- System-sans; geen externe fontbestanden.
-- Body 16 px, uitleg tijdens leren 17–18 px; kleine tekst minimaal 14 px.
-- Neutrale warme canvas, witte kaarten en één blauwe primaire accentkleur.
-- Groen, oranje en rood uitsluitend voor betekenisvolle status of beoordeling.
-- Spatiëring in 4/8/12/16/24/32/48; standaard radii 8 px, grotere oppervlakken 12 px.
-- Raakvlakken minimaal 44 × 44 px, zichtbare focus, safe-area-insets, reduced motion en donker thema.
-- Invoerveldgrenzen hebben meer contrast dan decoratieve kaartranden. De geteste tekst- en controlkleurparen voldoen aan de gebruikte AA-drempels; dit is geen volledige toegankelijkheidscertificering.
-
-## 7. Onderweg, zonder valse synchronisatie
-
-Een HTTPS-site maakt de app buitenshuis bereikbaar. De status ‘Offline gereed’ volgt de geactiveerde offline-installatie; zonder netwerk verandert die naar ‘Je bent offline’. Bij een bestaande installatie toont ‘Update klaar’ dat de nieuwe cache gereed is maar nog op activatie wacht. Sluit dan alle appvensters en open opnieuw. Het vinkje betekent **niet** dat er een cloudback-up is. Via de statusknop krijgt de gebruiker de installatie- en back-upuitleg.
-
-De voortgang blijft lokaal, per browser-origin. Geen account, backend, automatische synchronisatie of tracking. Als je later sync toevoegt, ontwerp dan eerst conflictoplossing en back-upgedrag — niet alleen een ‘sync’-icoon.
-
-## Verder bouwen
-
-- `styles.css`: tokens en component-/responsive stijlen. Geen tweede stylesysteem nodig.
-- `src/interface.js`: chrome, focus en viewportmetingen. Houd datamodel en scheduler erbuiten.
-- `src/app.js`: schermen en editors.
-- `tests/browser-mobile.mjs`: regressies voor drawer, dock, sheets, thema en offline gebruik.
-
-Geen publiek beschikbare ‘beste leerapp’-garantie: deze versie is een zorgvuldig gebouwde, lokaal werkende basis. Echte iPhone-/Android-tests en eventueel synchronisatie blijven vervolgstappen.
+Semantische headers/nav/buttons/progress/labels/details/dialog. Zichtbare focus, Escape/focus-terugkeer voor drawer/dialog, background inert bij drawer, keyboardalternatieven voor swipes. Donker thema en reduced motion. Contrast gebruikt de gecontroleerde basistokens; de laatste code-/browserchecks staan in TESTRESULTATEN.md. Geen volledige WCAG-audit of native telefoonclaim.

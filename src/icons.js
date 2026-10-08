@@ -36,6 +36,8 @@ const paths = {
   shuffle:
     '<path d="M3 5h3l12 14h3M3 19h3l12-14h3M18 2l3 3-3 3M18 16l3 3-3 3"/>',
   undo: '<path d="M4 4v6h6M4 10a8 8 0 1 1 0 8"/>',
+  devices:
+    '<rect x="3" y="3" width="12" height="11" rx="1.5"/><path d="M2 18h11M9 14v4"/><rect x="16" y="9" width="5" height="12" rx="1"/>',
   target:
     '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/>',
   tag: '<path d="M3 3h9l9 9-9 9-9-9V3z"/><circle cx="7.5" cy="7.5" r="1"/>',

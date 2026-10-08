@@ -1426,8 +1426,10 @@ svg {
 }
 /* Forms & sheets */
 .input,
+input:not([type]),
 input[type="text"],
 input[type="number"],
+input[type="url"],
 select,
 textarea {
   width: 100%;

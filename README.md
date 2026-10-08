@@ -1,179 +1,135 @@
-# Helder 2.0
+# Helder 3
 
-Een rustige, gratis flashcard-webapp met twee modi: **Flashcards** en **Leren**. Je eigen kaarten handmatig maken of importeren met Markdown, Quizlet-TSV en CSV. Offline-first, volledig lokaal, zonder account of betaalmuur.
+Een eenvoudige, Nederlandstalige leerapp met een echte leerflow, swipe-flashcards en optionele privésynchronisatie. Geen build nodig om te starten. Geen AI-API, advertenties of abonnement in de app.
 
-## Wat is nieuw in versie 2?
+**De publicatieversie begint leeg.** `data/starter.json` bevat `[]`. Het voorbeeldvak wordt alleen toegevoegd wanneer je het zelf importeert. Je bestaande 432 kaarten horen in het afzonderlijke privé-importpakket, niet in deze repository.
 
-- **Mobiele navigatie onderaan:** Vandaag, Bibliotheek, Met ster en Meer. Mappen en instellingen zitten in een toegankelijke drawer met focusbeheer.
-- **Focusmodus:** tijdens leren verdwijnt de gewone appnavigatie. Je ziet alleen je kaart, voortgang en de actie die nu nodig is.
-- **Vaste bediening binnen duimbereik:** antwoord tonen en beoordelen blijven onderaan. De leesruimte reserveert de echte hoogte van die bediening; lange antwoorden blijven volledig bereikbaar.
-- **Vier beoordelingen op één rij** op normale telefoons; een 2×2-indeling op schermen smaller dan 360 px.
-- **Rustigere editors:** map/beschrijving en extra kaartopties kun je uitklappen. De opslaanknop blijft zichtbaar wanneer het formulier scrollt.
-- **Offline-status:** ‘Offline gereed’ verschijnt pas na een geactiveerde offline-installatie. Het vinkje betekent géén cloudsynchronisatie.
-- Een compacter startscherm, consistente typografie, licht/donker en ondersteuning voor reduced motion.
-
-Je 432 startkaarten, FSRS, importformaten en volledige back-ups zijn behouden. De databasenaam en het dataschema zijn niet veranderd.
-
-## Van versie 1 naar versie 2
-
-1. Open de oude app en exporteer eerst **Instellingen → Volledige back-up**. Bewaar dat JSON-bestand buiten de appmap.
-2. Stop de lokale server en vervang de bronbestanden door deze versie. Houd alle submappen intact.
-3. Start op **hetzelfde adres en dezelfde poort** als voorheen (standaard `http://localhost:4173`). De browser gebruikt dan je bestaande collectie.
-4. Open de nieuwe versie één keer online en wacht op **‘Update klaar’** (of ‘Offline gereed’ als de update al actief is). Bij ‘Update klaar’: sluit vervolgens **alle Helder-tabs en geïnstalleerde Helder-vensters**, en open opnieuw. De nieuwe offlinecache kan dan actief worden. Wacht op ‘Offline gereed’.
-5. Zie je een lege of andere collectie? Controleer het websiteadres en je browser. Herstel alleen je eigen back-up als dat nodig is; herstellen **vervangt** de huidige collectie.
-
-Een nieuwe map op je schijf wist je voortgang niet. Een **ander domein, protocol, poort, browser of apparaat** heeft wél aparte opslag. De meegeleverde testserver is alleen voor lokaal ontwikkelen, niet voor publieke hosting.
-
-## Snel starten
-
-1. Pak de volledige zip uit. Houd de submappen intact.
-2. Open een terminal **in de map `helder-app`**.
-3. Kies één opdracht:
+## Starten
 
 ```sh
 node server.mjs
 ```
 
-Of, als je Python 3 hebt:
+Open `http://localhost:4173`. Laat de terminal open. Python kan ook: `python start.py`. Dubbelklikken op `index.html` werkt niet vanwege modules en browseropslag.
+
+## Wat is nieuw?
+
+1. **Optionele mobiel ↔ web-sync:** Supabase Auth met Google/GitHub OAuth, eigenaarafscherming, lokale offline kopie, versiecontrole en conflictkeuzes. De koppeling is geprogrammeerd, maar in dit pakket **niet aangesloten op een live project**. Zie [SYNC.md](docs/SYNC.md).
+2. **Swipe-flashcards:** rechts = gekend, links = nog niet. Dezelfde acties werken met knoppen/toetsen. Marks blijven bewaard; moeilijke kaarten kun je opnieuw oefenen. Geen verborgen wijziging aan je FSRS-planning.
+3. **Vakstructuur:** vakmappen → sets → niveaus → hoofdstukken. Een eigen overzicht en een aparte kaartenweergave. Bestaande `niveau::…`/`hoofdstuk::…`-tags worden automatisch herkend; eigen namen via Set beheren.
+4. **Leeropbouw:** kennismaken → eventueel herkennen met geschreven opties/feedback → zonder opties ophalen → later een geschreven toepassing met modelredenering/kernpunten. Nieuwe stof krijgt steun, herhalingen niet standaard.
+5. **15 is geen maximum:** een aanpasbare startinstelling voor nieuwe kaarten. Zet de daglimiet uit voor onbeperkt nieuwe kaarten. Herhalingen vallen niet onder die daglimiet; “kaarten per ronde” is apart.
+6. **Mobile-first product-UI:** rustige vakoverzichten, vaste duimbediening, zelfstandig scrollende editors, focusmodus, dark mode, toetsenbord/focus en reduced motion.
+
+## Op je telefoon, ook buitenshuis
+
+Publiceer deze map op één vast **HTTPS-adres**. Open op je telefoon één keer volledig online en wacht op “Offline gereed”. Installeer daarna via Safari → Deel → Zet op beginscherm (iPhone), of via Chrome → App installeren (Android). De app kan daarna ook zonder verbinding werken. Browsergegevens wissen verwijdert je lokale kopie.
+
+`localhost` op je computer is niet buitenshuis bereikbaar. Je eigen HTTPS-website werkt prima, ook in een submap. De cache en imports gebruiken relatieve paden.
+
+### Gratis GitHub Pages
+
+Voor een openbare, niet-commerciële statische projectsite kan GitHub Pages met een gratis GitHub-account gebruikt worden. Upload de **inhoud** van deze map naar een nieuwe openbare repository. Zet onder Settings → Pages de publicatiebron op je branch en `/ (root)`. Het adres wordt bijvoorbeeld `https://jouwnaam.github.io/helder/`. Upload ook het meegeleverde lege `.nojekyll`-bestand: zo blijven de JavaScript-, Markdown- en offlinebestanden ongewijzigd beschikbaar.
+
+GitHub Pages serveert alleen de frontend, **geen** database of syncserver. Voor optionele sync staat de database apart in jouw Supabase-project. Wachtwoorden worden nooit op de Pages-site gevraagd: aanmelden gaat naar Google/GitHub. Hou rekening met de voorwaarden en gebruikslimieten van beide providers.
+
+Bronnen: [GitHub Pages](https://docs.github.com/en/pages/getting-started-with-github-pages/what-is-github-pages), [limieten](https://docs.github.com/en/pages/getting-started-with-github-pages/github-pages-limits), [Supabase prijzen](https://supabase.com/pricing).
+
+### Controle vóór publicatie
 
 ```sh
-python start.py
+node scripts/public-check.mjs
 ```
 
-Op Windows heet die opdracht mogelijk `py -3 start.py`; op macOS/Linux `python3 start.py`.
+Controleert dat het starterbestand leeg is, de configuratie geen geheime key bevat en bekende privé-export/bestandspatronen niet in de appmap staan. Dit is een vangnet, geen volledige secretscanner. Controleer ook zelf je repository en eventuele gitgeschiedenis.
 
-4. Open **http://localhost:4173** in een recente browser.
-5. Laat de terminal open tijdens het gebruik. Stoppen: Ctrl+C.
+**Upload nooit:** privékaartbestanden, persoonlijke JSON-back-ups, `.env`, aanmeldtokens, private keys of het 432-kaarten-importpakket. Een publieke publishable/anon key mag wél in `config.json`; RLS en de eigenaarcontrole beschermen de gegevens.
 
-**Je hoeft geen `npm install` te doen.** Er is geen buildstap. Met Node 20+ kun je ook `npm start` en `npm test` gebruiken. Gebruik niet alleen een dubbelklik op index.html: browsers blokkeren dan de benodigde modules/opslag.
+## Sync kort
 
-Poort bezet? `python start.py --port 4174`, of stel `PORT=4174` in voor de Node-server. Open daarna hetzelfde poortnummer. Let op: een andere poort betekent een apart websiteadres en dus aparte browseropslag.
+Zonder configuratie zijn geen Supabase-netwerkverzoeken nodig. Iedere nieuwe browser begint lokaal leeg. Na opt-in heeft iedere aangemelde account een eigen cloudcollectie.
 
-## Wat werkt er?
+1. Maak je eigen Supabase-project.
+2. Voer `backend/supabase.sql` uit.
+3. Stel Google en/of GitHub OAuth in, inclusief callback en toegestane app-URL.
+4. Vul project-URL en **publieke** key in `config.json` in.
+5. Open de app opnieuw online; meld je aan en kies **Verbind deze bibliotheek**.
+6. Gebruik dezelfde account op je telefoon en computer; voer de acceptatietests in `docs/SYNC.md` uit.
 
-- Vrij flashcards omdraaien, vorige/volgende, husselen en sterren.
-- Leermodus met eigen antwoord, modelantwoord, optionele hint en begripscheck.
-- Echte **FSRS**-planning: Opnieuw / Moeilijk / Goed / Makkelijk.
-- Daglimiet nieuwe kaarten; meerdere rondes herhalingen mogelijk.
-- Aanpasbare rondegrootte, gewenste herinnering, antwoordmodus en thema.
-- Mappen/submappen, sets, meerdere tags per notitie, zoeken en dynamische filters.
-- Drie kaarttypes: gewoon, beide richtingen, invulcodes.
-- Handmatige editor, importvoorvertoning, exact-duplicaatcontrole en kaartwijzigingen zonder automatisch voortgang te wissen.
-- Pauzeren/hervatten en één laatste beoordeling ongedaan maken.
-- JSON-back-up en herstel inclusief voortgang; TSV/Markdown-export voor kaartinhoud.
-- Responsive mobiele interface, systeem-/licht-/donkerthema, toetsenbordbediening.
-- Installeerbare PWA en offline gebruik na een geslaagde eerste online installatie.
+De SQL en client zijn lokaal getest, inclusief twee testapparaten tegen een nagebootste REST-backend en eigenaarsafscherming in echte lokale Postgres via PGlite. **Een live Supabase-login, echte telefoon en jouw hostingconfiguratie zijn niet getest.** Zet het dus niet ongecontroleerd open voor andere gebruikers.
 
-## Je startmateriaal
+## Kaarten maken en importeren
 
-Bij het **eerste bezoek op een nieuw websiteadres** worden deze sets ingevoerd:
+Nieuwe set → Handmatig of Markdown/import. Gewone vraag/antwoord, omgekeerd, en Anki-achtige invulcodes (`{{c1::antwoord}}`). Niveau/hoofdstuk zijn gewone velden in de editor. Markdown, TSV en CSV zijn ondersteund.
 
-- **Algemene filosofie:** 50 kaarten.
-- **Continentale filosofie:** 382 kaarten.
+[Het optionele voorbeeldvak](data/voorbeeld.md) laat herkennings- en toepassingsvragen zien. Een herkenningsvraag moet 3–5 door jou gecontroleerde opties hebben, met precies één juiste optie. Er worden **geen willekeurige afleiders uit andere kaarten verzonnen**. Een toepassing heeft een scenario, modelredenering en optionele kernpunten. Zonder zulke extra inhoud blijft gewone uitleg/ophalen werken; los toepassen geeft dan een open zelfcheck, niet een automatisch juist/fout-oordeel.
 
-De leesinstructie uit het oude bestand is niet als studiekaart geïmporteerd. Niveau-/hoofdstukprefixen zijn omgezet naar echte tags. Kies bij het continentale deck eerst `niveau::1` om eenvoudig te beginnen. Het standaard aantal nieuwe kaarten geldt over alle sets samen.
-
-Dit zijn je eerdere decks, geen nieuwe inhoudelijke cursuscontrole. Als je deze broncode publiek gaat delen, beslis bewust of je je persoonlijke cursuskaarten wilt meeleveren. Een bestaande collectie wordt niet veranderd als je `starter.json` aanpast; daarvoor gebruik je de import-/editfunctie. Een nieuwe lege app? Zet `data/starter.json` op `[]` vóór het eerste bezoek.
-
-## Je eerste eigen set
-
-Nieuwe set → Handmatig: vul een vraag en antwoord in, eventueel tags/hint. Je kunt meer kaarten aan het concept toevoegen. De laatste ingevulde kaart wordt bij Opslaan ook meegenomen.
-
-Nieuwe set → Markdown / import:
+Markdown-structuur:
 
 ```md
-# Mijn set
-map: Filosofie::Mijn notities
+# Mijn vak
+map: Studie::Mijn vak
 
-## Wat is epistemologie?
-tags: kennisleer, niveau::1
+## Wat betekent 25%?
+tags: niveau::1, hoofdstuk::H1
 
-De studie van kennis: wat we weten en hoe we dat kunnen onderbouwen.
+Een kwart: 25 van de 100.
 
----
+:::herkennen
+vraag: Welk deel is 25%?
+- [x] Een kwart
+- [ ] Een derde
+- [ ] Een helft
+uitleg: 25/100 = 1/4.
+:::
 
-## Ervaringskennis heet {{c1::a posteriori}}.
-type: cloze
-
-Bijvoorbeeld: je kijkt naar buiten en ziet dat het regent.
+:::toepassen
+vraag: Een klas telt 28 leerlingen. Hoeveel is een kwart?
+antwoord:
+28 / 4 = 7 leerlingen.
+kernpunten:
+- Je deelt de hele groep door 4.
+- Je antwoord heeft de juiste eenheid.
+:::
 ```
 
-Zie `data/voorbeeld.md` en **Zo werkt het** in de app voor alle opties. TSV/CSV kan 2–7 kolommen hebben: Term, Definitie, Tags, Hint, Type, Uitleg, Bron.
+`---` scheidt notities. Optionele metadata: `hint:`, `uitleg:`, `bron:`, `type: reverse` of `type: cloze`. Gebruik één regel voor vragen/opties/metadata; modelantwoorden mogen meerdere regels hebben. Reserveer `:::` voor oefenblokken. Setnamen/niveaulabels gaan mee met Markdown via optionele `structuur:`-JSON-metadata. HTML wordt niet uitgevoerd.
 
-## Belangrijk: lokaal betekent lokaal
+TSV/CSV: `Term, Definitie, Tags, Hint, Type, Uitleg, Bron, Oefeningen`. Eerste twee verplicht (bij cloze mag Definitie leeg zijn). Achtste kolom is optionele JSON voor de extra oefeningen. Oude exports met 2–7 kolommen blijven werken.
 
-Je collectie staat in **IndexedDB van deze browser op dit websiteadres**. Niet in de broncodemap, niet automatisch in de cloud. De app gebruikt geen cookies of accounts voor synchronisatie. Het wissen van browsergegevens of het verliezen van het apparaat kan je collectie verwijderen.
+## Geheugen ≠ begrip
 
-**Maak een volledige JSON-back-up via Instellingen.** Bewaar die buiten de gepubliceerde appmap. Herstellen op een ander apparaat vervangt de collectie daar; het voegt geen twee verschillende voortgangslogboeken samen. TSV/Markdown bewaart geen voortgang.
+- **Gekend:** jouw swipe tijdens vrij oefenen.
+- **In opbouw:** er is een FSRS-planning, maar nog geen gespreide ophaalevidentie volgens onze productregel.
+- **Gespreid opgehaald:** op ten minste twee dagen, ten minste 24 uur uit elkaar, zonder recente uitleg/hint als correct beoordeeld. Dit is een transparante ontwerpregel, **geen gevalideerde beheersingsscore**.
+- **Toepassen:** apart geoefend; vrije antwoorden vergelijk je zelf met het model.
 
-De opslag is gescheiden per browser en website-origin: protocol, domein en poort. Verschillende paden op hetzelfde domein kunnen de collectie dus delen. Een ander domein, andere poort, andere browser of apparaat = aparte collectie. Gebruik altijd hetzelfde adres. Privémodus kan opslag tijdelijk maken of blokkeren.
+FSRS gebruikt standaardparameters uit `ts-fsrs 5.4.2`. Gewenste herinnering 90% is geen garantie op 90% begrip of examenresultaat. Een fout antwoord is **Opnieuw**, niet Moeilijk. Het complete onderzoek en de beperkingen staan in [ONDERZOEK.md](docs/ONDERZOEK.md).
 
-## Gratis op je telefoon
+## Back-up en updates
 
-Dezelfde app kan als webapp op Android en iPhone worden gebruikt, zonder betaald mobiel pakket:
+Instellingen → Volledige back-up exporteert kaarten, structuur, FSRS, swipe-marks, beoordelingen en oefenlogboek. **Nooit OAuth-tokens.** Back-up herstellen vervangt de huidige collectie. Bij actieve sync wordt die vervanging ook gesynchroniseerd; de bevestiging waarschuwt daarvoor.
 
-1. Publiceer de **inhoud van `helder-app`** als statische website op een HTTPS-host, bijvoorbeeld GitHub Pages, Cloudflare Pages of Netlify. Gebruik geen backend/buildcommando; publish directory is de appmap. Kies zelf een hostingplan; gratis tiers en voorwaarden kunnen veranderen.
-2. Open het HTTPS-adres op je telefoon en wacht tot **‘Offline gereed’** verschijnt.
-3. iPhone/Safari: Deel → **Zet op beginscherm**. Android/Chrome: menu → **App installeren** of **Toevoegen aan beginscherm**.
-4. Daarna kan de gecachete app offline werken. Je telefoon heeft wel haar **eigen lokale voortgang**. Gebruik JSON om die handmatig over te zetten.
+Een Markdown/TSV-export bevat inhoud en extra oefeningen, geen planning. Volledige JSON is de veilige keuze voor exact behoud van alle velden en geschiedenis. Sync is geen versiearchief: een verwijdering synchroniseert ook.
 
-`localhost` op je laptop is niet bereikbaar op je telefoon. Gewone netwerk-HTTP voldoet niet aan de PWA/offline-eisen. Browserinstallatie verschilt per versie; fysieke mobiele installatie is bij deze oplevering niet op echte toestellen getest.
-
-Als je alleen privé wilt gebruiken, publiceer dan geen back-ups of persoonlijke data in de appmap. Hosting maakt de bronbestanden en het meegeleverde startermateriaal meestal publiek toegankelijk, niet je lokale IndexedDB.
+Bij “Update klaar”: sluit **alle** Helder-tabs en geïnstalleerde appvensters, en open opnieuw. De bestaande IndexedDB-collectie blijft staan. De lege publicatiestart wist bestaande lokale gebruikersdata niet.
 
 ## Verder vibecoden
 
-Start met `styles.css` voor het uiterlijk en `docs/ONTWERP.md` voor de ontwerpkeuzes. `src/interface.js` beheert de mobiele chrome, het focusbeheer en de hoogte van de leerbediening. `src/app.js` bevat de schermen en interacties; `src/model.js` het kaart-/mapmodel; `src/scheduler.js` de FSRS-grens. De meegeleverde library staat in `vendor/`, niet op een CDN.
+- `src/model.js`: collectie, scopefilters, daglimiet, queue en validatie.
+- `src/learning.js`: lesfasen en scheiding tussen herkenning/geheugenevidentie/toepassing.
+- `src/study-ui.js`: studeer- en swipe-schermen.
+- `src/curriculum*.js`: niveaus, hoofdstukken, namen en vakoverzicht.
+- `src/sync-core.js`: pure driewegmerge, snapshot-CAS, conflicten, accountbinding.
+- `src/cloud.js`: optionele Supabase-client; `backend/supabase.sql`: eigenaarafscherming.
+- `styles.css`: basistokens/chrome; `product.css`: V3-productcomponenten.
+- `src/parser.js`: Markdown/TSV/CSV import/export.
+- `vendor/`: lokaal gebundelde FSRS en officiële Supabase SDK, met licenties.
 
-- `docs/ONDERZOEK.md`: onderbouwing, bronnen, productkeuzes en beperkingen.
-- `docs/ARCHITECTUUR.md`: datamodel, importcontract, veilige opslag en uitbreidingspunten.
-- `docs/ONTWERP.md`: responsive ontwerp, tokens, focusmodus en mobiele interacties.
-- `docs/TESTRESULTATEN.md`: daadwerkelijk uitgevoerde tests en grenzen daarvan.
-- `tests/*.test.mjs`: uitbreidbare pure tests.
+`npm test` draait pure Node-tests zonder extra installatie. Browser-/databasetests vereisen optionele testtools; zie [TESTRESULTATEN.md](docs/TESTRESULTATEN.md).
 
-Na een wijziging:
+Bij een volgende release: verander versie, alle browser-importquery’s, stylesheets en de cache in `sw.js` samen. V3 versieert **alle** gewijzigde module-imports zodat een nog actieve V2-cache geen oude modellen aan de nieuwe UI kan geven. Gebruik geen `skipWaiting` midden in een leerbeurt.
 
-```sh
-npm test
-```
+## Bewuste grenzen
 
-Optionele browsertests (voor verder ontwikkelen, niet nodig om de app te gebruiken):
-
-```sh
-npm install --no-save playwright@1.58.2
-npx playwright install chromium
-```
-
-Start daarna de lokale server in een andere terminal en voer uit:
-
-```sh
-node tests/browser-smoke.mjs
-node tests/browser-extra.mjs
-```
-
-De browsertests gebruiken tijdelijke profielen en maken screenshots in `test-results/`. Met `CHROMIUM_BIN` kun je een bestaande Chromium-binary gebruiken; `TEST_URL` wijzigt het testadres.
-
-Bij een release: verander de cachenaam in `sw.js`, houd de assetlijst bij en sluit oude tabs voordat je de nieuwe versie test. Anders kan een oude Service Worker nog oude modules leveren. Je leerdata blijven in IndexedDB.
-
-## Wat is bewust nog niet gebouwd?
-
-Geen accounts, automatische cloudsynchronisatie, AI-beoordeling, .apkg-import, afbeeldingen/audio of pushmeldingen. FSRS gebruikt standaardparameters; persoonlijke parameteroptimalisatie zit er nog niet in. De browser geeft zelf de toestemming voor blijvende opslag; een verzoek garandeert niet dat hij die toekent.
-
-Deze app ondersteunt goed leren, maar het onthouden van kaartantwoorden is niet hetzelfde als het volledig begrijpen van een cursus. Gebruik ook langere uitleg, eigen voorbeelden en echte oefenvragen.
-
-## Licenties
-
-Nieuwe appcode: MIT, zie `LICENSE`. Vendored ts-fsrs: MIT, zie `vendor/FSRS-LICENSE.txt`. Jouw persoonlijke kaartinhoud valt niet automatisch onder de applicentie.
-
-
-### V2-UI-tests
-
-Met Playwright en Chromium beschikbaar en een draaiende lokale server:
-
-```sh
-node tests/browser-mobile.mjs
-```
-
-Deze extra flow test 320 / 390 / 430 / 768 px, de onderste navigatie, focusbeheer, leesruimte boven de vaste leerbediening, sheets, donker thema, reduced motion en offline herladen. Je kunt `TEST_URL`, `TEST_OUTPUT`, `PLAYWRIGHT_MODULE` en `CHROMIUM_BIN` instellen voor je eigen omgeving.
-
-Bij latere releases: verhoog de cacheversie in `sw.js` en de versieparameters van CSS/entrymodule in `index.html` samen. Pas ook de assetlijst in `sw.js` aan. Een bestaande offline-app moet de nieuwe bestanden eerst online installeren.
+Geen AI-semantische beoordeling, automatische persoonlijke FSRS-optimalisatie, media-upload, openbaar setplatform, pushmeldingen of docentdashboard. De sync gebruikt gebatchte collectiesnapshots, geen schaalbaar record-delta-protocol. Maximaal 8 MB per cloudsnapshot; grotere collecties blijven lokaal werken. Geen universeel “beste leerapp”-bewijs: de onderzoeksbasis onderbouwt onderdelen, niet deze volledige combinatie.

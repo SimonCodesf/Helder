@@ -1,0 +1,9 @@
+{
+  "library": "@supabase/supabase-js",
+  "version": "2.117.3",
+  "license": "MIT",
+  "source": "https://github.com/supabase/supabase-js",
+  "bundler": "esbuild 0.25.5",
+  "format": "browser ESM, locally vendored; no runtime CDN",
+  "thirdPartyLicenses": "SUPABASE-THIRD-PARTY-LICENSES.txt"
+}
