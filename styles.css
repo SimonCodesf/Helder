@@ -1064,6 +1064,22 @@ svg {
   text-align: center;
   margin: -8px 0 16px;
 }
+.tally-again {
+  color: var(--red);
+  font-weight: 650;
+}
+.tally-hard {
+  color: var(--orange);
+  font-weight: 650;
+}
+.tally-good {
+  color: var(--blue);
+  font-weight: 650;
+}
+.tally-easy {
+  color: var(--green);
+  font-weight: 650;
+}
 .study-card {
   border: 1px solid var(--border);
   border-radius: 12px;

@@ -1,10 +1,10 @@
-import { escapeHTML as e, intervalLabel, safeURL } from "./utils.js?v=3.1.7";
-import { icon } from "./icons.js?v=3.1.7";
-import { markdown } from "./markdown.js?v=3.1.7";
-import { faces } from "./model.js?v=3.1.7";
-import { previewRatings } from "./scheduler.js?v=3.1.7";
-import { currentCardId } from "./study.js?v=3.1.7";
-import { facet } from "./curriculum.js?v=3.1.7";
+import { escapeHTML as e, intervalLabel, safeURL } from "./utils.js?v=3.1.8";
+import { icon } from "./icons.js?v=3.1.8";
+import { markdown } from "./markdown.js?v=3.1.8";
+import { faces } from "./model.js?v=3.1.8";
+import { previewRatings } from "./scheduler.js?v=3.1.8";
+import { currentCardId } from "./study.js?v=3.1.8";
+import { facet } from "./curriculum.js?v=3.1.8";
 export function studyScreen(
   state,
   session,
@@ -58,8 +58,23 @@ export function studyScreen(
         .map((qid) => state.cards.find((c) => c.id === qid))
         .filter(Boolean),
       fresh = remaining.filter((c) => c.schedule.state === 0).length,
-      warmed = (session.warmedIds ?? []).length;
-    content += `<p class="study-stats">${warmed ? `${warmed} verkend · ` : ""}${fresh} nieuw · ${remaining.length - fresh} te herhalen</p>`;
+      warmed = (session.warmedIds ?? []).length,
+      rated = [0, 0, 0, 0, 0];
+    for (const done of session.completed)
+      if (done.rating >= 1 && done.rating <= 4) rated[done.rating]++;
+    const chips = [
+      [1, "opnieuw", "tally-again"],
+      [2, "moeilijk", "tally-hard"],
+      [3, "goed", "tally-good"],
+      [4, "makkelijk", "tally-easy"],
+    ]
+      .filter(([r]) => rated[r] > 0)
+      .map(
+        ([r, label, cls]) =>
+          `<span class="${cls}">${rated[r]} ${label}</span>`,
+      )
+      .join(" · ");
+    content += `<p class="study-stats">${warmed ? `${warmed} verkend · ` : ""}${fresh} nieuw · ${remaining.length - fresh} te herhalen${chips ? ` · ${chips}` : ""}</p>`;
   }
   content += `<section class="study-card">${header}`;
   if (session.phase === "orient")

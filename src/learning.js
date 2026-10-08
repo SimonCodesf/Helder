@@ -1,4 +1,4 @@
-import { normalize, shuffle } from "./utils.js?v=3.1.7";
+import { normalize, shuffle } from "./utils.js?v=3.1.8";
 
 // Pedagogical scaffolding is separate from the FSRS memory model.
 // Choice/application answers must be authored, never invented from other cards.
@@ -73,6 +73,17 @@ export function correctRecallDays(state, cardId) {
       )
       .map((r) => r.day),
   );
+}
+// Exploration is recorded persistently (round: "exploration"), so quitting
+// mid-round loses nothing: explored cards stay explored in later rounds.
+export function exploredCardIds(state) {
+  return [
+    ...new Set(
+      (state.activities ?? [])
+        .filter((a) => a.round === "exploration")
+        .map((a) => a.cardId),
+    ),
+  ];
 }
 export function hasSpacedEvidence(state, cardId) {
   const attempts = state.reviews.filter(

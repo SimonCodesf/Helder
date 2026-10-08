@@ -1,5 +1,6 @@
-import { queueFor } from "./model.js?v=3.1.7";
-import { shuffle, uid } from "./utils.js?v=3.1.7";
+import { queueFor } from "./model.js?v=3.1.8";
+import { shuffle, uid } from "./utils.js?v=3.1.8";
+import { exploredCardIds } from "./learning.js?v=3.1.8";
 // Sessions are a UI concern, not a second scheduling algorithm. Only FSRS changes due dates.
 export function createSession(
   state,
@@ -47,6 +48,9 @@ export function createSession(
     hintUsed: false,
     answer: "",
     index: 0,
+    // Exploration is remembered across rounds: cards explored earlier
+    // (persisted as exploration activities) are not warmed up again.
+    warmedIds: exploredCardIds(state),
     startedAt: Date.now(),
     cardStartedAt: Date.now(),
     lastUndo: null,

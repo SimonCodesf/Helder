@@ -280,3 +280,14 @@ test("Registration/resets use the SDK; credential update requires recovery", asy
     globalThis.location = old;
   }
 });
+
+test("Explored cards stay explored in later rounds", () => {
+  const s = fixture();
+  s.activities.push({ cardId: s.cards[0].id, round: "exploration" });
+  const ss = createSession(s, { type: "all" });
+  assert.ok(ss.warmedIds.includes(s.cards[0].id));
+  ss.queue = [s.cards[0].id];
+  prepareStep(ss, s);
+  assert.equal(ss.phase, "recall");
+  assert.equal(ss.exploration, undefined);
+});
