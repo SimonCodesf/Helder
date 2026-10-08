@@ -120,7 +120,6 @@ try {
   assert.equal((await collection()).activities.length, 1);
   await snapshot("05b-choice-feedback-mobile");
   await click("explore-next");
-  await page.locator("#explore-answer").fill("Een kwart");
   await click("explore-reveal");
   await snapshot("06-reverse-mobile");
   await page

@@ -1,10 +1,10 @@
-import { escapeHTML as e, intervalLabel, safeURL } from "./utils.js?v=3.1.3";
-import { icon } from "./icons.js?v=3.1.3";
-import { markdown } from "./markdown.js?v=3.1.3";
-import { faces } from "./model.js?v=3.1.3";
-import { previewRatings } from "./scheduler.js?v=3.1.3";
-import { currentCardId } from "./study.js?v=3.1.3";
-import { facet } from "./curriculum.js?v=3.1.3";
+import { escapeHTML as e, intervalLabel, safeURL } from "./utils.js?v=3.1.4";
+import { icon } from "./icons.js?v=3.1.4";
+import { markdown } from "./markdown.js?v=3.1.4";
+import { faces } from "./model.js?v=3.1.4";
+import { previewRatings } from "./scheduler.js?v=3.1.4";
+import { currentCardId } from "./study.js?v=3.1.4";
+import { facet } from "./curriculum.js?v=3.1.4";
 export function studyScreen(
   state,
   session,
@@ -32,10 +32,13 @@ export function studyScreen(
           : "Herhaling";
   const header = `<div class="study-card-head"><div class="tags"><span class="pill blue">${label}</span>${facet(note, "niveau") ? `<span class="small muted">Niveau ${e(facet(note, "niveau"))}</span>` : ""}</div><button class="icon-button${note.starred ? " is-starred" : ""}" data-action="star-note" data-id="${e(note.id)}" aria-label="${note.starred ? "Ster verwijderen" : "Ster toevoegen"}" aria-pressed="${note.starred}">${icon("star")}</button></div>`;
   if (flash) {
-    const mark = session.flashMarks?.[id];
+    const marks = Object.values(session.flashMarks ?? {}),
+      knownCount = marks.filter((v) => v === "known").length,
+      unknownCount = marks.filter((v) => v === "unknown").length,
+      mark = session.flashMarks?.[id];
     return (
       content +
-      `<section class="study-card flash-card" data-swipe><span class="swipe-stamp known">${icon("check")} Gekend</span><span class="swipe-stamp unknown">${icon("refresh")} Nog niet</span>${header}<div class="flip-surface" role="button" tabindex="0" data-action="flip" aria-label="Kaart omdraaien"><div class="${session.revealed ? "answer-text" : "question"}">${markdown(session.revealed ? face.answer : face.question)}</div><p class="flip-hint">${mark ? `Gemarkeerd als ${mark === "known" ? "gekend" : "nog niet gekend"}` : "Tik om te draaien · swipe om te sorteren"}</p></div></section><div class="study-dock flash-dock"><div class="dock-heading"><p class="small muted">${Object.values(session.flashMarks ?? {}).filter((v) => v === "known").length} gekend · ${Object.values(session.flashMarks ?? {}).filter((v) => v === "unknown").length} nog niet</p><div class="flash-history-actions">${button("", "flash-prev", "icon-button", session.index === 0 ? 'disabled aria-label="Vorige kaart"' : 'aria-label="Vorige kaart"', "back")}${button("", "flash-next", "icon-button", 'aria-label="Kaart overslaan"', "chevron")}${button("", "flash-shuffle", "icon-button", 'aria-label="Kaarten husselen"', "shuffle")}</div></div><div class="flash-flip-row">${session.flashUndo ? button("", "undo-flash", "icon-button", 'aria-label="Laatste swipe ongedaan"', "undo") : ""}${button("Omdraaien", "flip", "primary large", "", "refresh")}</div><div class="swipe-actions">${button("Nog niet", "flash-mark", "unknown", 'data-mark="unknown"', "back")}${button("Gekend", "flash-mark", "known", 'data-mark="known"', "check")}</div></div></div>`
+      `<div class="flash-tally"><span class="tally-known">${icon("check")} ${knownCount} gekend</span><span class="tally-todo">${Math.max(0, session.total - done)} te gaan</span></div><section class="study-card flash-card" data-swipe><span class="swipe-stamp known">${icon("check")} Gekend</span><span class="swipe-stamp unknown">${icon("refresh")} Nog niet</span>${header}<div class="flip-surface" role="button" tabindex="0" data-action="flip" aria-label="Kaart omdraaien"><div class="${session.revealed ? "answer-text" : "question"}">${markdown(session.revealed ? face.answer : face.question)}</div><p class="flip-hint">${mark ? `Gemarkeerd als ${mark === "known" ? "gekend" : "nog niet gekend"}` : "Tik om te draaien · swipe om te sorteren"}</p></div></section><div class="study-dock flash-dock"><div class="dock-heading"><p class="small muted">${knownCount} gekend · ${unknownCount} nog niet</p><div class="flash-history-actions">${button("", "flash-prev", "icon-button", session.index === 0 ? 'disabled aria-label="Vorige kaart"' : 'aria-label="Vorige kaart"', "back")}${button("", "flash-next", "icon-button", 'aria-label="Kaart overslaan"', "chevron")}${button("", "flash-shuffle", "icon-button", 'aria-label="Kaarten husselen"', "shuffle")}</div></div><div class="flash-flip-row">${session.flashUndo ? button("", "undo-flash", "icon-button", 'aria-label="Laatste swipe ongedaan"', "undo") : ""}${button("Omdraaien", "flip", "primary large", "", "refresh")}</div><div class="swipe-actions">${button("Nog niet", "flash-mark", "unknown", 'data-mark="unknown"', "back")}${button("Gekend", "flash-mark", "known", 'data-mark="known"', "check")}</div></div></div>`
     );
   }
   if (session.application) {
@@ -49,6 +52,14 @@ export function studyScreen(
       content +
       `<section class="study-card application-card">${header}<div class="step-caption">Een stap verder · verandert je planning niet</div><div class="question">${markdown(prompt)}</div>${!task.revealed ? `<p class="study-prompt">Pas het begrip toe. Gebruik niet alleen de definitie.</p><div class="study-answer-input"><label class="field-label" for="application-answer">Jouw redenering</label><textarea id="application-answer" placeholder="Hoe pak jij dit aan?">${e(task.answer ?? "")}</textarea></div>` : `${task.answer?.trim() ? `<div class="your-answer"><span class="label">Jouw redenering</span><p>${e(task.answer)}</p></div>` : ""}<hr class="answer-divider"><div class="answer-label">${a ? "Voorbeeldredenering" : "Controleer je redenering"}</div><div class="answer-text">${markdown(a?.answer || face.answer)}</div>${a?.rubric?.length ? `<div class="rubric"><h3>Kernpunten</h3><ul>${a.rubric.map((v) => `<li>${e(v)}</li>`).join("")}</ul></div>` : `<p class="small muted">Past je voorbeeld echt bij het begrip? Kun je uitleggen waarom? Dit wordt niet automatisch goedgekeurd.</p>`}`}</section><div class="study-dock reveal-dock">${task.revealed ? `<p class="grade-prompt">Klopt je toepassing inhoudelijk? Jij vergelijkt.</p><div class="swipe-actions">${button("Nog oefenen", "application-rate", "", 'data-success="false"', "refresh")}${button("Gelukt", "application-rate", "primary", 'data-success="true"', "check")}</div>` : button("Vergelijk je redenering", "application-reveal", "primary large", "", "arrow")}<p class="small muted">Toepassen is een aparte vaardigheid, geen extra FSRS-rating.</p></div></div>`
     );
+  }
+  if (!flash && !session.application) {
+    const remaining = session.queue
+        .map((qid) => state.cards.find((c) => c.id === qid))
+        .filter(Boolean),
+      fresh = remaining.filter((c) => c.schedule.state === 0).length,
+      warmed = (session.warmedIds ?? []).length;
+    content += `<p class="study-stats">${warmed ? `${warmed} verkend · ` : ""}${fresh} nieuw · ${remaining.length - fresh} te herhalen</p>`;
   }
   content += `<section class="study-card">${header}`;
   if (session.phase === "orient")

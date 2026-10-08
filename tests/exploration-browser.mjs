@@ -59,7 +59,7 @@ try {
   await click("start-explore");
   await capture("20-exploration-start");
   await click("intro");
-  await page.locator("#explore-answer").waitFor();
+  await page.locator(".exploration-card").waitFor();
   assert.equal(
     await page
       .locator(".exploration-card")
@@ -68,7 +68,6 @@ try {
     false,
   );
   await capture("21-definition-first");
-  await page.locator("#explore-answer").fill("Uitgangspunt");
   await click("explore-reveal");
   await capture("22-reverse-feedback");
   await page

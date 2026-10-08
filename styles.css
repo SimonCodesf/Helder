@@ -1039,6 +1039,31 @@ svg {
   background: var(--blue-bright);
   border-radius: 4px;
 }
+.flash-tally {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 14px;
+  color: var(--muted);
+  margin: -12px 0 16px;
+}
+.tally-known {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--green);
+  font-weight: 650;
+}
+.tally-known svg {
+  width: 16px;
+  height: 16px;
+}
+.study-stats {
+  font-size: 14px;
+  color: var(--muted);
+  text-align: center;
+  margin: -8px 0 16px;
+}
 .study-card {
   border: 1px solid var(--border);
   border-radius: 12px;

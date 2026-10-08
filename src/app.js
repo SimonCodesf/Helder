@@ -10,9 +10,9 @@ import {
   shuffle,
   downloadText,
   safeURL,
-} from "./utils.js?v=3.1.3";
-import { icon } from "./icons.js?v=3.1.3";
-import { markdown } from "./markdown.js?v=3.1.3";
+} from "./utils.js?v=3.1.4";
+import { icon } from "./icons.js?v=3.1.4";
+import { markdown } from "./markdown.js?v=3.1.4";
 import {
   parseImport,
   splitTags,
@@ -20,7 +20,7 @@ import {
   toMarkdown,
   toTSV,
   noteImportKey,
-} from "./parser.js?v=3.1.3";
+} from "./parser.js?v=3.1.4";
 import {
   emptyCollection,
   validateCollection,
@@ -37,21 +37,21 @@ import {
   isAvailable,
   faces,
   burySiblings,
-} from "./model.js?v=3.1.3";
+} from "./model.js?v=3.1.4";
 import {
   loadCollection,
   saveCollection,
   requestPersistentStorage,
   getDeviceValue,
   setDeviceValue,
-} from "./storage.js?v=3.1.3";
-import { previewRatings, scheduleRating, State } from "./scheduler.js?v=3.1.3";
+} from "./storage.js?v=3.1.4";
+import { previewRatings, scheduleRating, State } from "./scheduler.js?v=3.1.4";
 import {
   createSession,
   currentCardId,
   advanceSession,
-} from "./study.js?v=3.1.3";
-import { guideView } from "./guide.js?v=3.1.3";
+} from "./study.js?v=3.1.4";
+import { guideView } from "./guide.js?v=3.1.4";
 import {
   prepareStep,
   startExploration,
@@ -61,7 +61,7 @@ import {
   beginRecall,
   recognitionOptions,
   shouldApply,
-} from "./learning.js?v=3.1.3";
+} from "./learning.js?v=3.1.4";
 import {
   facet,
   structureFor,
@@ -70,19 +70,19 @@ import {
   progressFor,
   labelMap,
   mapText,
-} from "./curriculum.js?v=3.1.3";
+} from "./curriculum.js?v=3.1.4";
 import {
   progressStrip,
   courseStructure,
   folderTile,
-} from "./curriculum-ui.js?v=3.1.3";
-import { studyScreen } from "./study-ui.js?v=3.1.3";
-import { explorationScreen } from "./exploration-ui.js?v=3.1.3";
-import { emailView } from "./email-ui.js?v=3.1.3";
-import { setupSwipe } from "./swipe.js?v=3.1.3";
-import { CloudConnection } from "./cloud.js?v=3.1.3";
-import { cloudPanel, conflictBody } from "./cloud-ui.js?v=3.1.3";
-import { LocalChangedError, localFromCloud } from "./sync-core.js?v=3.1.3";
+} from "./curriculum-ui.js?v=3.1.4";
+import { studyScreen } from "./study-ui.js?v=3.1.4";
+import { explorationScreen } from "./exploration-ui.js?v=3.1.4";
+import { emailView } from "./email-ui.js?v=3.1.4";
+import { setupSwipe } from "./swipe.js?v=3.1.4";
+import { CloudConnection } from "./cloud.js?v=3.1.4";
+import { cloudPanel, conflictBody } from "./cloud-ui.js?v=3.1.4";
+import { LocalChangedError, localFromCloud } from "./sync-core.js?v=3.1.4";
 import {
   setupInterface,
   syncInterface,
@@ -91,7 +91,7 @@ import {
   offlineUpdateReady,
   offlineAvailable,
   statusButton,
-} from "./interface.js?v=3.1.3";
+} from "./interface.js?v=3.1.4";
 
 let cloud;
 let state,
@@ -1171,32 +1171,9 @@ async function handleClick(event) {
         if (session === active) renderApp();
         break;
       }
-      case "explore-rate": {
-        const active = session,
-          warm = active?.exploration;
-        if (!warm || !warm.revealed || warm.busy) break;
-        warm.busy = true;
-        try {
-          await recordActivity(
-            currentCardId(active),
-            "practice",
-            el.dataset.success === "true",
-            {
-              round: "exploration",
-              exercise: warm.task.kind,
-              selfRated: warm.task.kind === "reverse",
-            },
-          );
-          if (session === active) {
-            nextExploration(active, state);
-            renderApp();
-            window.scrollTo(0, 0);
-          }
-        } finally {
-          warm.busy = false;
-        }
+      case "explore-rate":
+        await rateExploration(el.dataset.success === "true");
         break;
-      }
       case "explore-next":
         if (session.exploration?.revealed) {
           nextExploration(session, state);
@@ -1798,6 +1775,31 @@ async function markFlash(mark) {
     throw error;
   }
 }
+async function rateExploration(success) {
+  const active = session,
+    warm = active?.exploration;
+  if (!warm || !warm.revealed || warm.busy) return;
+  warm.busy = true;
+  try {
+    await recordActivity(currentCardId(active), "practice", success, {
+      round: "exploration",
+      exercise: warm.task.kind,
+      selfRated: warm.task.kind === "reverse",
+    });
+    if (session === active) {
+      nextExploration(active, state);
+      renderApp();
+      window.scrollTo(0, 0);
+    }
+  } finally {
+    warm.busy = false;
+  }
+}
+async function swipeExploration(mark) {
+  const warm = session?.exploration;
+  if (!warm || !warm.revealed || warm.task.kind !== "reverse") return;
+  await rateExploration(mark === "known");
+}
 async function undoFlash() {
   const u = session?.flashUndo;
   if (!u || ui.grading) return;
@@ -1817,14 +1819,15 @@ async function undoFlash() {
   renderApp();
   window.scrollTo(0, 0);
 }
-setupSwipe((mark) => markFlash(mark).catch(errorMessage));
+setupSwipe(
+  (mark) => markFlash(mark).catch(errorMessage),
+  (mark) => swipeExploration(mark).catch(errorMessage),
+);
 
 document.addEventListener("click", handleClick);
 document.addEventListener("input", (event) => {
   const el = event.target;
   if (el.id === "study-answer" && session) session.answer = el.value;
-  if (el.id === "explore-answer" && session?.exploration)
-    session.exploration.answer = el.value;
   if (el.id === "application-answer" && session?.application)
     session.application.answer = el.value;
   if (el.dataset.liveSearch) {
@@ -2004,7 +2007,7 @@ async function boot() {
     state = saved ? validateCollection(saved) : emptyCollection();
     if (!saved) {
       try {
-        const response = await fetch("./data/starter.json?v=3.1.3");
+        const response = await fetch("./data/starter.json?v=3.1.4");
         if (!response.ok) throw new Error("Starterbestand ontbreekt.");
         const starters = await response.json();
         for (const data of starters) {

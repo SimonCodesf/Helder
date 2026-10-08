@@ -1,12 +1,14 @@
 // Horizontal swipes coexist with vertical scrolling; equivalent buttons and keys
 // remain available. Recognition marks never write FSRS ratings.
-export function setupSwipe(onMark) {
+export function setupSwipe(onMark, onExploreMark) {
   let drag = null,
     suppressClickUntil = 0;
   document.addEventListener(
     "pointerdown",
     (event) => {
-      const card = event.target.closest(".flash-card[data-swipe]");
+      const card = event.target.closest(
+        ".flash-card[data-swipe], .exploration-card[data-swipe]",
+      );
       if (
         !card ||
         event.button !== 0 ||
@@ -59,8 +61,10 @@ export function setupSwipe(onMark) {
     d.card.style.removeProperty("--swipe-angle");
     delete d.card.dataset.swipeDirection;
     if (d.active) suppressClickUntil = Date.now() + 450;
-    if (event.type === "pointerup" && d.active && Math.abs(d.dx) >= 64)
-      onMark(d.dx > 0 ? "known" : "unknown");
+    if (event.type === "pointerup" && d.active && Math.abs(d.dx) >= 64) {
+      const explore = d.card.classList.contains("exploration-card");
+      (explore ? onExploreMark : onMark)?.(d.dx > 0 ? "known" : "unknown");
+    }
   };
   document.addEventListener("pointerup", end);
   document.addEventListener("pointercancel", end);
@@ -69,7 +73,7 @@ export function setupSwipe(onMark) {
     (event) => {
       if (
         Date.now() < suppressClickUntil &&
-        event.target.closest(".flash-card")
+        event.target.closest(".flash-card, .exploration-card")
       ) {
         event.preventDefault();
         event.stopImmediatePropagation();

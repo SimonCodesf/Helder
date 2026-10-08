@@ -1,6 +1,6 @@
-import { uid, localDay, nextMidnight, normalize } from "./utils.js?v=3.1.3";
-import { emptySchedule, State, retrievability } from "./scheduler.js?v=3.1.3";
-import { validateNote, clozeMatches } from "./parser.js?v=3.1.3";
+import { uid, localDay, nextMidnight, normalize } from "./utils.js?v=3.1.4";
+import { emptySchedule, State, retrievability } from "./scheduler.js?v=3.1.4";
+import { validateNote, clozeMatches } from "./parser.js?v=3.1.4";
 export const SCHEMA_VERSION = 1;
 export const DEFAULT_SETTINGS = {
   newPerDay: 15,

@@ -20,9 +20,7 @@ export async function finishWarmGroup(page) {
       continue;
     }
     if (await page.locator('[data-action="explore-reveal"]').count()) {
-      if (await page.locator("#explore-answer").count())
-        await page.locator("#explore-answer").fill("Mijn vermoeden");
-      await page.locator('[data-action="explore-reveal"]').click();
+      await page.locator('[data-action="explore-reveal"]').first().click();
       continue;
     }
     const rate = page.locator('[data-action="explore-rate"]').first();

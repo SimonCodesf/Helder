@@ -665,7 +665,8 @@ textarea[aria-invalid="true"] {
   background: var(--green-soft);
   color: var(--green);
 }
-.flash-card {
+.flash-card,
+.exploration-card[data-swipe] {
   position: relative;
   touch-action: pan-y;
   transform: translateX(var(--swipe-x, 0px)) rotate(var(--swipe-angle, 0deg));
@@ -673,16 +674,20 @@ textarea[aria-invalid="true"] {
     transform 0.16s ease,
     border-color 0.16s ease;
 }
-.flash-card .flip-surface {
+.flash-card .flip-surface,
+.exploration-card .flip-surface {
   touch-action: pan-y;
 }
-.flash-card[data-swipe-direction] {
+.flash-card[data-swipe-direction],
+.exploration-card[data-swipe-direction] {
   transition: none;
 }
-.flash-card[data-swipe-direction="known"] {
+.flash-card[data-swipe-direction="known"],
+.exploration-card[data-swipe-direction="known"] {
   border-color: var(--green);
 }
-.flash-card[data-swipe-direction="unknown"] {
+.flash-card[data-swipe-direction="unknown"],
+.exploration-card[data-swipe-direction="unknown"] {
   border-color: var(--orange);
 }
 .swipe-stamp {
@@ -715,7 +720,9 @@ textarea[aria-invalid="true"] {
   transform: rotate(6deg);
 }
 .flash-card[data-swipe-direction="known"] .swipe-stamp.known,
-.flash-card[data-swipe-direction="unknown"] .swipe-stamp.unknown {
+.flash-card[data-swipe-direction="unknown"] .swipe-stamp.unknown,
+.exploration-card[data-swipe-direction="known"] .swipe-stamp.known,
+.exploration-card[data-swipe-direction="unknown"] .swipe-stamp.unknown {
   display: flex;
 }
 .flash-session-meta {
