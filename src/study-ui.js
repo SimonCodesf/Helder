@@ -1,10 +1,10 @@
-import { escapeHTML as e, intervalLabel, safeURL } from "./utils.js?v=3.1.18";
-import { icon } from "./icons.js?v=3.1.18";
-import { markdown } from "./markdown.js?v=3.1.18";
-import { faces } from "./model.js?v=3.1.18";
-import { previewRatings } from "./scheduler.js?v=3.1.18";
-import { currentCardId } from "./study.js?v=3.1.18";
-import { facet } from "./curriculum.js?v=3.1.18";
+import { escapeHTML as e, intervalLabel, safeURL } from "./utils.js?v=3.1.19";
+import { icon } from "./icons.js?v=3.1.19";
+import { markdown } from "./markdown.js?v=3.1.19";
+import { faces, stats } from "./model.js?v=3.1.19";
+import { previewRatings } from "./scheduler.js?v=3.1.19";
+import { currentCardId } from "./study.js?v=3.1.19";
+import { facet } from "./curriculum.js?v=3.1.19";
 export function studyScreen(
   state,
   session,
@@ -55,10 +55,10 @@ export function studyScreen(
     );
   }
   if (!flash && !session.application) {
-    const remaining = session.queue
-        .map((qid) => state.cards.find((c) => c.id === qid))
-        .filter(Boolean),
-      fresh = remaining.filter((c) => c.schedule.state === 0).length,
+    // Scope-wide and persistent: closing the round changes nothing here.
+    // Never-rated terms always count, and rating moves cards live: out of
+    // nieuw/te herhalen, into their own color.
+    const st = stats(state, session.scope),
       warmed = (session.warmedIds ?? []).length,
       rated = [0, 0, 0, 0, 0];
     for (const done of session.completed)
@@ -69,8 +69,8 @@ export function studyScreen(
       [3, "goed", "tally-good"],
       [4, "makkelijk", "tally-easy"],
     ].filter(([r]) => rated[r] > 0);
-    const sentence = `${warmed ? `${warmed} verkend, ` : ""}${fresh} nieuw, ${remaining.length - fresh} te herhalen${ratings.length ? `, ${ratings.map(([r, label]) => `${rated[r]} ${label}`).join(", ")}` : ""}`;
-    content += `<p class="study-stats" aria-label="${sentence}"><span aria-hidden="true">${warmed ? `<span class="tally-warmed" title="Verkend">✓ ${warmed}</span> · ` : ""}<span class="tally-fresh" title="Nieuw">+${fresh}</span> · <span class="tally-due" title="Te herhalen">↻ ${remaining.length - fresh}</span>${ratings.map(([r, label, cls]) => ` · <span class="${cls}" title="${label}">${rated[r]}</span>`).join("")}</span></p>`;
+    const sentence = `${warmed ? `${warmed} verkend, ` : ""}${st.new} nieuw, ${st.due} te herhalen${ratings.length ? `, ${ratings.map(([r, label]) => `${rated[r]} ${label}`).join(", ")}` : ""}`;
+    content += `<p class="study-stats" aria-label="${sentence}"><span aria-hidden="true">${warmed ? `<span class="tally-warmed" title="Verkend">✓ ${warmed}</span> · ` : ""}<span class="tally-fresh" title="Nieuw, ook zonder oordeel">+${st.new}</span> · <span class="tally-due" title="Te herhalen">↻ ${st.due}</span>${ratings.map(([r, label, cls]) => ` · <span class="${cls}" title="${label}">${rated[r]}</span>`).join("")}</span></p>`;
   }
   content += `<section class="study-card">${header}`;
   if (session.phase === "orient")
