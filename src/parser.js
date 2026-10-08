@@ -1,5 +1,5 @@
-import { normalize } from "./utils.js?v=3.1.23";
-import { validateLearning } from "./learning.js?v=3.1.23";
+import { normalize } from "./utils.js?v=3.1.24";
+import { validateLearning } from "./learning.js?v=3.1.24";
 export class ImportError extends Error {
   constructor(message) {
     super(message);

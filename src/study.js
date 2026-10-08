@@ -1,10 +1,10 @@
-import { queueFor, stats } from "./model.js?v=3.1.23";
-import { shuffle, uid } from "./utils.js?v=3.1.23";
-import { exploredCardIds } from "./learning.js?v=3.1.23";
-// A learn round stays steady: with fewer than this many due reviews, one
-// small batch of new cards is explored up front. Nothing new is added
-// mid-round; the rest waits for the next round.
-const MAX_DUE_WITH_NEW = 10;
+import { queueFor, stats } from "./model.js?v=3.1.24";
+import { shuffle, uid } from "./utils.js?v=3.1.24";
+import { exploredCardIds } from "./learning.js?v=3.1.24";
+// A learn round stays steady: new terms are only explored while due
+// reviews plus terms still awaiting their first rating stay below this
+// total. Nothing new is added mid-round; the rest waits for later rounds.
+const MAX_OPEN_BEFORE_NEW = 10;
 // Sessions are a UI concern, not a second scheduling algorithm. Only FSRS changes due dates.
 export function createSession(
   state,
@@ -32,11 +32,11 @@ export function createSession(
       isNew = (id) =>
         state.cards.find((c) => c.id === id)?.schedule.state === 0,
       dueCount = queue.filter((id) => !isNew(id)).length,
-      // Cards already in learning await their first rating: no new batch
-      // until they are rated.
+      // Terms already in learning await their first rating: new terms join
+      // only while due reviews plus unrated terms stay below the threshold.
       inLearning = stats(state, scope, Date.now()).learning;
     batch =
-      dueCount < MAX_DUE_WITH_NEW && !inLearning
+      dueCount + inLearning < MAX_OPEN_BEFORE_NEW
         ? queue
             .filter((id) => isNew(id) && !warmed.has(id))
             .slice(0, state.settings.exploreSize ?? 3)

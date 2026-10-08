@@ -327,16 +327,32 @@ test("Failed reverse exploration returns twice, then drops", () => {
   assert.ok(!exploredCardIds(s).includes(first));
 });
 
-test("Unrated explored cards block new batches and show in stats", () => {
+test("New batches join only while due plus unrated stay below ten", () => {
   const s = fixture();
+  for (let i = 6; i < 10; i++)
+    upsertNote(s, s.sets[0].id, {
+      front: "Begrip " + i,
+      back: "Een definitie voor begrip " + i + ".",
+      kind: "basic",
+      tags: ["niveau::1", "hoofdstuk::H1"],
+    });
   s.activities.push({ cardId: s.cards[0].id, round: "exploration" });
   assert.equal(stats(s).learning, 1);
-  const ss = createSession(s, { type: "all" });
-  // The unrated card stays in the round, but nothing new is explored.
-  assert.ok(ss.queue.includes(s.cards[0].id));
-  prepareStep(ss, s);
-  assert.equal(ss.phase, "recall");
-  assert.equal(ss.exploration, undefined);
+  // 0 due + 1 unrated: batch proceeds.
+  const open = createSession(s, { type: "all" });
+  prepareStep(open, s);
+  assert.equal(open.phase, "explore");
+  // 9 due + 1 unrated reach ten: reviews-only round, unrated stays in queue.
+  for (const c of s.cards.slice(1)) {
+    c.schedule.state = 2;
+    c.schedule.reps = 5;
+    c.schedule.due = Date.now() - 1000;
+  }
+  const full = createSession(s, { type: "all" });
+  assert.ok(full.queue.includes(s.cards[0].id));
+  prepareStep(full, s);
+  assert.equal(full.phase, "recall");
+  assert.equal(full.exploration, undefined);
   // Dropped cards neither block nor count.
   s.activities.push({
     cardId: s.cards[0].id,
@@ -344,7 +360,4 @@ test("Unrated explored cards block new batches and show in stats", () => {
     dropped: true,
   });
   assert.equal(stats(s).learning, 0);
-  const fresh = createSession(s, { type: "all" });
-  prepareStep(fresh, s);
-  assert.equal(fresh.phase, "explore");
 });
