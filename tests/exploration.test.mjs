@@ -13,6 +13,8 @@ import {
   nextExploration,
   finishExploration,
   requeueExploration,
+  dropExploredCard,
+  exploredCardIds,
   explorationTerm,
   explorationTasks,
 } from "../src/learning.js";
@@ -300,7 +302,7 @@ test("Explored cards stay explored in later rounds", () => {
   assert.equal(ss.exploration, undefined);
 });
 
-test("Failed reverse exploration returns once at the end", () => {
+test("Failed reverse exploration returns twice, then drops", () => {
   const s = fixture();
   const ss = createSession(s, { type: "all" });
   prepareStep(ss, s);
@@ -309,6 +311,17 @@ test("Failed reverse exploration returns once at the end", () => {
   const first = ss.exploration.ids[0];
   ss.exploration.revealed = true;
   assert.equal(requeueExploration(ss), true);
-  assert.equal(ss.exploration.ids.at(-1), first);
+  assert.equal(requeueExploration(ss), true);
   assert.equal(requeueExploration(ss), false);
+  dropExploredCard(ss);
+  finishExploration(ss);
+  // Dropped: not warmed, not recalled, unexplored again next round.
+  assert.ok(!ss.warmedIds.includes(first));
+  assert.ok(!ss.queue.includes(first));
+  s.activities.push(
+    { cardId: first, round: "exploration" },
+    { cardId: first, round: "exploration" },
+    { cardId: first, round: "exploration", dropped: true },
+  );
+  assert.ok(!exploredCardIds(s).includes(first));
 });

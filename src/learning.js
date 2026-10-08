@@ -1,4 +1,4 @@
-import { normalize, shuffle } from "./utils.js?v=3.1.16";
+import { normalize, shuffle } from "./utils.js?v=3.1.17";
 
 // Pedagogical scaffolding is separate from the FSRS memory model.
 // Choice/application answers must be authored, never invented from other cards.
@@ -76,14 +76,15 @@ export function correctRecallDays(state, cardId) {
 }
 // Exploration is recorded persistently (round: "exploration"), so quitting
 // mid-round loses nothing: explored cards stay explored in later rounds.
+// A card dropped after three misses records a final dropped activity, which
+// revokes the earlier attempts: it counts as unexplored again.
 export function exploredCardIds(state) {
-  return [
-    ...new Set(
-      (state.activities ?? [])
-        .filter((a) => a.round === "exploration")
-        .map((a) => a.cardId),
-    ),
-  ];
+  const seen = new Map();
+  for (const a of state.activities ?? []) {
+    if (a.round !== "exploration") continue;
+    seen.set(a.cardId, a.dropped === true ? null : a.cardId);
+  }
+  return [...seen.values()].filter((id) => id != null);
 }
 export function hasSpacedEvidence(state, cardId) {
   const attempts = state.reviews.filter(
@@ -188,21 +189,34 @@ export function nextExploration(session, state) {
   }
   startExploreTask(session, state);
 }
-// A failed reverse exploration returns once at the end of the group.
-// A second failure moves on, so a difficult card can never loop forever.
+// A failed reverse exploration may return twice more (three attempts in
+// total). After the third miss the card drops out: it is not recalled this
+// round and counts as unexplored again, so the next round re-explores it.
+export const MAX_EXPLORE_ATTEMPTS = 3;
 export function requeueExploration(session) {
   const e = session.exploration;
   if (!e || e.task?.kind !== "reverse") return false;
-  e.retried ??= [];
-  const id = e.ids[e.index];
-  if (e.retried.includes(id)) return false;
-  e.retried.push(id);
+  e.attempts ??= {};
+  const id = e.ids[e.index],
+    used = e.attempts[id] ?? 0;
+  if (used >= MAX_EXPLORE_ATTEMPTS) return false;
+  e.attempts[id] = used + 1;
+  if (used + 1 >= MAX_EXPLORE_ATTEMPTS) return false;
   e.ids.push(id);
   return true;
 }
+export function dropExploredCard(session) {
+  const e = session.exploration;
+  if (!e) return;
+  const id = e.ids[e.index];
+  e.dropped ??= [];
+  if (!e.dropped.includes(id)) e.dropped.push(id);
+}
 export function finishExploration(session) {
-  const ids = session.exploration.ids;
-  session.warmedIds = [...new Set([...(session.warmedIds ?? []), ...ids])];
+  const ids = session.exploration.ids,
+    dropped = new Set(session.exploration.dropped ?? []),
+    kept = ids.filter((id) => !dropped.has(id));
+  session.warmedIds = [...new Set([...(session.warmedIds ?? []), ...kept])];
   // Learn rounds explore once, up front. Later new cards in the queue are
   // recalled directly; the next round brings a fresh batch.
   if (session.mode === "learn") session.batchSettled = true;
@@ -210,10 +224,13 @@ export function finishExploration(session) {
     session.exploredIds = [
       ...new Set([
         ...(session.exploredIds ?? []),
-        ...ids.filter((id) => (session.supportIds ?? []).includes(id)),
+        ...kept.filter((id) => (session.supportIds ?? []).includes(id)),
       ]),
     ];
     session.queue = session.queue.filter((id) => !ids.includes(id));
+  } else if (session.mode === "learn" && dropped.size) {
+    // Three strikes: not recalled this round, unexplored again next round.
+    session.queue = session.queue.filter((id) => !dropped.has(id));
   }
   delete session.exploration;
   session.preparedId = null;
