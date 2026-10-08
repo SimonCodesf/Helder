@@ -1,4 +1,4 @@
-# Productontwerp — Helder 3
+# Productontwerp — Helder 3.1
 
 ## Richting
 
@@ -15,7 +15,7 @@ Een rustig gereedschap, geen gamified dashboard. Eén duidelijke actie per studi
 
 ## Studie
 
-Kennismaken, herkennen en ophalen hebben eigen schermen; hulp wordt niet in een onoverzichtelijke alles-in-één-card gepropt. Herkenning heeft expliciete antwoordfeedback; daarna verdwijnen de opties. Toepassingen hebben scenario/model/kernpunten en een aparte zelfcheck. Geen impliciete "mastery percentage".
+Verkennen heeft een eigen start, een herkennings-/definitie-eerstscherm en een expliciete brug naar ophalen. Een kleine route-indicator benoemt kennismaken, zelf ophalen en later herhalen. Geen geheugenscore tijdens opwarming. Kennismaken, herkennen en ophalen hebben eigen schermen; hulp wordt niet in een onoverzichtelijke alles-in-één-card gepropt. Herkenning heeft expliciete antwoordfeedback; daarna verdwijnen de opties. Toepassingen hebben scenario/model/kernpunten en een aparte zelfcheck. Geen impliciete "mastery percentage".
 
 De fixed study-dock wordt gemeten met ResizeObserver. De body reserveert die werkelijke hoogte zodat het laatste deel van een lang model scrollbaar blijft. Via visualViewport kan de dock bij een open schermtoetsenbord terug in de flow; fysieke iPhone/Android-acceptatie blijft nodig. Bij 320 px worden ratings 2×2, bij 390 px één rij. Safe-area insets zijn ondersteund.
 
@@ -32,3 +32,7 @@ Offline-readiness en sync zijn verschillende toestanden. De optionele apparatenk
 ## Toegankelijkheid en grenzen
 
 Semantische headers/nav/buttons/progress/labels/details/dialog. Zichtbare focus, Escape/focus-terugkeer voor drawer/dialog, background inert bij drawer, keyboardalternatieven voor swipes. Donker thema en reduced motion. Contrast gebruikt de gecontroleerde basistokens; de laatste code-/browserchecks staan in TESTRESULTATEN.md. Geen volledige WCAG-audit of native telefoonclaim.
+
+## Aanmelding
+
+E-mailaanmelding is geen nieuw dashboard: een gefocust formulier, heldere switch naar registratie/herstel, generieke mailbevestiging en veilige fouttekst. Herstelsessie vraagt eerst om een nieuw wachtwoord; daarna blijft het apart opt-in verbinden van de bibliotheek zichtbaar. Wachtwoorden worden niet in voorbeelden/screenshots van echte gebruikers getoond.

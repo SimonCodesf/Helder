@@ -1,4 +1,4 @@
-import { normalize, shuffle } from "./utils.js?v=3.0.0";
+import { normalize, shuffle } from "./utils.js?v=3.1.0";
 
 // Pedagogical scaffolding is separate from the FSRS memory model.
 // Choice/application answers must be authored, never invented from other cards.
@@ -10,6 +10,11 @@ export function validateLearning(learning) {
     if (typeof v !== "string" || (required && !v.trim()) || v.length > 50000)
       throw new Error(`Controleer ${name}.`);
   };
+  if (learning.term != null) {
+    text(learning.term, "de term voor omgekeerd verkennen");
+    if (learning.term.length > 200 || learning.term.includes("\n"))
+      throw new Error("Gebruik één korte term voor omgekeerd verkennen.");
+  }
   if (learning.choice) {
     const c = learning.choice;
     text(c.prompt, "je herkenningsvraag");
@@ -107,23 +112,147 @@ export function shouldApply(state, card, note, rating) {
     .at(-1);
   return !last || Date.now() - last.time >= 7 * 86400000;
 }
+// Batch size is a transparent product default, not a research-derived optimum.
+export function explorationTerm(note) {
+  if (note.kind === "cloze" || !note.back?.trim()) return null;
+  if (note.learning?.term) return note.learning.term.trim();
+  const term = note.front.trim().replace(/[*_`]/g, "");
+  if (
+    term.length > 100 ||
+    /[?\n{}]/.test(term) ||
+    /[.:!]$/.test(term) ||
+    /^(?:wat|hoe|waarom|welke|wanneer|waar|leg|geef|beschrijf|bereken|noem|is|kan|kun|what|why|how|which|explain|describe|calculate|give|name)\b/i.test(
+      term,
+    )
+  )
+    return null;
+  return term;
+}
+export function explorationTasks(note, card) {
+  const tasks = [];
+  if (card.template === "forward" && note.learning?.choice)
+    tasks.push({ kind: "choice", choice: note.learning.choice });
+  const term = card.template === "forward" && explorationTerm(note);
+  if (term) {
+    const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const mask = new RegExp(
+      "(?<![\\p{L}\\p{N}])" + escaped + "(?![\\p{L}\\p{N}])",
+      "giu",
+    );
+    tasks.push({
+      kind: "reverse",
+      term,
+      definition: note.back.replace(mask, "[…]"),
+    });
+  }
+  if (!tasks.length) tasks.push({ kind: "exposure" });
+  return tasks;
+}
+function startExploreTask(session, state) {
+  const e = session.exploration,
+    card = state.cards.find((c) => c.id === e.ids[e.index]),
+    note = state.notes.find((n) => n.id === card.noteId);
+  e.task = explorationTasks(note, card)[e.substep];
+  e.options = e.task.kind === "choice" ? recognitionOptions(note) : [];
+  e.answer = "";
+  e.revealed = false;
+  e.selected = null;
+  e.screen = "task";
+  session.supportIds = [...new Set([...(session.supportIds ?? []), card.id])];
+}
+export function startExploration(session, state) {
+  startExploreTask(session, state);
+}
+export function nextExploration(session, state) {
+  const e = session.exploration,
+    card = state.cards.find((c) => c.id === e.ids[e.index]),
+    note = state.notes.find((n) => n.id === card.noteId);
+  if (++e.substep < explorationTasks(note, card).length)
+    return startExploreTask(session, state);
+  e.substep = 0;
+  if (++e.index >= e.ids.length) {
+    e.index = e.ids.length - 1;
+    e.screen = "bridge";
+    return;
+  }
+  startExploreTask(session, state);
+}
+export function finishExploration(session) {
+  const ids = session.exploration.ids;
+  session.warmedIds = [...new Set([...(session.warmedIds ?? []), ...ids])];
+  if (session.mode === "explore") {
+    session.exploredIds = [
+      ...new Set([
+        ...(session.exploredIds ?? []),
+        ...ids.filter((id) => (session.supportIds ?? []).includes(id)),
+      ]),
+    ];
+    session.queue = session.queue.filter((id) => !ids.includes(id));
+  }
+  delete session.exploration;
+  session.preparedId = null;
+  session.phase = "recall";
+  session.revealed = false;
+}
 export function prepareStep(session, state) {
-  if (session.application || session.mode !== "learn") return;
+  if (
+    session.application ||
+    !["learn", "explore"].includes(session.mode) ||
+    session.exploration
+  )
+    return;
   const id = session.queue[0];
   if (!id || session.preparedId === id) return;
-  const card = state.cards.find((c) => c.id === id);
+  const card = state.cards.find((c) => c.id === id),
+    note = state.notes.find((n) => n.id === card?.noteId);
+  if (!card || !note) return;
   session.preparedId = id;
-  session.phase =
-    !session.practice && card?.schedule.state === 0 && state.settings.scaffold
-      ? "orient"
-      : "recall";
-  session.intro = session.phase === "introduce";
-  session.introSeen = false;
+  const explore =
+    session.mode === "explore" ||
+    (!session.practice &&
+      card.schedule.state === 0 &&
+      state.settings.scaffold &&
+      !(session.warmedIds ?? []).includes(id));
+  if (explore) {
+    const tag = (n, prefix) => n.tags.find((t) => t.startsWith(prefix)) ?? "";
+    const ids = session.queue
+      .filter((candidate) => {
+        const c = state.cards.find((v) => v.id === candidate),
+          n = state.notes.find((v) => v.id === c?.noteId);
+        return (
+          c &&
+          n &&
+          (session.mode === "explore" || c.schedule.state === 0) &&
+          !(session.warmedIds ?? []).includes(candidate) &&
+          n.setId === note.setId &&
+          tag(n, "niveau::") === tag(note, "niveau::") &&
+          tag(n, "hoofdstuk::") === tag(note, "hoofdstuk::")
+        );
+      })
+      .slice(0, state.settings.exploreSize ?? 3);
+    session.exploration = {
+      ids,
+      index: 0,
+      substep: 0,
+      screen: "start",
+      answer: "",
+      revealed: false,
+      selected: null,
+    };
+    session.phase = "explore";
+    session.intro = false;
+    session.revealed = false;
+    return;
+  }
+  session.phase = "recall";
+  session.intro = false;
+  session.introSeen = (session.supportIds ?? []).includes(id);
   session.choiceSelection = null;
   session.choiceOptions = [];
   session.revealed = false;
   session.hintUsed = false;
   session.answer = "";
+  session.cardStartedAt = Date.now();
 }
 export function beginRecall(session) {
   session.phase = "recall";

@@ -1,97 +1,63 @@
-# Testresultaten — Helder 3.0
+# Testresultaten — Helder 3.1
 
-## Wat daadwerkelijk is gecontroleerd
+## Daadwerkelijk geslaagd
 
-- **69 pure Node-tests: geslaagd, geen overgeslagen tests.**
-- **Browser-smoke:** 7 geslaagde controlegroepen, met meerdere assertions per groep.
-- **Aanvullende mobiele browsercontroles:** 7 geslaagde controlegroepen.
-- **Sync-integratie:** 8 geslaagde controlegroepen tegen nagebootste REST/Auth-responses, met de echte gebundelde Supabase SDK.
-- **Database:** 7 geslaagde controlegroepen in echte lokale Postgres via PGlite.
-- **V2 → V3:** 3 geslaagde upgradecontroles tegen de bestaande V2-broncode en bibliotheek op hetzelfde websiteadres.
-- **Herimport:** 50 + 382 eerdere kaarten behouden hun zeven inhoudsvelden exact; beide Markdown-bestanden en de JSON-back-up worden door V3 geaccepteerd. De private export is niet onderdeel van dit publieke apppakket.
-- **Publicatie:** starter is `[]`, config bevat geen project of secrets en geen bekende private exportbestanden zijn aanwezig.
-- **Offlinebestanden:** alle 37 unieke cacheverwijzingen geven HTTP 200; scripts hebben het juiste JavaScript-contenttype. Transitive browsermodule-imports zijn versiegebonden.
+- **88 pure Node-tests**, nul mislukt/overgeslagen (69 bestaande + 19 nieuwe).
+- **14 browsercontrolegroepen:** normale flow (7) en aanvullend mobiel (7).
+- **4 verkenningscontrolegroepen:** definitie-eerst, apart vrij verkennen, ondersteuning/overslaan, offline.
+- **9 e-mailcontrolegroepen:** echte gebundelde SDK, uitsluitend lokaal gesimuleerde Auth-responses.
+- **8 synccontrolegroepen:** echte SDK en drie browsercontexten, gesimuleerde REST/Auth.
+- **7 databasecontrolegroepen:** geleverd SQL-script in echte lokale Postgres/PGlite, gecontroleerde authclaims.
+- **3 upgradecontroles V2 → V3.1:** behoud inhoud/planning/reviews/settings/revision; nieuwe modules met oude worker; offline na activering.
+- **Herimport:** 50 + 382 eerdere kaarten, exact behoud van front/back/kind/tags/hint/explain/source; volledige 432-kaarten-JSON wordt geaccepteerd. Die bestanden zijn niet in het publieke pakket opgenomen.
+- **Publicatie:** lege starter `[]`, alleen een publieke publishable key, geen bekende privé-exportbestanden.
+- **41 unieke offlinebestanden:** HTTP 200 en correcte JavaScript-MIME. Browsermodule-imports/style/cache hebben versie 3.1.0.
 
-Deze aantallen zijn **geen opgeteld totaal van onafhankelijke tests**: browsercontrolegroepen bevatten verschillende assertions. Alle hieronder beschreven succesvolle browserflows eindigden zonder ongehanteerde JavaScript-runtimefouten. Dit is geen volledige security-, toegankelijkheids- of schaalbaarheidscertificering.
+Aantallen zijn geen opgeteld totaal van onafhankelijke toetsen: browsergroepen bevatten meerdere assertions. Succesvolle flows eindigen zonder ongehanteerde JavaScript-runtimefouten. Dit is geen security-/WCAG-/schaalcertificering en geen meting van leereffect.
 
 ## Pure tests
 
-`tests/model.test.mjs`, `tests/parser.test.mjs`, `tests/v3.test.mjs`.
+`tests/model.test.mjs`, `parser.test.mjs`, `v3.test.mjs`, `exploration.test.mjs`.
 
-Bestaande parser-/model-/FSRS-tests zijn behouden: Markdown/TSV/CSV, quotes en meerdere regels, BOM/CRLF, metadata, duplicaten, invulcodes, veilige tekstweergave, roundtrip, mappen, scopes, sterren, daglimieten, sibling-burying, reset en serialized schedules.
+Bestaand: parser/import/export, invulcodes, veilige tekstweergave, maps/scopes, dagbudget, sibling-burying, reset, FSRS, curricula, snapshots/CAS, driewegmerge/conflicten, accountbinding en late reacties na logout.
 
-V3 voegt onder meer toe:
+Nieuw: kleine groepen blijven bij set/niveau/hoofdstuk; herhalingen eerst; overgeslagen groepen tellen niet als bekeken/hulp; daadwerkelijk bekeken steun geldt voor alle kaarten uit die groep; definitie → term met exacte masking; gewone vragen/invul niet zomaar omkeren; expliciete term; authored MC vóór reverse; geen verzonnen opties; standalone warm-up verandert planning niet; `verken-term:` roundtrip; letterlijke `Term:`-antwoordtekst blijft inhoud; geldige groepsgroottes en oude defaults; e-mailprovider/private-key-afwijzing; SDK-methoden en herstelguard.
 
-- lege publicatie, optionele eigen herkennings- en toepassingsvragen;
-- validatie van vraagopties, ontbrekende afsluiters en vakmetadata vóór opslag;
-- numerieke niveauvolgorde, niveau/hoofdstuk/scopeselecties en onbeperkte nieuwe kaarten;
-- kennismaken versus ophalen en aparte oefenlogs;
-- gespreide aanwijzingen: alleen zelfstandige, actieve herhalingen, op verschillende dagen én minstens 24 uur uit elkaar; niet alleen een kalender-middernacht;
-- geen prototype-keys in niveau-/hoofdstuknamen;
-- tokens en apparaatspecifieke instellingen niet in cloudsnapshots;
-- onafhankelijke wijzigingen samenvoegen, timestampmetadata zonder valse conflicten;
-- FSRS-planning als atomair conflict, behoud van niet-actieve logtakken;
-- ongeldige samengevoegde verwijzingen/cycli en accountwissels blokkeren;
-- CAS-revisioncontrole op twee apparaten;
-- late netwerkresponses kunnen een afgemelde collectie niet herstellen.
+## Browser — leer- en beheerflow
 
-## Browser: normale leer- en beheerflows
+`tests/browser-smoke.mjs` controleert leeg beginnen, optioneel voorbeeld importeren, labels/niveau/hoofdstuk, swipe/undo zonder FSRS-wijziging, groepsverkenning → authored choice/feedback → reverse → recall, alleen recall schrijft geheugenreview, aparte toepassingslog, onbeperkt/steun uit, 320 px en runtimefouten.
 
-`tests/browser-smoke.mjs`:
+`tests/browser-mobile.mjs` controleert drawer-focus/Escape, concrete importfout zonder opslag, filterdoorsnede, lange antwoorden bereikbaar boven gemeten dock, echte Chromium touch-swipe, licht/donker, 320/390/tablet en offline reload. Editorvelden zijn minimaal 48 px hoog/16 px tekst. Asynchrone overgangswachttijden in de tests zijn gecorrigeerd; dit verandert de appbeoordelingen niet.
 
-1. Nieuwe browser begint leeg; optioneel voorbeeldvak importeert vijf kaarten met extra oefeningen.
-2. Niveaus en hoofdstukken hebben eigen velden en leesbare labels; selectie werkt.
-3. Horizontaal slepen markeert gekend/nog niet, ongedaan maken werkt en FSRS blijft exact gelijk.
-4. Kennismaken → herkenning met feedback → ophalen. Herkenning schrijft geen FSRS-beoordeling; hulp wordt bij de ophaalpoging geregistreerd.
-5. Toepassingszelfcheck heeft een apart log en verandert de geheugenplanning niet.
-6. Nieuwe-kaartlimiet kan uit; kennismakingssteun kan ook uit.
-7. 320-pixelweergave heeft geen horizontale pagina-overflow; geen runtimefouten.
+## Browser — verkennen
 
-`tests/browser-mobile.mjs`:
+`tests/exploration-browser.mjs` importeert drie optionele begrippen. Definitie wordt vóór term getoond. Zelfcheck en aparte ronde bewaren alleen oefenmetadata, geen FSRS-beoordeling. Skip markeert geen bekeken hulp. Instelbare groepsgrootte één en recent-help-Easy-blokkade werken. Nieuwe modules blijven beschikbaar bij werkelijk offline herladen.
 
-1. Drawer houdt toetsenbordfocus binnen en Escape sluit hem met focusherstel.
-2. Ongeldige import toont een fout en schrijft geen kaarten.
-3. Niveau- en hoofdstukfilters snijden elkaar; lege selectie blijft bruikbaar.
-4. Einde van een lang modelantwoord is bereikbaar **boven** de vaste actiebalk.
-5. Chromium-touch-events voeren daadwerkelijk een horizontale swipe uit.
-6. Donker/licht thema, geselecteerd niveau, tablet en 320 px worden gecontroleerd.
-7. Na offlinecache-opbouw werkt een echte offline reload met de geïmporteerde inhoud.
+## Browser — e-mail
 
-Nieuwe editorvelden worden ook gecontroleerd op minimaal 48 px veldhoogte en 16 px tekst. Kaartlijstpadding en de toegankelijke importfoutstatus worden eveneens geassert. Tijdens visuele controle is de styling van ongetypeerde tekstvelden en URL-velden gecorrigeerd en opnieuw getest.
+`tests/email-browser.mjs` gebruikt de **echte officiële SDK**, maar onderschept alle Auth-verzoeken met fake `.test`-accounts/keys/tokens. Geen echte registratie, mail of Supabase-write.
 
-## Sync: geïntegreerde client, nagebootste dienst
+Gecontroleerd: Email-only knop; gelabelde passwordformulieren/touchtargets; registratie vraagt bevestiging; veilige credentialfout en leegmaken passwordvelden; generieke herstelmelding zonder accountenumeratie; login blijft unbound vóór expliciete sync; token-hash-recovery op een nieuwe browser met URL-cleanup; wachtwoordwijziging vóór sync; bevestiging zonder lokale PKCE-verifier; verlopen token geeft geen herstelsessie; smalle dark-dialog zonder overflow. Passwords/tokens ontbreken in collectie/export. Standaard live PKCE-mail, SMTP en echte JWT-verificatie zijn hiermee niet bewezen.
 
-`tests/browser-sync.mjs` gebruikt twee gescheiden browsercontexten voor dezelfde testaccount en een derde voor een andere account. De officiële SDK is echt; config, OAuth-session en REST-responses zijn lokaal nagebootst. Er zijn geen echte accounts, projecten of keys gebruikt.
+## Sync en database
 
-Gecontroleerd: expliciet verbinden vóór upload; downloaden op apparaat twee; lege andere account; offline wijzigingen aan verschillende kaarten samenvoegen; conflict op dezelfde tekst stoppen en bewust oplossen; tokens ontbreken in collectie/cloudpayload; afmelden wist lokaal maar verwijdert niet de cloudcollectie; geen runtimefouten.
+`tests/browser-sync.mjs`: twee apparaten dezelfde account + derde andere account. Expliciete opt-in vóór upload; download; lege andere account; verschillende offline edits samenvoegen; hetzelfde veld vraagt een keuze; tokenvrije payload; logout wist lokaal maar niet cloud; geen runtimefouten.
 
-**Dit bewijst niet dat een live OAuth-provider, redirects, RLS in jouw project of tokenvernieuwing op een echte telefoon juist zijn ingesteld.** Voer de acceptatielijst in [SYNC.md](SYNC.md) uit na configuratie.
+`tests/database-security.mjs`: eerste geauthenticeerde RPC-write; stale revision afgewezen; directe tabelwrite verboden; account B ziet A niet; eigen lege collectie B; anon reads/writes verboden; malformed payload geweigerd. Authclaims zijn lokaal gecontroleerd, niet extern geverifieerde Supabase-JWT’s.
 
-## Database: echte lokale Postgres
+## Live alleen uitlezend gecontroleerd
 
-`tests/database-security.mjs` voert het geleverde `backend/supabase.sql` uit in PGlite 0.3.14. `auth.uid()` gebruikt gecontroleerde testclaims. Gecontroleerd:
+Met de verstrekte publishable key gaf de publieke Auth-settings-endpoint HTTP 200: alleen Email actief, signup toegestaan, bevestiging aan. De tabel bestaat en anon SELECT werd geweigerd. Geen account/mail aangemaakt, geen kaarten geüpload, geen beheerinstellingen gewijzigd. **Niet bewezen:** SMTP, authenticated RLS/RPC van jouw live project, echte apparaat-sync/redirects. Zie de acceptatielijst in [SYNC.md](SYNC.md).
 
-1. Eerste geauthenticeerde RPC-write.
-2. Oude revision weigert overschrijven.
-3. Directe tabelwrite is niet toegestaan.
-4. Andere account ziet de rij van de eigenaar niet.
-5. Andere account krijgt een eigen lege collectie.
-6. Anonieme reads en writes worden geweigerd.
-7. Ongeldige payload wordt geweigerd.
+## Visuele controle
 
-Dit is een databaseprivilegetest, **geen test van live JWT-verificatie, Supabase-infrastructuur of een volledige externe security-audit**.
+Individueel geïnspecteerde echte appbeelden: lege start, verkenningsstart, MC + foutfeedback, definitie-eerst + zelfcheck, bridge/rondeeinde, recall, toepassen, swipe, kaartenlijst, editor, importfout, drawer, lang antwoord, geconfigureerde e-mailstatus in donker, login/register/notices/herstel/verlopen link, 320 px, tablet en desktop. Mobiel 390 × 844, smal 320 × 844, tablet 768 × 1024, desktop 1440 × 1000. De verplichte capture-helper renderde ook de echte lokale app in een 390-px-frame. Geen stockbeelden; alleen taakgerichte UI/iconen.
 
-## Upgrade, export en visuele inspectie
-
-De bestaande V2-app werd eerst gebruikt om instellingen te wijzigen en één kaart te beoordelen. Daarna serveerde hetzelfde lokale websiteadres V3. Kaarten, notities, FSRS-schedules, beoordelingen, instelling en revision bleven gelijk. V3 werd correct weergegeven terwijl de V2-worker nog actief was; na het sluiten van de tabs werd de nieuwe cache actief en werkte offline herladen met dezelfde bibliotheek.
-
-De private herimport werd apart met de V3-parser en het model gecontroleerd: twee sets, 432 kaarten, geen beoordelingen, verse planning; geen inhoudsverlies in kind/front/back/tags/hint/explain/source.
-
-Screenshots zijn individueel bekeken voor leeg beginnen, vakoverzicht, kaartlijst, kennismaken, herkenningsvraag, ophalen, toepassen, swipen, editor, importfout, drawer, lang antwoord, syncconflict en ongeconfigureerde sync in donker thema. Formaten: 390 × 844, 320 × 844, desktop 1440 × 1000 en tablet 768 × 1024. Het screenshots-voorbeeldvak is openbaar demonstratiemateriaal, niet de eerdere private kaarten.
+Tijdens QA aangepast en opnieuw gerenderd: verkenning begint op 0/n, niet op een misleidend n/n; foutoptie heeft een rood X naast de tekst/rode grens, juiste optie een groen vinkje. Geen bekende overflows/overlappen in de geïnspecteerde states. Dit is geen volledige WCAG-audit.
 
 ## Zelf uitvoeren
 
-De app en pure tests vereisen alleen Node ≥ 20; geen dependency-installatie of frontendbuild:
+App en pure tests hebben geen build/dependency-installatie nodig (Node ≥ 20):
 
 ```sh
 npm test
@@ -99,30 +65,20 @@ npm run test:public
 npm start
 ```
 
-Voor de optionele browser-/Postgres-tests, in een tweede terminal:
+Voor optionele browser/database-tests, in een tweede terminal:
 
 ```sh
 npm install --no-save playwright @electric-sql/pglite
 npx playwright install chromium
 npm run test:browser
+npm run test:exploration
+npm run test:email
 npm run test:sync
 npm run test:database
 ```
 
-Testtools zijn geen runtime-dependencies van de app. `test:sync` is een mocktest en meldt je niet aan bij een externe dienst. Gebruik een lokale ontwikkelserver met lege `starter.json`.
+Testtools zijn geen runtime-dependencies. Default `TEST_URL=http://127.0.0.1:4173`; screenshots naar `test-output/`. Optioneel: `TEST_OUTPUT`, `CHROMIUM_BIN`, `PLAYWRIGHT_MODULE`, `PGLITE_MODULE`. `CHROMIUM_NO_SANDBOX=1` alleen in een afgeschermde testcontainer.
 
-Optionele omgevingsvariabelen:
+## Niet getest / niet beweren
 
-- `TEST_URL`: standaard `http://127.0.0.1:4173`, andere poort/submap mogelijk.
-- `TEST_OUTPUT`: standaard `test-output/`; screenshots en alleen testdiagnostiek.
-- `CHROMIUM_BIN`: bestaande Chromium-binary in plaats van de Playwright-installatie.
-- `PLAYWRIGHT_MODULE` / `PGLITE_MODULE`: alternatieve geïnstalleerde modulepaden.
-- `CHROMIUM_NO_SANDBOX=1`: alleen voor een afgeschermde testcontainer die dat nodig heeft; niet als normale desktopinstelling.
-
-## Nog niet getest
-
-- Live Supabase OAuth-aanmelding, echte productieconfiguratie en netwerkquota.
-- Fysieke iPhone/Android, hun virtuele toetsenborden en geïnstalleerde PWA-gedrag.
-- Alle schermlezers/browsercombinaties of een volledige WCAG-audit.
-- Grote gebruikersaantallen, schadelijke belasting en externe security-penetratietests.
-- Onderwijseffect van deze gehele app. De bronnen onderbouwen onderdelen; een gebruikstest en uitgestelde kennis-/transfertoets zijn nog nodig.
+Live mailaanmelding/bezorging/tokenvernieuwing en productiequota; fysieke iPhone/Android/virtueel toetsenbord/PWA-opslag; volledige schermlezer/WCAG-dekking; duizenden gebruikers/penetratietest; daadwerkelijke verbetering van uitgestelde kennis of transfer door deze hele app. Bronnen onderbouwen onderdelen, niet het volledige product.

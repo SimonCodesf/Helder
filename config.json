@@ -1,5 +1,7 @@
 {
-  "supabaseUrl": "",
-  "publishableKey": "",
-  "providers": ["google", "github"]
+  "supabaseUrl": "https://eblzstvfbmvzcqylbjps.supabase.co",
+  "publishableKey": "sb_publishable_xxxItTqJEW6z_SxxeF5I8A_a9Qv5zJg",
+  "providers": [
+    "email"
+  ]
 }

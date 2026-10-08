@@ -1,8 +1,3 @@
-# UI-voorbeeld
+# Echte voorbeeldschermen — Helder 3.1
 
-Echte screenshots van Helder 3 met het optionele, openbare voorbeeldvak Percentages. Dit voorbeeld wordt niet automatisch in een nieuwe bibliotheek geladen. De publicatieversie begint leeg.
-
-- `mobiel.png`: vakoverzicht, herkenningsvraag en vrije swipe-flashcards.
-- `desktop.png`: vakoverzicht met niveaus en hoofdstukken.
-
-Geen private filosofiekaarten, echte accounts of secrets zijn opgenomen. Mock-syncschermen zijn bewust niet gebruikt in deze preview.
+Schermen zijn uit de app vastgelegd, geen werkende live account of mailclaim. De gebruikerscollectie start leeg. De optionele bestanden data/voorbeeld.md en data/verkennen.md leveren demonstratiemateriaal; eerdere privékaarten zijn niet gepubliceerd.

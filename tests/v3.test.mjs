@@ -110,11 +110,11 @@ test("Level and chapter filters intersect", () => {
     0,
   );
 });
-test("First-time learner chooses orientation; known reviews do not reread", () => {
+test("First-time learner enters exploration; known reviews do not reread", () => {
   const s = fixture(),
     session = createSession(s, { type: "all" });
   prepareStep(session, s);
-  assert.equal(session.phase, "orient");
+  assert.equal(session.phase, "explore");
   s.settings.scaffold = false;
   const plain = createSession(s, { type: "all" });
   prepareStep(plain, s);

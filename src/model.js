@@ -1,6 +1,6 @@
-import { uid, localDay, nextMidnight, normalize } from "./utils.js?v=3.0.0";
-import { emptySchedule, State, retrievability } from "./scheduler.js?v=3.0.0";
-import { validateNote, clozeMatches } from "./parser.js?v=3.0.0";
+import { uid, localDay, nextMidnight, normalize } from "./utils.js?v=3.1.0";
+import { emptySchedule, State, retrievability } from "./scheduler.js?v=3.1.0";
+import { validateNote, clozeMatches } from "./parser.js?v=3.1.0";
 export const SCHEMA_VERSION = 1;
 export const DEFAULT_SETTINGS = {
   newPerDay: 15,
@@ -11,6 +11,7 @@ export const DEFAULT_SETTINGS = {
   theme: "system",
   dailyLimit: true,
   scaffold: true,
+  exploreSize: 3,
   application: true,
 };
 export function emptyCollection() {
@@ -521,6 +522,7 @@ export function validateCollection(raw) {
     typeof settings.mix !== "boolean" ||
     typeof settings.dailyLimit !== "boolean" ||
     typeof settings.scaffold !== "boolean" ||
+    ![1, 3, 5].includes(settings.exploreSize) ||
     typeof settings.application !== "boolean"
   )
     throw new Error("Ongeldige instellingen.");

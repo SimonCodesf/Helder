@@ -3,6 +3,7 @@ map: Voorbeelden
 beschrijving: De kern, verbanden en toepassingen van percentages.
 
 ## Wat betekent 25%?
+verken-term: Een kwart
 tags: niveau::1, hoofdstuk::H1
 
 25% betekent 25 van de 100, oftewel **een kwart**.

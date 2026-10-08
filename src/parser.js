@@ -1,5 +1,5 @@
-import { normalize } from "./utils.js?v=3.0.0";
-import { validateLearning } from "./learning.js?v=3.0.0";
+import { normalize } from "./utils.js?v=3.1.0";
+import { validateLearning } from "./learning.js?v=3.1.0";
 export class ImportError extends Error {
   constructor(message) {
     super(message);
@@ -186,7 +186,7 @@ export function parseMarkdown(text) {
         continue;
       }
       const meta =
-        /^(map|beschrijving|structuur|tags|hint|type|uitleg|bron):\s*(.*)$/i.exec(
+        /^(map|beschrijving|structuur|tags|hint|type|uitleg|bron|verken-term):\s*(.*)$/i.exec(
           raw,
         );
       if (meta) {
@@ -212,6 +212,7 @@ export function parseMarkdown(text) {
         else if (key === "hint") card.hint = value;
         else if (key === "uitleg") card.explain = value;
         else if (key === "bron") card.source = value;
+        else if (key === "verken-term") (card.learning ??= {}).term = value;
         else answer.push(raw);
         continue;
       }
@@ -269,7 +270,7 @@ export function toMarkdown(set, notes, folderPath = "") {
     notes
       .map(
         (n) =>
-          `## ${n.front.replace(/\n/g, " ")}\n${n.kind !== "basic" ? `type: ${n.kind}\n` : ""}${n.tags.length ? `tags: ${n.tags.join(", ")}\n` : ""}${n.hint ? `hint: ${n.hint.replace(/\n/g, " ")}\n` : ""}${n.explain ? `uitleg: ${n.explain.replace(/\n/g, " ")}\n` : ""}${n.source ? `bron: ${n.source}\n` : ""}\n${n.back}\n${exerciseMarkdown(n.learning)}`,
+          `## ${n.front.replace(/\n/g, " ")}\n${n.kind !== "basic" ? `type: ${n.kind}\n` : ""}${n.tags.length ? `tags: ${n.tags.join(", ")}\n` : ""}${n.hint ? `hint: ${n.hint.replace(/\n/g, " ")}\n` : ""}${n.explain ? `uitleg: ${n.explain.replace(/\n/g, " ")}\n` : ""}${n.source ? `bron: ${n.source}\n` : ""}${n.learning?.term ? `verken-term: ${n.learning.term}\n` : ""}\n${n.back}\n${exerciseMarkdown(n.learning)}`,
       )
       .join("\n---\n\n")
   );

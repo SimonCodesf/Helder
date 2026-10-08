@@ -145,6 +145,7 @@ try {
   console.log("PASS end of long answer stays reachable above fixed dock");
   await click("end-study");
   await click("start-flash");
+  await page.locator(".flip-surface").waitFor({ state: "visible" });
   const cdp = await context.newCDPSession(page);
   const box = await page.locator(".flip-surface").boundingBox(),
     x = box.x + box.width / 2,

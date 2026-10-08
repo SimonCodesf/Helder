@@ -1,107 +1,100 @@
-# Privésynchronisatie — setup en grenzen
+# Privésynchronisatie — Helder 3.1 met e-mail
 
-## Wat geleverd is
+## Jouw configuratie staat al klaar
 
-Een werkende optionele client, officiële lokaal gebundelde Supabase JavaScript SDK 2.117.3, SQL-schema, Postgres-eigenaarafscherming en CAS-RPC. Geen project, keys of live account van de gebruiker zijn aangemaakt. `config.json` staat bewust leeg. De default-app verstuurt geen kaarten naar een backend.
+`config.json` bevat al de verstrekte project-URL `https://eblzstvfbmvzcqylbjps.supabase.co`, de verstrekte **publishable** key en `"providers": ["email"]`. Er is geen Google/GitHub-setup nodig. Deze key is bedoeld voor de frontend; het is geen databasewachtwoord, SMTP-key of beheerderskey. De app weigert `sb_secret_` en `service_role`.
 
-## Gratis beginnen, niet onbeperkt
+**Uitlezend live gecontroleerd:** het project accepteert de key (Auth settings HTTP 200), Email is actief, registratie is toegestaan en e-mailbevestiging staat aan. De collectietabel bestaat; een anonieme SELECT werd geweigerd. Er is geen account aangemaakt, e-mail verstuurd, collectie gewijzigd of dashboardinstelling aangepast. Deze controle bewijst niet dat SMTP werkt of dat alle live RLS/RPC-instellingen correct zijn.
 
-Supabase biedt momenteel een gratis plan met onder meer 500 MB database, 5 GB egress, maximaal twee actieve projecten en pauzering na een week inactiviteit. Voor een persoonlijke app is dat een bruikbaar startpunt, maar het is geen garantie op gratis productiehosting of onbeperkte gebruikers. Controleer de actuele voorwaarden/quota. [Prijzen](https://supabase.com/pricing).
+## Stap 1 — Publiceer eerst de app
 
-De standaard mailserver is **niet voor publieke productie**: hij verstuurt alleen naar teamadressen, met een zeer laag uurquotum. Daarom gebruikt deze app Google/GitHub OAuth, zonder wachtwoord- of magische-linkformulier op de statische site. Wil je later email-login toevoegen, configureer eerst eigen SMTP, verificatie en herstelstromen. Zet emailverificatie niet uit als “oplossing”. [SMTP-beperkingen](https://supabase.com/docs/guides/auth/auth-smtp).
+Upload de inhoud van de appmap naar één vast HTTPS-adres, bijvoorbeeld:
 
-## Instellen
+- eigen website: `https://jouwdomein.nl/leren/`
+- GitHub Pages: `https://jouwnaam.github.io/helder/`
 
-### 1. Eigen project
+Gebruik consequent hetzelfde adres, inclusief submap en slash. De Supabase-project-URL is **niet** het adres waarop je Helder opent. Maak vóór een appupdate een JSON-back-up en sluit daarna alle oude appvensters/tabs.
 
-Maak op Supabase een project aan. Kies een geschikte regio. Beveilig het beheerdersaccount, bewaar het databasewachtwoord privé. Projectaanmaak en eventuele kosten zijn jouw keuze; dit pakket doet niets automatisch.
+## Stap 2 — Controleer de database
 
-### 2. Schema
+Open jouw Supabase-project → SQL Editor. Voer `backend/supabase.sql` uit als je dit schema nog niet precies hebt ingesteld. Het script maakt/update de noodzakelijke tabel, policies en functies; het wist geen bestaande collecties. Kopieer geen sleutel of databasewachtwoord naar SQL/ frontend.
 
-Plak `backend/supabase.sql` in de SQL-editor en voer uit.
+Het schema heeft:
 
-- `public.helder_collections`: één rij per geauthenticeerde gebruiker.
-- RLS SELECT: alleen wanneer `auth.uid() = user_id`.
-- `anon`: geen tabeltoegang en geen push-RPC.
-- `authenticated`: alleen SELECT op de tabel; schrijven gaat via de gecontroleerde RPC.
-- Publieke RPC `helder_push`: SECURITY INVOKER.
-- Private helper: SECURITY DEFINER in het **niet-exposed** schema `private`, lege/pinned search_path, alle tabelnamen volledig gekwalificeerd, expliciete `auth.uid()`-controle. Voeg `private` niet toe aan Exposed schemas.
-- `p_expected` voorkomt stale writes; maximaal 8 MB per payload.
-- `auth.users`-verwijdering ruimt de gekoppelde rij op via ON DELETE CASCADE.
+- één rij per account, gekoppeld aan `auth.users`;
+- eigenaar-RLS voor SELECT (`auth.uid() = user_id`);
+- geen toegang voor `anon` en geen directe tabelwrite voor gewone accounts;
+- writes via `helder_push`, met verwachte revision (CAS) en maximaal 8 MB;
+- een publieke SECURITY INVOKER-wrapper en een private, pinned SECURITY DEFINER-helper met expliciete accountcontrole;
+- `ON DELETE CASCADE` bij accountverwijdering.
 
-[RLS-documentatie](https://supabase.com/docs/guides/database/postgres/row-level-security).
+Voeg het schema `private` **niet** toe aan Exposed schemas. Een publieke key zonder goede policies beschermt niets. [RLS-documentatie](https://supabase.com/docs/guides/database/postgres/row-level-security).
 
-### 3. Loginproviders
+## Stap 3 — E-mailprovider en app-URL
 
-Activeer Google en/of GitHub onder Authentication → Sign In / Providers.
+In Authentication → Sign In / Providers: laat Email ingeschakeld. Laat bevestiging van het e-mailadres aan. Je hoeft geen OAuth-provider te activeren.
 
-Voor GitHub: maak een OAuth App aan. De callback-URL is de URL die Supabase toont, gewoonlijk `https://PROJECT.supabase.co/auth/v1/callback`, **niet** je Pages-URL. Vul client-ID en client-secret alleen in het Supabase-dashboard in. Voor Google maak je een OAuth-client aan met de door Supabase opgegeven callback. Publiceer/controleer de OAuth-consentinstellingen voor externe gebruikers.
+In Authentication → URL Configuration:
 
-Zet onder Authentication → URL Configuration:
+1. **Site URL:** jouw echte gepubliceerde appadres, bijvoorbeeld `https://jouwdomein.nl/leren/`. Niet `https://eblzstvfbmvzcqylbjps.supabase.co`.
+2. **Redirect URLs:** voeg datzelfde exacte appadres toe.
+3. Voeg ook de herstelvariant toe: `https://jouwdomein.nl/leren/?auth_recovery=1`.
+4. Alleen voor lokale tests kun je apart `http://localhost:4173/` en `http://localhost:4173/?auth_recovery=1` toevoegen. Productie blijft HTTPS.
 
-- Site URL: je vaste HTTPS-adres, inclusief submap.
-- Redirect URLs: exact hetzelfde appadres (en eventueel een exacte `index.html`-variant die je gebruikt).
-- Lokale tests: optioneel exact `http://localhost:4173/`; productie blijft HTTPS.
+De frontend gebruikt de officiële Supabase SDK (lokaal meegeleverd). E-mail/wachtwoord gaat naar Supabase Auth over HTTPS. Aanmelden blijft per apparaat bewaard; op een gedeeld apparaat meld je na gebruik af. Wachtwoorden staan niet in de kaarten, de cloudcollectie of exports. [Password Auth](https://supabase.com/docs/guides/auth/passwords), [Redirect URLs](https://supabase.com/docs/guides/auth/redirect-urls).
 
-De client gebruikt PKCE, de officiële SDK verzorgt code-uitwisseling, tokenopslag, vernieuwing en de authstatus. De redirect gaat terug naar dezelfde app; er is geen backendroute nodig op GitHub Pages.
+## Stap 4 — Mailbezorging: eigen SMTP voor andere gebruikers
 
-[GitHub OAuth](https://supabase.com/docs/guides/auth/social-login/auth-github), [Supabase Auth](https://supabase.com/docs/guides/auth).
+De standaard Supabase-maildienst is niet voor publieke productie: alleen teamadressen, momenteel twee e-mails per uur en geen productiegarantie. Voor andere gebruikers moet je een eigen SMTP-provider instellen onder de Auth/email-/SMTP-instellingen van het project. Dashboardlabels kunnen veranderen.
 
-### 4. Publieke frontendconfiguratie
+Vul daar de SMTP-host/poort, afzender en SMTP-credentials van jouw mailprovider in. Die credentials blijven **alleen in het Supabase-dashboard**, nooit in `config.json` of de repository. Controleer afzender-/domeinverificatie, spam, quota en actuele kosten van de mailprovider. Zet e-mailbevestiging niet uit om bezorging te omzeilen. [SMTP-documentatie](https://supabase.com/docs/guides/auth/auth-smtp).
 
-```json
-{
-  "supabaseUrl": "https://JOUWPROJECT.supabase.co",
-  "publishableKey": "sb_publishable_JOUW_PUBLIEKE_KEY",
-  "providers": ["google", "github"]
-}
-```
+Deze SMTP-configuratie kan ik niet afleiden uit een publishable key; ze is nog niet live gecontroleerd.
 
-Haal URL/publishable key uit je eigen projectinstellingen. Een oude `anon` JWT-key is ook ondersteund; de client weigert `service_role` en `sb_secret_` keys. Een publieke key is **geen** vervanging voor RLS. Plaats nooit databasewachtwoorden, OAuth-secrets, service-role-keys of aanmeldtokens in config, chat of git.
+## Stap 5 — Links die ook in een andere browser werken
 
-`config.json` wordt netwerk-eerst geladen en offline gecachet. Publiceer de aangepaste configuratie en open eenmaal online opnieuw. Bij wijzigingen aan de appcode volg je de gezamenlijke versiebump uit README.
+De standaard PKCE-link kan een verifier uit de browser van de registratie nodig hebben. Je wilt vaak de mail op je telefoon openen terwijl je op de computer registreerde. Daarom zijn token-hash-templates meegeleverd:
 
-### 5. Bewust verbinden
+- **Authentication → Email Templates → Confirm signup:** plak `backend/email-templates/confirm-email.html`.
+- **Reset password:** plak `backend/email-templates/reset-password.html`.
 
-Instellingen → Je apparaten → Aanmelden met Google/GitHub. Daarna **Verbind deze bibliotheek**. Bestaande lokale kaarten worden pas na die bevestiging naar je eigen account gestuurd. Meld op elk apparaat dezelfde account aan.
+Deze templates gebruiken `{{ .SiteURL }}` en een eenmalige `{{ .TokenHash }}`. De client controleert die hash met `verifyOtp`. Kopieer de templatevariabelen letterlijk; vervang ze niet door een echte token. Stel Site URL dus eerst correct in. Bevestiging opent de accountinstellingen; herstel vraagt om een nieuw wachtwoord. De token wordt daarna uit de URL verwijderd. Een verlopen link geeft een duidelijke fout, geen herstelsessie.
 
-Lege browser + bestaande cloudaccount → cloudcollectie komt terug. Een nieuwe account → lege cloudcollectie, tenzij jij bewust je bestaande lokale kaarten eraan verbindt. Dezelfde inhoud met verschillende kaart-ID’s wordt niet “slim” ontdubbeld; exporteer eerst en controleer bij het samenvoegen.
+Behandel echte bevestigings-/herstellinks als privé; stuur ze niet door of in chat. Bevestiging/herstel met mocks is getest, maar de echte template-uitrol en mailbezorging nog niet.
 
-## Syncgedrag
+## Stap 6 — Bewust verbinden op beide apparaten
 
-- Elke kaart/grade wordt eerst atomair lokaal opgeslagen; leren blijft offline werken.
-- Na circa 30 seconden rust, bij terugkeer naar de app/verbinding, of via Nu synchroniseren, wordt gecontroleerd.
-- Tijdens een leerbeurt of open editor wordt geen inkomende collectie toegepast. Sync wacht tot je buiten de studie/editor bent.
-- Iedere zichtbare minuut wordt alleen de kleine revisiemetadata gecontroleerd. De hele snapshot wordt pas opgehaald als die revisie verandert, of verstuurd bij eigen wijzigingen.
-- Verschillende kaarten of verschillende tekstvelden worden drieweg samengevoegd. `updatedAt`-metadata veroorzaakt geen vals conflict.
-- Gelijktijdige wijzigingen aan hetzelfde tekstveld vragen om een keuze.
-- FSRS-planning is een **atomair geheel**: stabiliteit/moeilijkheid/vervaldatum worden niet uit twee plannen gemixt of gemiddeld. Voor twee offline beoordelingen van dezelfde kaart kiest de gebruiker een consistente branche. Andere pogingen blijven in het logboek, expliciet inactief en uitgesloten van voortgang/statistiek.
-- Bij onverenigbare verwijderingen/structuur/templatewijzigingen pauzeert sync en vraagt om een hele-collectiekeuze. Er wordt niets stilzwijgend weggegooid.
-- Beide oorspronkelijke versies kunnen vanuit het conflictvenster als tokenvrije JSON worden gedownload; de laatste conflictsnapshots blijven lokaal bewaard tot afmelden.
-- Een lokale wijziging tijdens fetch wordt via revision-CAS gedetecteerd. Een stale tab moet herladen; ze kan niet over een nieuwere IndexedDB-snapshot heen schrijven.
-- Afmelden & lokaal wissen laat de cloudcollectie staan, maar wist de lokale collectie, binding en lokale conflictkopie. Maak een back-up van nog niet gesyncte werk voordat je dat bevestigt.
-- Ander account/project dan de lokale binding: sync wordt geblokkeerd. De app uploadt niet zomaar de kaarten van de vorige gebruiker.
-- Thema en typ-/denkmodus blijven per apparaat. Kaarten, niveaus/hoofdstukken, overige leerinstellingen en leerlogboek worden gedeeld.
+1. Open Helder online → Instellingen → Je apparaten → **Aanmelden met e-mail**.
+2. Kies **Account maken** als je nog geen account hebt. Bevestig via de e-mail. Registratie/herstel geven een generieke melding; die onthult niet of een account bestaat.
+3. Meld aan. Klik vervolgens **Verbind deze bibliotheek** en bevestig. Pas nu mogen bestaande lokale kaarten naar jouw eigen account.
+4. Open Helder op het tweede apparaat en meld aan met dezelfde account. Kies daar ook verbinden; een lege browser downloadt dan jouw cloudcollectie.
+5. Test een tweede, andere account: die begint leeg en mag jouw kaarten niet zien.
 
-## Wat je zelf moet accepteren vóór publicatie
+Afmelden & lokaal wissen verwijdert de lokale collectie/binding/conflictkopie, niet de cloudcollectie. Exporteer eerst nog niet gesyncte wijzigingen. Een ander account/project dan de opgeslagen binding wordt geblokkeerd; er wordt niet stilzwijgend werk van een vorige gebruiker geüpload.
 
-Dit zijn **live acceptatietests**, niet iets wat dit pakket al namens jou heeft uitgevoerd:
+## Syncgedrag en grenzen
 
-1. Twee echte gebruikers: gebruiker B kan geen kaarten van A lezen, ook niet met aangepaste REST-URL’s en zijn eigen token.
-2. Twee echte apparaten: kaart op computer toevoegen → telefoon; telefoon beoordelen → computer; dagbudget en due dates controleren.
-3. Beide apparaten offline: verschillende kaarten aanpassen, opnieuw verbinden, geen verlies.
-4. Dezelfde vraag/kaart tegelijkertijd veranderen/beoordelen: conflictvenster, downloads en keuze testen.
-5. Afmelden en accountwissel: geen upload van een vorige lokale account.
-6. PKCE-login, tokenvernieuwing, providerfouten, blokkade van niet-toegestane redirect-URL.
-7. Installeren/offline op echte iPhone Safari en Android Chrome, inclusief opslag-/quota-/inactiviteitsgedrag.
-8. Opt-in, accountafscherming en eventuele privacyverklaring passend bij jouw publieke website.
+- Iedere kaart/grade wordt eerst lokaal opgeslagen. Offline leren blijft mogelijk.
+- Na circa 30 seconden rust, bij terugkeer/verbinding, of via Nu synchroniseren wordt gecontroleerd. Iedere zichtbare minuut is er slechts een kleine revisioncheck.
+- Geen inkomende toepassing tijdens leren of een open editor; sync wacht daarop.
+- Verschillende velden/kaarten worden drieweg samengevoegd. Hetzelfde tekstveld op twee apparaten vraagt om een keuze, met downloads van beide versies.
+- FSRS-planning is één atomair geheel, niet een gemiddelde van twee plannen. Niet-gekozen parallelle pogingen blijven inactief bewaard.
+- Onverenigbare structuur/verwijderingen vragen om een expliciete keuze; geen stil verlies.
+- Thema en typ-/denkmodus blijven per apparaat. Kaarten, structuur, overige leerinstellingen en logboek worden gedeeld.
+- Dit is **snapshot-sync**, geen grootschalig delta-/CRDT-platform. Boven 8 MB stopt cloud-push zonder lokale data te wissen.
+- Twee offline apparaten kunnen gezamenlijk boven een ingestelde nieuwe-kaartlimiet uitkomen; er is geen serverreservering van dat dagbudget.
+- Sync is geen historisch back-upbestand: verwijderingen/resets/herstel synchroniseren mee. Maak ook onafhankelijke JSON-back-ups.
+- Tokens staan in aparte IndexedDB-devicekeys. Geen eigen PIN-encryptie of end-to-end encryptie; browserveiligheid/XSS en hostingbeheer blijven relevant.
+- Het gratis Supabase-plan heeft quota/inactiviteitspauze; controleer de actuele [prijzen](https://supabase.com/pricing). Geen belofte van onbeperkte gratis productie.
 
-## Grenzen
+## Nog uit te voeren live acceptatie
 
-- Offline apparaten kunnen samen meer nieuwe kaarten introduceren dan één daglimiet; de teller wordt na sync samengevoegd. Dit is geen harde, servergereserveerde quota. Kalenderdagen volgen de tijdzone van het apparaat.
-- Dit is gebatchte **snapshot-sync**, niet een record-delta-/CRDT-systeem. Geschikt als basis voor persoonlijk gebruik, niet bewezen schaalbaar voor duizenden actieve gebruikers. Een efficiënte delta-outbox/compaction is een volgende schaalstap.
-- Lang logboek → grotere payload. Boven 8 MB faalt cloud-push zonder lokale data te wissen. Exporteren/lokaal leren blijft beschikbaar.
-- Netwerkverlies/free-projectpauze kan sync verhinderen; lokaal werk blijft staan. Controleer providerquota en maak backups.
-- Sync is geen historische backup: verwijderingen, resets en JSON-herstel gaan ook naar andere apparaten. Handmatige JSON-export bewaart een onafhankelijke kopie.
-- Tokens worden in aparte IndexedDB-devicekeys bewaard, niet versleuteld met een eigen app-PIN. Browser-/apparaatbeveiliging en XSS-preventie blijven essentieel. Geen end-to-end encryptie: jij en je hostingprovider kunnen de serverdata beheren.
-- Het lokale SQL-testmodel gebruikt twee gecontroleerde authclaims in Postgres; dit test RLS/CAS, **niet** de echte externe OAuth/JWT-verificatie van Supabase. De officiële SDK is gebruikt, maar de live providerkoppeling is nog niet bevestigd.
+1. Registratie, bevestiging op ander apparaat, onjuiste login, herstel en verlopen links via **echte mail**.
+2. Twee echte accounts: B kan ook via een aangepaste REST-request met zijn eigen token geen gegevens van A lezen.
+3. Twee apparaten: kaart toevoegen, beoordelen, opnieuw openen; vervaldatum en dagbudget kloppen.
+4. Offline beide apparaten: verschillende kaarten wijzigen → terug online → geen verlies; dezelfde kaart wijzigen → conflictkeuze.
+5. Afmelden/accountwissel, tokenvernieuwing en niet-toegestane redirect-URL.
+6. Echte iPhone Safari/Android Chrome, toetsenbord, installatie, offline en opslagquota.
+7. Eigen privacyverklaring/accountverwijdering en passend beheer als anderen de app gebruiken.
+
+Lokaal zijn de officiële SDK en gesimuleerde Auth/REST-responses getest; het SQL-script is uitgevoerd in echte lokale Postgres/PGlite met gecontroleerde authclaims. Dat is geen bewijs van jouw live JWT-/SMTP-/policy-configuratie.

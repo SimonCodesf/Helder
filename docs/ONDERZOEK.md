@@ -1,4 +1,4 @@
-# Hoe Helder 3 leren ondersteunt
+# Hoe Helder 3.1 leren ondersteunt
 
 ## Conclusie vooraf
 
@@ -18,17 +18,24 @@ Roediger & Karpicke (2006) vonden in tekstleertaken dat herlezen korte-termijnpr
 
 Atkinson, Renkl & Merrill (2003) onderzochten de overgang van uitgewerkte voorbeelden naar zelf problemen oplossen. Alleen stapsgewijs weghalen van oplossingsstappen hielp niet betrouwbaar voor verre transfer; combinatie met uitlegprompts voor het onderliggende principe gaf in hun twee experimenten betere transfer. Dit waren specifieke probleemoplossingstaken, geen bewijs voor een universele flashcardladder. Hier is het institutionele abstract geraadpleegd, niet de volledige methodedetails. [^https://asu.elsevierpure.com/en/publications/transitioning-from-studying-examples-to-solving-problems-effects-]
 
-**Implementatie:**
+**Wat je kritiek terecht blootlegde:** V3 had een korte introductie/herkenningsstap per kaart. Dat was nog geen echte verkenningsronde met verschillende ingangen. V3.1 voegt daarvoor een groepsfase toe, maar de gehele route is nog niet experimenteel gevalideerd.
 
-1. Nieuwe kaart: kies uitleg of direct proberen. Bekende stof hoeft niet telkens opnieuw uitgelegd.
-2. Uitleg: kern/model en verband leggen met bestaande kennis.
-3. Indien door de auteur beschikbaar: een herkenningsvraag met 3–5 plausibele opties en feedback. Deze oefening schrijft geen FSRS-review.
-4. Uitleg/opties verdwijnen; je haalt de kern zelf op.
-5. Eerlijk vergelijken en een eerste FSRS-planning starten.
+Kornell, Hays & Bjork (2009) laten zien dat een mislukte eerste poging met daarna het antwoord onder bepaalde omstandigheden later leren kan helpen. In hun trivia-experimenten was het voordeel gelijk aan relevante extra studie; in de woordassociatie-experimenten was poging + feedback beter dan de vergelijking. Dat is geen bewijs dat je altijd moet raden, of dat definitie → term universeel makkelijker of beter is. De volledige auteurs-PDF is geraadpleegd. [^https://web.williams.edu/Psychology/Faculty/Kornell/Publications/Kornell.Hays.Bjork.2009.pdf]
 
-Dit is **onze ontwerpvertaling**, geen letterlijk uit de paper gekopieerd of gevalideerd protocol. Wie uitleg of antwoordopties net heeft gezien krijgt geen “Makkelijk”. Een expliciete hint dwingt “Opnieuw”. De poging wordt als ondersteund geregistreerd en telt niet als gespreide zelfstandige ophaalevidentie.
+Butler & Roediger (2008) vonden dat meerkeuze ook foutieve afleiders kan laten beklijven; feedback verminderde zulke fouten en hielp latere recall in hun materiaal. Hier is het publisherabstract gebruikt, niet de volledige methode. Daarom: gecontroleerde opties, uitleg bij fouten, en herkenning niet verwarren met zelfstandige productie. [^https://link.springer.com/article/10.3758/MC.36.3.604]
 
-Geen willekeurige afleiders uit andere kaarten: een verwant filosofisch begrip kan deels waar zijn; een absurd antwoord meet gokgedrag, niet onderscheid. De auteur schrijft en controleert opties en uitleg. Zonder extra inhoud valt de app terug op uitleg + open ophalen, niet op verzonnen kwaliteit.
+**Implementatie in V3.1:**
+
+1. Begin met een kleine groep van hetzelfde vak/set, niveau en hoofdstuk: standaard drie, instelbaar op één/drie/vijf. Die groepsgrootte is een **productheuristiek**, geen bewezen cognitief optimum.
+2. Als een auteur een meerkeuzevraag met gecontroleerde opties schreef: eerst proberen, dan directe feedback. Geen willekeurige afleiders uit andere kaarten.
+3. Bij een geschikte begripstitel of expliciete `verken-term:`: eerst de definitie zien en de term raden. Exacte termvermeldingen worden gemaskeerd; de inhoud kan nog steeds verklappende aanwijzingen bevatten. Andere formuleringen worden niet automatisch fout gerekend.
+4. Bij een gewone vraag zonder geschikte term, of een invulkaart: uitleg/voorbeeld eerst. Niet ieder soort kennis past in een omgekeerde termvraag.
+5. Nadat de groep is verkend verdwijnen de opties en uitleg. Vervolgens probeer je de canonieke vraag → eigen antwoord zelfstandig. Recent bekeken hulp wordt geregistreerd; “Makkelijk” is dan uitgeschakeld. Een expliciete hint dwingt “Opnieuw”.
+6. Later geplande herhalingen hebben geen automatische opwarming. Echte gespreide recall blijft de basis; een geschreven toepassingsvraag vraagt om een andere redenering.
+
+Een aparte knop **Verkennen** laat je ook reeds geplande stof vrij ontdekken, zonder de FSRS-planning aan te passen. Verkenningslogs bewaren vorm/tijd/zelfcheck, **niet** je getypte vermoeden. Een overgeslagen groep geldt niet als bekeken.
+
+Dit is onze **ontwerpvertaling** van principes, geen getraind, wetenschappelijk gevalideerd tutorsysteem. Definitie → term is hier een andere ingang tijdens kennismaking, niet stilzwijgend hetzelfde geheugenspoor als term → definitie. Alleen de uiteindelijke canonieke recallprompt schrijft de bijbehorende geheugenreview.
 
 ## 3. Gespreid terugkomen
 
@@ -97,9 +104,18 @@ Een app moet herhaald gebruik gemakkelijk maken, maar een streak of veel swipes 
 | Gespreid opgehaald | Op minimaal twee dagen en 24 uur uit elkaar zonder recente steun zelf als correct beoordeeld. | Een objectieve inhoudstoets of permanente beheersing. |
 | Toepassing gelukt | Jij vergelijkt je redenering met model/kernpunten. | Gegarandeerde verre transfer. |
 
-## 10. Aanbevolen volgende empirische stap
+## 10. In hoeverre onderzoeksgedreven?
 
-Test deze combinatie daadwerkelijk: zelfde inhoud/tijd, vooraf afgesproken uitgestelde toets (bijv. later zelfstandig uitleggen én een nieuw scenario), niet alleen clicks, tevredenheid of dagstreaks. Meet eerste-poging-correct, retentie na vertraging, kwaliteit van toepassingsredeneringen, tijd en ervaren belasting. Analyseer beginners/gevorderden apart. De huidige implementatie levert logboekstructuur, maar geen bewijs dat Helder 3 beter is dan alle alternatieven.
+| Laag | Onderbouwing | Status in Helder |
+|---|---|---|
+| Actief ophalen en spreiding | Relatief sterke, brede onderzoeksbasis. | Werkend met echte FSRS-planning; eigen beoordelingen blijven subjectief. |
+| Feedback en afbouwen van ondersteuning | Onderbouwd, maar taak/inhoud bepaalt de geschikte uitvoering. | Werkende V3.1-groepsroute; de specifieke volgorde is niet gevalideerd. |
+| Definitie → term, groepen van drie, toepassingsdrempel | Verdedigbare productkeuzes, geen bewezen universele optimums. | Transparante regels, aanpasbaar/overslaan mogelijk. |
+| Hele app versus alternatieven | Geen directe vergelijkende uitgestelde leerproef. | Niet aangetoond; geen eerlijk wetenschappelijk percentage te geven. |
+
+## 11. Aanbevolen volgende empirische stap
+
+Test deze combinatie daadwerkelijk: zelfde inhoud/tijd, vooraf afgesproken uitgestelde toets (bijv. later zelfstandig uitleggen én een nieuw scenario), niet alleen clicks, tevredenheid of dagstreaks. Meet eerste-poging-correct, retentie na vertraging, kwaliteit van toepassingsredeneringen, tijd en ervaren belasting. Analyseer beginners/gevorderden apart. De huidige implementatie levert logboekstructuur, maar geen bewijs dat Helder 3.1 beter is dan alle alternatieven.
 
 ## Bronnen
 
@@ -110,3 +126,6 @@ Test deze combinatie daadwerkelijk: zelfde inhoud/tijd, vooraf afgesproken uitge
 [^https://andymatuschak.org/files/papers/Butler%20-%202010%20-%20Repeated%20Testing%20Produces%20Superior%20Transfer%20of%20Learning%20Relative%20to%20Repeated.pdf]: Butler (2010), Repeated Testing Produces Superior Transfer… https://andymatuschak.org/files/papers/Butler%20-%202010%20-%20Repeated%20Testing%20Produces%20Superior%20Transfer%20of%20Learning%20Relative%20to%20Repeated.pdf
 [^https://pdf.retrievalpractice.org/transfer/Pan_Rickard_2018.pdf]: Pan & Rickard (2018), Transfer of Test-Enhanced Learning: Meta-Analytic Review and Synthesis. https://pdf.retrievalpractice.org/transfer/Pan_Rickard_2018.pdf
 [^https://pubmed.ncbi.nlm.nih.gov/31556629/]: Brunmair & Richter (2019), Similarity Matters: A Meta-Analysis of Interleaved Learning and Its Moderators. https://pubmed.ncbi.nlm.nih.gov/31556629/
+
+[^https://web.williams.edu/Psychology/Faculty/Kornell/Publications/Kornell.Hays.Bjork.2009.pdf]: Kornell, Hays & Bjork (2009), Unsuccessful Retrieval Attempts Enhance Subsequent Learning. Auteurs-PDF.
+[^https://link.springer.com/article/10.3758/MC.36.3.604]: Butler & Roediger (2008), Feedback enhances the positive effects and reduces the negative effects of multiple-choice testing. Publisherabstract.

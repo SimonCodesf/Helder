@@ -6,6 +6,7 @@ import {
   outputFile,
 } from "./browser-environment.mjs";
 import fs from "node:fs/promises";
+import { finishWarmGroup } from "./exploration-browser-helpers.mjs";
 import assert from "node:assert/strict";
 const browser = await chromium.launch(launchOptions);
 const context = await browser.newContext({
@@ -109,24 +110,34 @@ try {
     "PASS horizontal swipe, persistent known/unknown, undo, scheduling unchanged",
   );
   await click("start-learn");
+  await page.locator(".exploration-intro").waitFor();
+  await snapshot("04-exploration-start-mobile");
   await click("intro");
-  await snapshot("04-introduce-mobile");
-  assert.equal((await collection()).reviews.length, 0);
-  await click("intro-done");
   await page.locator(".choice-options").waitFor();
   await snapshot("05-recognition-mobile");
   await page.locator('[data-action="choose-answer"][data-choice="1"]').click();
   assert.equal((await collection()).reviews.length, 0);
   assert.equal((await collection()).activities.length, 1);
-  await click("choice-done");
+  await snapshot("05b-choice-feedback-mobile");
+  await click("explore-next");
+  await page.locator("#explore-answer").fill("Een kwart");
+  await click("explore-reveal");
+  await snapshot("06-reverse-mobile");
+  await page
+    .locator('[data-action="explore-rate"][data-success="true"]')
+    .click();
+  await finishWarmGroup(page);
+  assert.equal((await collection()).reviews.length, 0);
+  assert.equal((await collection()).activities.length, 4);
   await page.locator("#study-answer").fill("Een kwart: 25 van elke 100.");
   await click("reveal");
-  await snapshot("06-recall-mobile");
+  await snapshot("07-recall-mobile");
+  assert.equal(await page.locator('[data-rating="4"]').isDisabled(), true);
   await page.locator('[data-rating="3"]').click();
   assert.equal((await collection()).reviews.length, 1);
   assert.equal((await collection()).reviews[0].assisted, true);
   console.log(
-    "PASS introduction → recognition with feedback → independent prompt; recognition does not write FSRS",
+    "PASS exploratory group → authored choice → reverse clue → productive recall; only recall writes FSRS",
   );
   await click("end-study");
   const scheduled = JSON.stringify(
@@ -135,7 +146,7 @@ try {
   await click("start-transfer");
   await page.locator("#application-answer").fill("Mijn eigen aanpak.");
   await click("application-reveal");
-  await snapshot("07-application-mobile");
+  await snapshot("08-application-mobile");
   await page
     .locator('[data-action="application-rate"][data-success="true"]')
     .click();
@@ -158,9 +169,9 @@ try {
   await page.goto(TEST_URL + "/#/library");
   await page.locator(".course-tile").first().locator("h3 a").click();
   await page.setViewportSize({ width: 1440, height: 1000 });
-  await snapshot("08-course-desktop");
+  await snapshot("09-course-desktop");
   await page.setViewportSize({ width: 320, height: 844 });
-  await snapshot("09-course-small");
+  await snapshot("10-course-small");
   assert.equal(
     await page.evaluate(
       () => document.documentElement.scrollWidth > innerWidth,

@@ -1,5 +1,5 @@
-import { getDeviceValue, setDeviceValue } from "./storage.js?v=3.0.0";
-import { SyncEngine } from "./sync-core.js?v=3.0.0";
+import { getDeviceValue, setDeviceValue } from "./storage.js?v=3.1.0";
+import { SyncEngine } from "./sync-core.js?v=3.1.0";
 export function validateCloudConfig(config) {
   if (!config?.supabaseUrl && !config?.publishableKey) return null;
   let url;
@@ -37,9 +37,9 @@ export function validateCloudConfig(config) {
   if (
     !Array.isArray(config.providers) ||
     !config.providers.length ||
-    config.providers.some((p) => !["google", "github"].includes(p))
+    config.providers.some((p) => !["email", "google", "github"].includes(p))
   )
-    throw new Error("Kies google en/of github als ondersteunde loginprovider.");
+    throw new Error("Kies email, google en/of github als loginprovider.");
   return { url: url.origin, key, providers: config.providers };
 }
 class SupabaseTransport {
@@ -97,17 +97,28 @@ export class CloudConnection {
   }
   async start() {
     try {
-      const returningFromAuth = new URL(location.href).searchParams.has("code");
+      const callback = new URL(location.href),
+        returningFromAuth =
+          callback.searchParams.has("code") ||
+          callback.searchParams.has("token_hash"),
+        tokenHash = callback.searchParams.get("token_hash"),
+        type = callback.searchParams.get("type");
       const response = await fetch(new URL("../config.json", import.meta.url), {
         cache: "no-cache",
       });
       if (!response.ok) throw new Error("config.json kon niet geladen worden.");
       this.config = validateCloudConfig(await response.json());
       if (!this.config) {
-        this.notify("local");
+        this.cleanCallback();
+        this.notify(
+          returningFromAuth ? "error" : "local",
+          returningFromAuth
+            ? "Vul eerst de syncconfiguratie in voordat je een e-maillink gebruikt."
+            : "",
+        );
         return;
       }
-      const { createClient } = await import("../vendor/supabase.mjs?v=3.0.0");
+      const { createClient } = await import("../vendor/supabase.mjs?v=3.1.0");
       const storage = {
         getItem: (key) => getDeviceValue("oauth:" + key),
         setItem: (key, value) => setDeviceValue("oauth:" + key, value),
@@ -123,18 +134,40 @@ export class CloudConnection {
         },
         realtime: { params: { eventsPerSecond: 1 } },
       });
-      this.client.auth.onAuthStateChange((_event, session) =>
+      this.client.auth.onAuthStateChange((event, session) => {
+        if (event === "PASSWORD_RECOVERY") this.recovering = true;
+        if (event === "SIGNED_OUT") this.recovering = false;
         setTimeout(
           () =>
             this.setSession(session).catch((e) =>
               this.notify("error", e.message),
             ),
           0,
-        ),
-      );
+        );
+      });
+      if (tokenHash) {
+        if (!["email", "recovery"].includes(type))
+          throw new Error("Deze e-maillink wordt niet ondersteund.");
+        const { error } = await this.client.auth.verifyOtp({
+          token_hash: tokenHash,
+          type,
+        });
+        if (error)
+          throw new Error(
+            "De e-maillink is ongeldig of verlopen. Vraag een nieuwe link aan.",
+          );
+        this.recovering = type === "recovery";
+      }
       const { data, error } = await this.client.auth.getSession();
       if (error)
         throw new Error("Aanmelden kon niet worden afgerond. Probeer opnieuw.");
+      if (
+        returningFromAuth &&
+        callback.searchParams.get("auth_recovery") === "1" &&
+        data.session
+      )
+        this.recovering = true;
+      this.cleanCallback();
       await this.setSession(data.session);
       if (returningFromAuth && data.session) location.hash = "#/settings";
       this.poll = setInterval(() => {
@@ -147,18 +180,21 @@ export class CloudConnection {
           this.sync().catch(() => {});
       });
     } catch (error) {
+      this.cleanCallback();
       this.notify("error", error.message);
     }
   }
   async setSession(session) {
     if (!session) {
+      this.engine?.cancel();
       this.identity = null;
       this.engine = null;
       this.notify(this.config ? "signed-out" : "local");
       return;
     }
     const id = session.user.id;
-    if (this.identity?.id === id && this.engine) return;
+    if (this.identity?.id === id && this.engine && !this.recovering) return;
+    this.engine?.cancel();
     this.identity = {
       id,
       label:
@@ -166,6 +202,14 @@ export class CloudConnection {
         session.user.user_metadata?.user_name ||
         "Je account",
     };
+    if (this.recovering) {
+      this.engine = null;
+      this.notify(
+        "recovering",
+        "Je bent via de herstellink aangemeld. Kies nu een nieuw wachtwoord.",
+      );
+      return;
+    }
     const engine = new SyncEngine({
       transport: new SupabaseTransport(this.client, id),
       store: { get: getDeviceValue, set: setDeviceValue },
@@ -182,9 +226,84 @@ export class CloudConnection {
     if (engine.meta?.enabled && engine.phase !== "account-mismatch")
       this.sync().catch(() => {});
   }
+  cleanCallback() {
+    const url = new URL(location.href);
+    let changed = false;
+    for (const key of [
+      "code",
+      "token_hash",
+      "type",
+      "auth_recovery",
+      "error",
+      "error_code",
+      "error_description",
+    ])
+      if (url.searchParams.has(key)) {
+        url.searchParams.delete(key);
+        changed = true;
+      }
+    if (changed)
+      history.replaceState(null, "", url.pathname + url.search + url.hash);
+  }
+  authFailure(error) {
+    const messages = {
+      invalid_credentials: "E-mailadres of wachtwoord klopt niet.",
+      email_not_confirmed: "Bevestig eerst je e-mailadres via de mail.",
+      email_address_not_authorized:
+        "De maildienst accepteert dit adres niet. Voor andere gebruikers moet de projecteigenaar eigen SMTP instellen.",
+      over_email_send_rate_limit:
+        "De mailgrens is bereikt. Wacht even; controleer ook de SMTP-instellingen.",
+      over_request_rate_limit:
+        "Te veel pogingen. Wacht even en probeer opnieuw.",
+      weak_password:
+        "Je wachtwoord voldoet niet aan de beveiligingsregels van dit project.",
+      signup_disabled: "Registratie is in dit project niet toegestaan.",
+      captcha_failed:
+        "Dit project vereist een aanvullende browsercontrole. Die moet eerst in de aanmeldinterface worden gekoppeld.",
+    };
+    return new Error(
+      messages[error?.code] ||
+        "Aanmelden of mail versturen mislukt. Controleer de verbinding en de Auth/SMTP-instellingen van het project.",
+    );
+  }
+  async emailAuth(mode, email, password) {
+    if (!this.config?.providers.includes("email") || !this.client)
+      throw new Error("E-mailaanmelding is niet ingesteld.");
+    const base = ["register", "forgot"].includes(mode)
+      ? new URL(location.pathname, location.origin).href
+      : null;
+    let result;
+    if (mode === "login")
+      result = await this.client.auth.signInWithPassword({ email, password });
+    else if (mode === "register")
+      result = await this.client.auth.signUp({
+        email,
+        password,
+        options: { emailRedirectTo: base },
+      });
+    else if (mode === "forgot")
+      result = await this.client.auth.resetPasswordForEmail(email, {
+        redirectTo: base + "?auth_recovery=1",
+      });
+    else if (mode === "update") {
+      if (!this.identity || !this.recovering)
+        throw new Error("Gebruik eerst een geldige herstellink.");
+      result = await this.client.auth.updateUser({ password });
+    } else throw new Error("Onbekende aanmeldstap.");
+    if (result.error) throw this.authFailure(result.error);
+    if (mode === "update") {
+      this.recovering = false;
+      const { data, error } = await this.client.auth.getSession();
+      if (error || !data.session)
+        throw new Error("Het wachtwoord is gewijzigd. Meld je opnieuw aan.");
+      await this.setSession(data.session);
+    } else if (result.data?.session) await this.setSession(result.data.session);
+    return { session: !!result.data?.session };
+  }
   async signIn(provider) {
     if (!this.config?.providers.includes(provider))
       throw new Error("Deze loginprovider is niet ingesteld.");
+    if (provider === "email") throw new Error("Gebruik het e-mailformulier.");
     const redirect = new URL(location.pathname, location.origin).href;
     const { error } = await this.client.auth.signInWithOAuth({
       provider,

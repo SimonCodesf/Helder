@@ -1,6 +1,6 @@
 {
   "name": "helder-flashcards",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "private": true,
   "type": "module",
   "description": "Offline-first flashcards, geleidelijk leren met FSRS en optionele privésync. Geen build nodig.",
@@ -11,7 +11,9 @@
     "test:browser": "node tests/browser-smoke.mjs && node tests/browser-mobile.mjs",
     "test:sync": "node tests/browser-sync.mjs",
     "test:database": "node tests/database-security.mjs",
-    "test:public": "node scripts/public-check.mjs"
+    "test:public": "node scripts/public-check.mjs",
+    "test:exploration": "node tests/exploration-browser.mjs",
+    "test:email": "node tests/email-browser.mjs"
   },
   "engines": {
     "node": ">=20"

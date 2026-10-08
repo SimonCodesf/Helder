@@ -10,9 +10,9 @@ import {
   shuffle,
   downloadText,
   safeURL,
-} from "./utils.js?v=3.0.0";
-import { icon } from "./icons.js?v=3.0.0";
-import { markdown } from "./markdown.js?v=3.0.0";
+} from "./utils.js?v=3.1.0";
+import { icon } from "./icons.js?v=3.1.0";
+import { markdown } from "./markdown.js?v=3.1.0";
 import {
   parseImport,
   splitTags,
@@ -20,7 +20,7 @@ import {
   toMarkdown,
   toTSV,
   noteImportKey,
-} from "./parser.js?v=3.0.0";
+} from "./parser.js?v=3.1.0";
 import {
   emptyCollection,
   validateCollection,
@@ -37,27 +37,31 @@ import {
   isAvailable,
   faces,
   burySiblings,
-} from "./model.js?v=3.0.0";
+} from "./model.js?v=3.1.0";
 import {
   loadCollection,
   saveCollection,
   requestPersistentStorage,
   getDeviceValue,
   setDeviceValue,
-} from "./storage.js?v=3.0.0";
-import { previewRatings, scheduleRating, State } from "./scheduler.js?v=3.0.0";
+} from "./storage.js?v=3.1.0";
+import { previewRatings, scheduleRating, State } from "./scheduler.js?v=3.1.0";
 import {
   createSession,
   currentCardId,
   advanceSession,
-} from "./study.js?v=3.0.0";
-import { guideView } from "./guide.js?v=3.0.0";
+} from "./study.js?v=3.1.0";
+import { guideView } from "./guide.js?v=3.1.0";
 import {
   prepareStep,
+  startExploration,
+  nextExploration,
+  finishExploration,
+  explorationTerm,
   beginRecall,
   recognitionOptions,
   shouldApply,
-} from "./learning.js?v=3.0.0";
+} from "./learning.js?v=3.1.0";
 import {
   facet,
   structureFor,
@@ -66,17 +70,19 @@ import {
   progressFor,
   labelMap,
   mapText,
-} from "./curriculum.js?v=3.0.0";
+} from "./curriculum.js?v=3.1.0";
 import {
   progressStrip,
   courseStructure,
   folderTile,
-} from "./curriculum-ui.js?v=3.0.0";
-import { studyScreen } from "./study-ui.js?v=3.0.0";
-import { setupSwipe } from "./swipe.js?v=3.0.0";
-import { CloudConnection } from "./cloud.js?v=3.0.0";
-import { cloudPanel, conflictBody } from "./cloud-ui.js?v=3.0.0";
-import { LocalChangedError, localFromCloud } from "./sync-core.js?v=3.0.0";
+} from "./curriculum-ui.js?v=3.1.0";
+import { studyScreen } from "./study-ui.js?v=3.1.0";
+import { explorationScreen } from "./exploration-ui.js?v=3.1.0";
+import { emailView } from "./email-ui.js?v=3.1.0";
+import { setupSwipe } from "./swipe.js?v=3.1.0";
+import { CloudConnection } from "./cloud.js?v=3.1.0";
+import { cloudPanel, conflictBody } from "./cloud-ui.js?v=3.1.0";
+import { LocalChangedError, localFromCloud } from "./sync-core.js?v=3.1.0";
 import {
   setupInterface,
   syncInterface,
@@ -85,7 +91,7 @@ import {
   offlineUpdateReady,
   offlineAvailable,
   statusButton,
-} from "./interface.js?v=3.0.0";
+} from "./interface.js?v=3.1.0";
 
 let cloud;
 let state,
@@ -374,7 +380,7 @@ function notesView(r) {
     Math.max(0, Math.ceil(filtered.length / perPage) - 1),
   );
   const shown = filtered.slice(ui.page * perPage, (ui.page + 1) * perPage);
-  return `<div class="page set-page"><header class="page-head"><div><div class="breadcrumb"><a href="#/library">Bibliotheek</a>${set?.folderId ? `<span>/</span><a href="${routeURL("folder", set.folderId)}">${e(folderPath(state, set.folderId).replaceAll("::", " / "))}</a>` : ""}</div><h1>${e(scopeTitle(scope))}</h1><p>${e(set?.description ?? (r.type === "difficult" ? "Je swipes naar “nog niet” en kaarten die vaker moeilijk bleken." : r.type === "starred" ? "Bewaar wat je wilt terugvinden, uit al je vakken." : "Alle kaarten met deze tag."))}</p></div><div class="head-actions detail-actions">${set ? button('<span class="btn-label">Kaarten toevoegen</span>', "add-cards", "detail-action", `data-id="${e(set.id)}" aria-label="Kaarten toevoegen"`, "plus") + button('<span class="btn-label">Set beheren</span>', "edit-set", "detail-action", `data-id="${e(set.id)}" aria-label="Set beheren"`, "more") : ""}</div></header>${hasStructure ? `<nav class="course-tabs" aria-label="Setweergave"><button class="${overview ? "active" : ""}" data-action="course-tab" data-view="overview" aria-pressed="${overview}">Overzicht</button><button class="${!overview ? "active" : ""}" data-action="course-tab" data-view="cards" aria-pressed="${!overview}">Kaarten <span>${allNotes.length}</span></button></nav>` : ""}<div class="set-study-actions">${button("Leren", "start-learn", "primary large", actionScope(selectedScope), "arrow")}${button("Flashcards", "start-flash", "large", actionScope(selectedScope), "stack")}</div><div class="set-study-meta"><span class="small muted">${countLabel(s.total, "kaart", "kaarten")} · ${s.due} te herhalen${ui.level ? " · " + e(levelLabel(set, ui.level)) : ""}${ui.chapter ? " · " + e(chapterLabel(set, ui.chapter === "__none" ? "" : ui.chapter)) : ""}</span>${button("Toepassen", "start-transfer", "ghost", actionScope(selectedScope), "bulb")}</div>
+  return `<div class="page set-page"><header class="page-head"><div><div class="breadcrumb"><a href="#/library">Bibliotheek</a>${set?.folderId ? `<span>/</span><a href="${routeURL("folder", set.folderId)}">${e(folderPath(state, set.folderId).replaceAll("::", " / "))}</a>` : ""}</div><h1>${e(scopeTitle(scope))}</h1><p>${e(set?.description ?? (r.type === "difficult" ? "Je swipes naar “nog niet” en kaarten die vaker moeilijk bleken." : r.type === "starred" ? "Bewaar wat je wilt terugvinden, uit al je vakken." : "Alle kaarten met deze tag."))}</p></div><div class="head-actions detail-actions">${set ? button('<span class="btn-label">Kaarten toevoegen</span>', "add-cards", "detail-action", `data-id="${e(set.id)}" aria-label="Kaarten toevoegen"`, "plus") + button('<span class="btn-label">Set beheren</span>', "edit-set", "detail-action", `data-id="${e(set.id)}" aria-label="Set beheren"`, "more") : ""}</div></header>${hasStructure ? `<nav class="course-tabs" aria-label="Setweergave"><button class="${overview ? "active" : ""}" data-action="course-tab" data-view="overview" aria-pressed="${overview}">Overzicht</button><button class="${!overview ? "active" : ""}" data-action="course-tab" data-view="cards" aria-pressed="${!overview}">Kaarten <span>${allNotes.length}</span></button></nav>` : ""}<div class="set-study-actions">${button("Leren", "start-learn", "primary large", actionScope(selectedScope), "arrow")}${button("Flashcards", "start-flash", "large", actionScope(selectedScope), "stack")}</div><div class="set-study-meta"><span class="small muted">${countLabel(s.total, "kaart", "kaarten")} · ${s.due} te herhalen${ui.level ? " · " + e(levelLabel(set, ui.level)) : ""}${ui.chapter ? " · " + e(chapterLabel(set, ui.chapter === "__none" ? "" : ui.chapter)) : ""}</span><div class="practice-modes">${button("Verkennen", "start-explore", "ghost", actionScope(selectedScope), "book")}${button("Toepassen", "start-transfer", "ghost", actionScope(selectedScope), "bulb")}</div></div>
   ${overview ? courseStructure(state, set, ui, button, actionScope) : `<div class="toolbar course-filters"><label class="search-field">${icon("search")}<input type="search" id="live-query" data-live-search="notes" placeholder="Zoek een kaart…" aria-label="Kaarten zoeken" value="${e(ui.query)}"></label>${structure.levels.length ? `<select id="level-filter" aria-label="Niveau"><option value="">Alle niveaus</option>${structure.levels.map((v) => `<option value="${e(v)}" ${ui.level === v ? "selected" : ""}>${e(levelLabel(set, v))}</option>`).join("")}</select>` : ""}${structure.chapters.length ? `<select id="chapter-filter" aria-label="Hoofdstuk"><option value="">Alle hoofdstukken</option>${structure.chapters.map((v) => `<option value="${e(v)}" ${ui.chapter === v ? "selected" : ""}>${e(chapterLabel(set, v))}</option>`).join("")}<option value="__none" ${ui.chapter === "__none" ? "selected" : ""}>Zonder hoofdstuk</option></select>` : ""}<select id="tag-filter" aria-label="Overige tags">${tagOptions(allNotes)}</select></div><div class="section-head"><h2>Kaarten</h2><span class="small muted">${filtered.length} notities</span></div>${shown.length ? `<div class="cards-list">${shown.map(noteRow).join("")}</div><div class="pagination"><span>${ui.page * perPage + 1}–${Math.min((ui.page + 1) * perPage, filtered.length)} van ${filtered.length}</span><div class="actions">${button("Vorige", "page-prev", "", ui.page ? "" : "disabled", "back")}${button("Volgende", "page-next", "", (ui.page + 1) * perPage < filtered.length ? "" : "disabled", "chevron")}</div></div>` : emptyHTML("Geen kaarten in deze selectie.", "Kies een ander niveau of hoofdstuk, of maak een kaart.")}`}
   <div class="scope-practice">${button("Extra ophalen oefenen", "start-practice", "ghost", actionScope(selectedScope), "refresh")}<span class="small muted">Buiten je planning</span></div></div>`;
 }
@@ -397,7 +403,7 @@ function settingsView() {
     )
     .join(
       "",
-    )}</select><span class="help">Hoger betekent vaker oefenen. Geen voorspelling van examenresultaat of werkelijk begrip. Nieuwe beoordelingen gebruiken je keuze; bestaande vervaldata blijven staan.</span></div><div class="field"><label for="answer-mode">Antwoorden in de leermodus</label><select id="answer-mode" name="answerMode"><option value="write" ${s.answerMode === "write" ? "selected" : ""}>Typen — eigen woorden, geen automatische beoordeling</option><option value="think" ${s.answerMode === "think" ? "selected" : ""}>Hardop of in je hoofd beantwoorden</option></select></div><div class="check-field"><input type="checkbox" id="scaffold" name="scaffold" ${s.scaffold ? "checked" : ""}><label for="scaffold">Nieuwe stof geleidelijk opbouwen<div class="help">Kennismaken, eventueel herkennen, daarna zelfstandig ophalen. Reeds geleerde kaarten slaan deze steun over.</div></label></div><div class="check-field"><input type="checkbox" id="application" name="application" ${s.application ? "checked" : ""}><label for="application">Toepassingen aanbieden na gespreid ophalen<div class="help">Alleen wanneer je kaart een eigen scenario en modelredenering heeft. Los toepassen oefenen kan altijd.</div></label></div><div class="check-field"><input type="checkbox" id="mix" name="mix" ${s.mix ? "checked" : ""}><label for="mix">Herhalingen door elkaar aanbieden<div class="help">Nieuwe kaarten gaan per set van het laagste naar het hoogste niveau. Herhalingen houden voorrang.</div></label></div></section><section class="setting-section"><h2>Uiterlijk</h2><div class="field"><label for="theme">Thema</label><select id="theme" name="theme"><option value="system" ${s.theme === "system" ? "selected" : ""}>Volg mijn apparaat</option><option value="light" ${s.theme === "light" ? "selected" : ""}>Licht</option><option value="dark" ${s.theme === "dark" ? "selected" : ""}>Donker</option></select></div>${button("Instellingen opslaan", "submit-settings", "primary")}</section></form><section class="setting-section"><h2>Je apparaten</h2><div id="cloud-panel">${cloudPanel(cloud, button)}</div></section><section class="setting-section"><h2>Je gegevens</h2><p>Alles wordt eerst lokaal bewaard. Sync is optioneel via je eigen backend. Een JSON-back-up bewaart ook je leerlogboek, maar nooit aanmeldtokens.</p><div class="actions">${button("Volledige back-up", "backup", "primary", "", "download")}${button("Back-up herstellen", "restore", "", "", "upload")}${button("Opslag beschermen", "persist", "", "", "lock")}</div><p class="backup-note">Laatste export: ${state.lastBackup ? e(new Intl.DateTimeFormat("nl-BE", { dateStyle: "medium", timeStyle: "short" }).format(new Date(state.lastBackup))) : "nog geen back-up gemaakt"}.</p><p class="small muted">Een back-up bevat kaarten, tags, mappen, FSRS-planning en het leerlogboek. Open de app altijd op hetzelfde websiteadres; een ander adres of andere browser heeft een aparte collectie.</p></section><section class="setting-section"><h2>Wat je logboek zegt</h2><p>${logs.length} beoordelingen opgeslagen. ${reviews.length} daarvan waren herhalingen van eerder geziene kaarten.</p><p><strong>${rate}</strong>${reviews.length >= 5 ? " van die herhalingen beoordeelde je als correct (Moeilijk, Goed of Makkelijk)." : ""}</p><p class="small muted">Dit is je eigen beoordeling, geen objectieve meting. Nieuwe kaarten zijn uitgesloten; herhaalde pogingen op dezelfde dag tellen mee. Een afgeronde ronde zegt niet dat je de stof blijvend beheerst.</p></section><section class="setting-section"><h2>Op je beginscherm</h2><p>Op HTTPS kun je Helder als gratis webapp installeren. Open de site één keer volledig online; daarna werkt de gecachete app offline.</p><div class="actions">${installPrompt ? button("App installeren", "install", "soft", "", "download") : ""}<a class="btn" href="#/guide">${icon("help")} Installatie en uitleg</a></div><p class="backup-note">Helder 3.0 · ts-fsrs 5.4.2 · Geen telemetry</p></section></div>`;
+    )}</select><span class="help">Hoger betekent vaker oefenen. Geen voorspelling van examenresultaat of werkelijk begrip. Nieuwe beoordelingen gebruiken je keuze; bestaande vervaldata blijven staan.</span></div><div class="field"><label for="answer-mode">Antwoorden in de leermodus</label><select id="answer-mode" name="answerMode"><option value="write" ${s.answerMode === "write" ? "selected" : ""}>Typen — eigen woorden, geen automatische beoordeling</option><option value="think" ${s.answerMode === "think" ? "selected" : ""}>Hardop of in je hoofd beantwoorden</option></select></div><div class="check-field"><input type="checkbox" id="scaffold" name="scaffold" ${s.scaffold ? "checked" : ""}><label for="scaffold">Nieuwe stof geleidelijk opbouwen<div class="help">Eerst een groep verkennen: meerkeuze waar beschikbaar, definitie → term of uitleg. Daarna verdwijnen de opties en uitleg. Herhalingen blijven zonder deze opwarming.</div></label></div><div class="field"><label for="explore-size">Kaarten per verkenningsgroep</label><select id="explore-size" name="exploreSize">${[1, 3, 5].map((n) => `<option value="${n}" ${s.exploreSize === n ? "selected" : ""}>${n} ${n === 1 ? "kaart" : "kaarten"}</option>`).join("")}</select><span class="help">Een praktische startkeuze, geen bewezen ideaal. Groepen houden niveau en hoofdstuk bij elkaar.</span></div><div class="check-field"><input type="checkbox" id="application" name="application" ${s.application ? "checked" : ""}><label for="application">Toepassingen aanbieden na gespreid ophalen<div class="help">Alleen wanneer je kaart een eigen scenario en modelredenering heeft. Los toepassen oefenen kan altijd.</div></label></div><div class="check-field"><input type="checkbox" id="mix" name="mix" ${s.mix ? "checked" : ""}><label for="mix">Herhalingen door elkaar aanbieden<div class="help">Nieuwe kaarten gaan per set van het laagste naar het hoogste niveau. Herhalingen houden voorrang.</div></label></div></section><section class="setting-section"><h2>Uiterlijk</h2><div class="field"><label for="theme">Thema</label><select id="theme" name="theme"><option value="system" ${s.theme === "system" ? "selected" : ""}>Volg mijn apparaat</option><option value="light" ${s.theme === "light" ? "selected" : ""}>Licht</option><option value="dark" ${s.theme === "dark" ? "selected" : ""}>Donker</option></select></div>${button("Instellingen opslaan", "submit-settings", "primary")}</section></form><section class="setting-section"><h2>Je apparaten</h2><div id="cloud-panel">${cloudPanel(cloud, button)}</div></section><section class="setting-section"><h2>Je gegevens</h2><p>Alles wordt eerst lokaal bewaard. Sync is optioneel via je eigen backend. Een JSON-back-up bewaart ook je leerlogboek, maar nooit aanmeldtokens.</p><div class="actions">${button("Volledige back-up", "backup", "primary", "", "download")}${button("Back-up herstellen", "restore", "", "", "upload")}${button("Opslag beschermen", "persist", "", "", "lock")}</div><p class="backup-note">Laatste export: ${state.lastBackup ? e(new Intl.DateTimeFormat("nl-BE", { dateStyle: "medium", timeStyle: "short" }).format(new Date(state.lastBackup))) : "nog geen back-up gemaakt"}.</p><p class="small muted">Een back-up bevat kaarten, tags, mappen, FSRS-planning en het leerlogboek. Open de app altijd op hetzelfde websiteadres; een ander adres of andere browser heeft een aparte collectie.</p></section><section class="setting-section"><h2>Wat je logboek zegt</h2><p>${logs.length} beoordelingen opgeslagen. ${reviews.length} daarvan waren herhalingen van eerder geziene kaarten.</p><p><strong>${rate}</strong>${reviews.length >= 5 ? " van die herhalingen beoordeelde je als correct (Moeilijk, Goed of Makkelijk)." : ""}</p><p class="small muted">Dit is je eigen beoordeling, geen objectieve meting. Nieuwe kaarten zijn uitgesloten; herhaalde pogingen op dezelfde dag tellen mee. Een afgeronde ronde zegt niet dat je de stof blijvend beheerst.</p></section><section class="setting-section"><h2>Op je beginscherm</h2><p>Op HTTPS kun je Helder als gratis webapp installeren. Open de site één keer volledig online; daarna werkt de gecachete app offline.</p><div class="actions">${installPrompt ? button("App installeren", "install", "soft", "", "download") : ""}<a class="btn" href="#/guide">${icon("help")} Installatie en uitleg</a></div><p class="backup-note">Helder 3.1 · ts-fsrs 5.4.2 · Geen telemetry</p></section></div>`;
 }
 function notFoundView() {
   return `<div class="page">${emptyHTML("Deze plek bestaat niet meer.", "Misschien is de set of map verwijderd.", "Naar de bibliotheek", "go-library")}</div>`;
@@ -438,7 +444,7 @@ function renderApp({ keepFocus = false } = {}) {
 function startStudy(scope, mode = "learn", practice = false) {
   session = createSession(state, scope, { mode, practice });
   ui.grading = false;
-  if (!session.total && mode === "flash") {
+  if (!session.total && ["flash", "explore"].includes(mode)) {
     session = null;
     toast(
       "Geen actieve kaarten in deze selectie. Controleer je filter of gepauzeerde kaarten.",
@@ -461,6 +467,8 @@ function learningPending() {
 }
 function studyView() {
   prepareStep(session, state);
+  if (session.exploration)
+    return explorationScreen(state, session, { button, scopeTitle });
   return studyScreen(state, session, {
     button,
     scopeTitle,
@@ -469,6 +477,8 @@ function studyView() {
   });
 }
 function finishedView() {
+  if (session.mode === "explore")
+    return `<div class="study-page"><header class="study-header">${button("Terug", "end-study", "ghost", "", "back")}<div class="study-context"><h1>Je verkenningsronde</h1><p>${e(scopeTitle(session.scope))}</p></div><span></span></header><section class="finish-card"><div class="finish-icon">${icon("book")}</div><h1>Een eerste kennismaking.</h1><p>Je hebt ${session.exploredIds?.length ?? 0} kaarten verkend. Dat is een ingang, geen bewijs van zelfstandig onthouden. Je herhalingsplanning is niet veranderd.</p><div class="actions">${button("Nu zelf ophalen", "start-learn", "primary", actionScope(session.scope), "arrow")}${button("Terug naar overzicht", "end-study")}</div></section></div>`;
   if (session.mode === "flash") {
     const marks = session.flashMarks ?? {},
       known = Object.values(marks).filter((v) => v === "known").length,
@@ -490,7 +500,14 @@ function finishedView() {
   return `<div class="study-page"><header class="study-header">${button("Terug", "end-study", "ghost", "", "back")}<div class="study-context"><h1>${e(scopeTitle(session.scope))}</h1></div><span></span></header><section class="finish-card"><div class="finish-icon">${icon("check")}</div><h1>${flash ? "Je hebt de set bekeken." : completed ? "Deze ronde zit erop." : "Voor nu is er niets aan de beurt."}</h1><p>${flash ? "Je planning is niet veranderd. Herhaal gerust vrij, of gebruik Leren voor gespreide herhaling." : session.practice ? "Je hebt extra geoefend, zonder de gewone FSRS-planning te veranderen." : "Dat is een goede tussenstap, geen bewijs dat alles voorgoed blijft zitten. De planner bewaart de volgende herhalingen."}</p>${!flash && completed ? `<div class="finish-stats"><div><strong>${completed}</strong><span>beoordeeld</span></div><div><strong>${good}</strong><span>als correct beoordeeld</span></div><div><strong>${minutes}</strong><span>${minutes === 1 ? "minuut" : "minuten"}</span></div></div>` : ""}${next ? `<div class="timer-line" id="pending-time" data-due="${next.schedule.due}">${countLabel(pending.length, "kaart", "kaarten")} in de leerfase. Volgende ${next.schedule.due <= Date.now() ? "is nu beschikbaar" : "over " + intervalLabel(next.schedule.due)}.</div>` : ""}<div class="actions">${canContinue ? button("Volgende ronde", "continue-learning", "primary", "", "arrow") : ""}${flash ? button("Nog eens bekijken", "restart-flash", "primary", "", "refresh") : ""}${button("Terug naar overzicht", "end-study", canContinue || flash ? "" : "primary")}${!flash ? button("Vrij oefenen", "switch-flash", "ghost", "", "stack") : ""}</div>${session.lastUndo ? `<div class="actions" style="margin-top:16px">${button("Laatste beoordeling ongedaan", "undo-grade", "ghost", "", "undo")}</div>` : ""}</section><p class="small muted" style="margin-top:24px;text-align:center">Reeds beoordeelde kaarten zijn direct opgeslagen. Een nieuwe ronde gebruikt je actuele planning.</p></div>`;
 }
 async function grade(rating) {
-  if (ui.grading || !session?.revealed || session.mode !== "learn") return;
+  if (
+    ui.grading ||
+    !session?.revealed ||
+    session.mode !== "learn" ||
+    session.exploration ||
+    session.phase !== "recall"
+  )
+    return;
   if ((session.hintUsed && rating !== 1) || (session.introSeen && rating === 4))
     return;
   ui.grading = true;
@@ -651,12 +668,82 @@ function confirmModal(
     `<div class="actions">${button("Annuleren", "close-modal")}${button(label, "confirm", danger ? "danger" : "primary")}</div>`,
   );
 }
+function openEmail(mode = "login", email = "") {
+  if (!["login", "register", "forgot", "update"].includes(mode)) return;
+  if (mode === "update" && !cloud?.recovering) {
+    toast("Gebruik eerst een geldige herstellink.", { error: true });
+    return;
+  }
+  const view = emailView(mode, email);
+  draft = { type: "email", mode };
+  openModal(
+    view.title,
+    view.subtitle,
+    view.body,
+    `<div class="actions">${button("Annuleren", "close-modal")}<button class="btn primary" type="submit" form="email-auth-form" data-auth-submit>${view.action}</button></div>`,
+  );
+  setTimeout(
+    () => $(mode === "update" ? "#auth-password" : "#auth-email")?.focus(),
+    0,
+  );
+}
+async function submitEmail(event) {
+  event.preventDefault();
+  const form = event.target,
+    submit = $("[data-auth-submit]");
+  if (!form.reportValidity() || submit?.disabled) return;
+  const mode = form.dataset.mode,
+    email = $("#auth-email")?.value.trim() ?? "",
+    password = $("#auth-password")?.value ?? "";
+  if (
+    ["register", "update"].includes(mode) &&
+    (password.length < 8 || password !== $("#auth-password-confirm").value)
+  ) {
+    modalError(
+      new Error("Gebruik minstens 8 tekens en herhaal hetzelfde wachtwoord."),
+    );
+    return;
+  }
+  if (submit) submit.disabled = true;
+  try {
+    const result = await cloud.emailAuth(mode, email, password);
+    form
+      .querySelectorAll('input[type="password"]')
+      .forEach((el) => (el.value = ""));
+    if (mode === "forgot" || (mode === "register" && !result.session)) {
+      draft = { type: "email-notice" };
+      openModal(
+        mode === "forgot" ? "Controleer je e-mail" : "Bevestig je e-mailadres",
+        "Je lokale bibliotheek is niet veranderd.",
+        `<p>${mode === "forgot" ? "Als dit adres een account heeft, ontvang je een herstellink. Controleer ook je spammap." : "Als de registratie is geaccepteerd, ontvang je een bevestigingsmail. Open de link en meld je daarna aan. Heb je al een account? Gebruik aanmelden of wachtwoordherstel."}</p><p class="small muted">Geen mail? De projecteigenaar controleert SMTP, quota en de Site URL in Supabase. Zet verificatie niet uit.</p>`,
+        button("Naar aanmelden", "email-mode", "primary", 'data-mode="login"'),
+      );
+    } else {
+      modal.close();
+      draft = null;
+      refreshCloudUI();
+      await cloud.sync();
+      toast(
+        mode === "update"
+          ? "Je nieuwe wachtwoord is bewaard."
+          : "Aangemeld. Verbind je bibliotheek om sync in te schakelen.",
+      );
+    }
+  } catch (error) {
+    form
+      .querySelectorAll('input[type="password"]')
+      .forEach((el) => (el.value = ""));
+    modalError(error);
+  } finally {
+    if (submit?.isConnected) submit.disabled = false;
+  }
+}
 function noteFields(note = {}) {
   const kind = note.kind || "basic",
     c = note.learning?.choice,
     a = note.learning?.application;
   return `<div class="field"><label for="note-kind">Kaarttype</label><select id="note-kind"><option value="basic" ${kind === "basic" ? "selected" : ""}>Vraag & antwoord</option><option value="reverse" ${kind === "reverse" ? "selected" : ""}>Omgekeerd — beide richtingen</option><option value="cloze" ${kind === "cloze" ? "selected" : ""}>Invul — {{c1::antwoord}}</option></select></div><div class="field"><label for="note-front">Vraag / term / invultekst</label><textarea id="note-front" placeholder="Eén vraag, één helder idee" required>${e(note.front ?? "")}</textarea></div><div class="field"><label for="note-back">Modelantwoord <span class="muted">(bij invul: extra uitleg)</span></label><textarea id="note-back" placeholder="De kern, eventueel met een voorbeeld">${e(note.back ?? "")}</textarea><span class="help">Markdown: **vet**, *cursief*, - lijstjes. Geen HTML-uitvoering.</span></div><div class="form-row"><div class="field"><label for="note-level">Niveau <span class="muted">(optioneel)</span></label><input id="note-level" placeholder="1, 2 of 3" value="${e(facet(note.tags ? note : { tags: [] }, "niveau"))}"></div><div class="field"><label for="note-chapter">Hoofdstuk <span class="muted">(optioneel)</span></label><input id="note-chapter" placeholder="Bijv. H1" value="${e(facet(note.tags ? note : { tags: [] }, "hoofdstuk"))}"></div></div><div class="field"><label for="note-tags">Overige tags</label><input id="note-tags" placeholder="kennisleer, begrippen" value="${e((note.tags ?? []).filter((t) => !t.startsWith("niveau::") && !t.startsWith("hoofdstuk::")).join(", "))}"></div><details class="editor-extras" ${note.hint || note.explain || note.source ? "open" : ""}><summary>${icon("settings")}<span>Hint, begripscheck & bron</span>${icon("down")}</summary><div class="field"><label for="note-hint">Hint</label><input id="note-hint" value="${e(note.hint ?? "")}"></div><div class="field"><label for="note-explain">Begripscheck</label><input id="note-explain" value="${e(note.explain ?? "")}" placeholder="Leg het verschil uit met een verwant begrip."></div><div class="field"><label for="note-source">Bron-URL</label><input type="url" id="note-source" value="${e(note.source ?? "")}" placeholder="https://…"></div></details>
-  <details class="editor-extras" ${c ? "open" : ""}><summary>${icon("target")}<span>Herkenningsvraag</span>${icon("down")}</summary><p class="small muted">Steun bij nieuwe stof. Schrijf zelf plausibele, duidelijk onjuiste afleiders.</p><div class="field"><label for="choice-prompt">Vraag</label><input id="choice-prompt" value="${e(c?.prompt ?? "")}"></div><div class="field"><label for="choice-correct">Juiste optie</label><input id="choice-correct" value="${e(c?.options[c.correct] ?? "")}"></div><div class="field"><label for="choice-wrong">Afleiders</label><textarea id="choice-wrong" placeholder="Minstens twee afleiders, elk op één regel">${e(c?.options.filter((_, i) => i !== c.correct).join("\n") ?? "")}</textarea></div><div class="field"><label for="choice-feedback">Waarom is dit juist?</label><input id="choice-feedback" value="${e(c?.feedback ?? "")}"></div></details>
+  <div class="field"><label for="warm-term">Term voor omgekeerd verkennen <span class="muted">(optioneel)</span></label><input type="text" id="warm-term" maxlength="200" value="${e(note.learning?.term ?? "")}" placeholder="${e(explorationTerm(note.front ? note : { front: "", back: "" }) ?? "Bijv. Premisse")}"><span class="help">Bij korte begripsnamen automatisch: definitie → term. Bij een gewone vraag alleen als je hier een term invult.</span></div><details class="editor-extras" ${c ? "open" : ""}><summary>${icon("target")}<span>Herkenningsvraag</span>${icon("down")}</summary><p class="small muted">Steun bij nieuwe stof. Schrijf zelf plausibele, duidelijk onjuiste afleiders.</p><div class="field"><label for="choice-prompt">Vraag</label><input id="choice-prompt" value="${e(c?.prompt ?? "")}"></div><div class="field"><label for="choice-correct">Juiste optie</label><input id="choice-correct" value="${e(c?.options[c.correct] ?? "")}"></div><div class="field"><label for="choice-wrong">Afleiders</label><textarea id="choice-wrong" placeholder="Minstens twee afleiders, elk op één regel">${e(c?.options.filter((_, i) => i !== c.correct).join("\n") ?? "")}</textarea></div><div class="field"><label for="choice-feedback">Waarom is dit juist?</label><input id="choice-feedback" value="${e(c?.feedback ?? "")}"></div></details>
   <details class="editor-extras" ${a ? "open" : ""}><summary>${icon("bulb")}<span>Toepassingsvraag</span>${icon("down")}</summary><p class="small muted">Een scenario, voorbeeld of vergelijking. Geen automatische beoordeling van vrije tekst.</p><div class="field"><label for="apply-prompt">Vraag / scenario</label><input id="apply-prompt" value="${e(a?.prompt ?? "")}"></div><div class="field"><label for="apply-answer">Voorbeeldredenering</label><textarea id="apply-answer">${e(a?.answer ?? "")}</textarea></div><div class="field"><label for="apply-rubric">Kernpunten voor zelfcontrole</label><textarea id="apply-rubric" placeholder="Eén kernpunt per regel">${e(a?.rubric?.join("\n") ?? "")}</textarea></div></details>`;
 }
 function readNoteFields() {
@@ -664,6 +751,8 @@ function readNoteFields() {
     chapter = $("#note-chapter").value.trim(),
     tags = splitTags($("#note-tags").value),
     learning = {};
+  const warmTerm = $("#warm-term").value.trim();
+  if (warmTerm) learning.term = warmTerm;
   if (level) tags.push("niveau::" + level);
   if (chapter) tags.push("hoofdstuk::" + chapter);
   const cp = $("#choice-prompt").value.trim(),
@@ -1017,10 +1106,32 @@ async function handleClick(event) {
         break;
       }
       case "intro-skip":
-        beginRecall(session);
+        if (session.exploration) finishExploration(session);
+        else beginRecall(session);
         renderApp();
         break;
       case "choose-answer": {
+        if (session.exploration) {
+          const active = session,
+            warm = session.exploration,
+            c = warm.task.choice;
+          if (
+            warm.task.kind !== "choice" ||
+            warm.revealed ||
+            !c.options[Number(el.dataset.choice)]
+          )
+            break;
+          warm.selected = Number(el.dataset.choice);
+          warm.revealed = true;
+          await recordActivity(
+            currentCardId(active),
+            "recognition",
+            warm.selected === c.correct,
+            { round: "exploration", exercise: "choice", attempted: true },
+          );
+          if (session === active) renderApp();
+          break;
+        }
         if (session.phase !== "choice" || session.choiceSelection != null)
           break;
         const card = state.cards.find((c) => c.id === currentCardId(session)),
@@ -1040,6 +1151,65 @@ async function handleClick(event) {
         beginRecall(session);
         renderApp();
         window.scrollTo(0, 0);
+        break;
+      case "explore-reveal":
+        if (session.exploration) {
+          session.exploration.revealed = true;
+          renderApp();
+        }
+        break;
+      case "explore-explain": {
+        const active = session,
+          warm = active?.exploration;
+        if (!warm || warm.revealed || warm.task.kind !== "choice") break;
+        warm.revealed = true;
+        await recordActivity(currentCardId(active), "recognition", false, {
+          round: "exploration",
+          exercise: "choice",
+          attempted: false,
+        });
+        if (session === active) renderApp();
+        break;
+      }
+      case "explore-rate": {
+        const active = session,
+          warm = active?.exploration;
+        if (!warm || !warm.revealed || warm.busy) break;
+        warm.busy = true;
+        try {
+          await recordActivity(
+            currentCardId(active),
+            "practice",
+            el.dataset.success === "true",
+            {
+              round: "exploration",
+              exercise: warm.task.kind,
+              selfRated: warm.task.kind === "reverse",
+            },
+          );
+          if (session === active) {
+            nextExploration(active, state);
+            renderApp();
+            window.scrollTo(0, 0);
+          }
+        } finally {
+          warm.busy = false;
+        }
+        break;
+      }
+      case "explore-next":
+        if (session.exploration?.revealed) {
+          nextExploration(session, state);
+          renderApp();
+          window.scrollTo(0, 0);
+        }
+        break;
+      case "explore-finish":
+        if (session.exploration?.screen === "bridge") {
+          finishExploration(session);
+          renderApp();
+          window.scrollTo(0, 0);
+        }
         break;
       case "application-reveal":
         session.application.revealed = true;
@@ -1085,13 +1255,17 @@ async function handleClick(event) {
         );
         break;
       case "cloud-login":
-        await cloud.signIn(el.dataset.provider);
+        if (el.dataset.provider === "email") openEmail("login");
+        else await cloud.signIn(el.dataset.provider);
+        break;
+      case "email-mode":
+        openEmail(el.dataset.mode, $("#auth-email")?.value ?? "");
         break;
       case "cloud-help":
         openModal(
           "Sync op je eigen backend",
           "De app blijft ook zonder sync bruikbaar.",
-          `<p>Een statische website kan geen privéleerdata opslaan. De meegeleverde koppeling gebruikt Supabase Auth en een afgeschermde Postgres-tabel.</p><ol class="connection-steps"><li><strong>Maak een eigen Supabase-project.</strong><p>Voer <code>backend/supabase.sql</code> uit. Dit zet accountafscherming en versiecontrole klaar.</p></li><li><strong>Stel Google en/of GitHub OAuth in.</strong><p>Gebruik je vaste HTTPS-appadres als toegestane terugkeer-URL. Wachtwoorden worden niet op deze website ingevuld.</p></li><li><strong>Vul config.json in.</strong><p>Alleen de project-URL en publieke publishable key. Nooit een secret- of service-role-key.</p></li><li><strong>Test met twee accounts en twee apparaten.</strong><p>Meld je aan, verbind bewust je collectie en controleer dat accounts elkaars kaarten niet zien.</p></li></ol><p><a class="btn" href="./docs/SYNC.md" target="_blank" rel="noopener">${icon("book")} Volledige setup & beperkingen</a></p>`,
+          `<p>Een statische website kan geen privéleerdata opslaan. De meegeleverde koppeling gebruikt Supabase Auth en een afgeschermde Postgres-tabel.</p><ol class="connection-steps"><li><strong>Maak een eigen Supabase-project.</strong><p>Voer <code>backend/supabase.sql</code> uit. Dit zet accountafscherming en versiecontrole klaar.</p></li><li><strong>Stel e-mail of OAuth in.</strong><p>E-mailaanmelding werkt met wachtwoord, bevestiging en herstel. Gebruik je eigen appadres als Site URL; voor publieke bevestigingsmails is eigen SMTP nodig. Google/GitHub blijven optioneel.</p></li><li><strong>Vul config.json in.</strong><p>Alleen de project-URL en publieke publishable key. Nooit een secret- of service-role-key.</p></li><li><strong>Test met twee accounts en twee apparaten.</strong><p>Meld je aan, verbind bewust je collectie en controleer dat accounts elkaars kaarten niet zien.</p></li></ol><p><a class="btn" href="./docs/SYNC.md" target="_blank" rel="noopener">${icon("book")} Volledige setup & beperkingen</a></p>`,
           button("Begrepen", "close-modal", "primary"),
         );
         break;
@@ -1199,6 +1373,9 @@ async function handleClick(event) {
       case "start-learn":
         startStudy(getActionScope(el));
         break;
+      case "start-explore":
+        startStudy(getActionScope(el), "explore");
+        break;
       case "start-flash":
         startStudy(getActionScope(el), "flash");
         break;
@@ -1238,6 +1415,12 @@ async function handleClick(event) {
         renderApp();
         break;
       case "intro":
+        if (session.exploration) {
+          startExploration(session, state);
+          renderApp();
+          window.scrollTo(0, 0);
+          break;
+        }
         session.phase = "introduce";
         session.intro = true;
         session.introSeen = true;
@@ -1544,11 +1727,12 @@ function refreshCloudUI() {
     el.dataset.syncState = cloud?.phase ?? "local";
   });
 }
-async function recordActivity(cardId, form, success) {
+async function recordActivity(cardId, form, success, extra = {}) {
   await mutate(
     (next) => {
       next.activities ??= [];
       next.activities.push({
+        ...extra,
         id: uid(),
         cardId,
         form,
@@ -1639,6 +1823,8 @@ document.addEventListener("click", handleClick);
 document.addEventListener("input", (event) => {
   const el = event.target;
   if (el.id === "study-answer" && session) session.answer = el.value;
+  if (el.id === "explore-answer" && session?.exploration)
+    session.exploration.answer = el.value;
   if (el.id === "application-answer" && session?.application)
     session.application.answer = el.value;
   if (el.dataset.liveSearch) {
@@ -1684,6 +1870,10 @@ document.addEventListener("change", async (event) => {
   }
 });
 document.addEventListener("submit", async (event) => {
+  if (event.target.id === "email-auth-form") {
+    await submitEmail(event);
+    return;
+  }
   if (event.target.id !== "settings-form") return;
   event.preventDefault();
   try {
@@ -1692,6 +1882,7 @@ document.addEventListener("submit", async (event) => {
       newPerDay: Number(f.get("newPerDay") ?? state.settings.newPerDay),
       dailyLimit: f.get("dailyLimit") === "on",
       scaffold: f.get("scaffold") === "on",
+      exploreSize: Number(f.get("exploreSize") ?? 3),
       application: f.get("application") === "on",
       sessionSize: Number(f.get("sessionSize")),
       retention: Number(f.get("retention")),
@@ -1742,6 +1933,7 @@ document.addEventListener("keydown", (event) => {
     return;
   }
   if (
+    session.exploration ||
     session.intro ||
     session.phase === "orient" ||
     session.phase === "choice" ||
@@ -1812,7 +2004,7 @@ async function boot() {
     state = saved ? validateCollection(saved) : emptyCollection();
     if (!saved) {
       try {
-        const response = await fetch("./data/starter.json?v=3.0.0");
+        const response = await fetch("./data/starter.json?v=3.1.0");
         if (!response.ok) throw new Error("Starterbestand ontbreekt.");
         const starters = await response.json();
         for (const data of starters) {

@@ -1,5 +1,5 @@
-import { escapeHTML as e } from "./utils.js?v=3.0.0";
-import { icon } from "./icons.js?v=3.0.0";
+import { escapeHTML as e } from "./utils.js?v=3.1.0";
+import { icon } from "./icons.js?v=3.1.0";
 export function cloudPanel(cloud, button) {
   const phase = cloud?.phase ?? "local",
     configured = !!cloud?.config;
@@ -9,6 +9,7 @@ export function cloudPanel(cloud, button) {
       error: "Sync vraagt aandacht",
       "signed-out": "Sync is beschikbaar",
       unbound: "Verbind je bibliotheek",
+      recovering: "Kies een nieuw wachtwoord",
       synced: "Alles bijgewerkt",
       syncing: "Bezig met synchroniseren",
       pending: "Wijzigingen klaar voor sync",
@@ -21,6 +22,8 @@ export function cloudPanel(cloud, button) {
       "Lokaal leren blijft gratis en zonder account. Voor mobiel ↔ web is een eigen syncbackend nodig.",
     "signed-out":
       "Meld je op je telefoon en computer aan met hetzelfde account.",
+    recovering:
+      "Je herstellink is gecontroleerd. Stel een nieuw wachtwoord in; sync wacht tot die stap klaar is.",
     unbound:
       "Je bent aangemeld. Schakel sync bewust in voordat er kaarten naar je eigen backend gaan.",
     synced:
@@ -39,7 +42,7 @@ export function cloudPanel(cloud, button) {
       "Je lokale kaarten blijven beschikbaar. Controleer je verbinding of configuratie.",
   }[phase];
   const last = cloud?.engine?.meta?.lastSync;
-  return `<div class="cloud-status ${phase}"><span class="cloud-glyph">${icon(["synced"].includes(phase) ? "check" : ["conflict", "error"].includes(phase) ? "help" : phase === "local" ? "lock" : "refresh")}</span><div><h3>${title}</h3><p>${e(message)}</p>${cloud?.identity ? `<p class="cloud-account">${e(cloud.identity.label)}</p>` : ""}${last ? `<span class="small muted">Laatste sync: ${e(new Intl.DateTimeFormat("nl-BE", { dateStyle: "short", timeStyle: "short" }).format(new Date(last)))}</span>` : ""}</div></div><div class="actions">${!configured ? button("Sync instellen", "cloud-help", "", "", "settings") : !cloud.identity ? cloud.config.providers.map((p) => button("Aanmelden met " + (p === "google" ? "Google" : "GitHub"), "cloud-login", "", `data-provider="${p}"`, "lock")).join("") : phase === "unbound" ? button("Verbind deze bibliotheek", "cloud-connect", "primary", "", "refresh") : phase === "conflict" ? button("Vergelijk de wijzigingen", "cloud-conflicts", "primary", "", "help") : phase !== "account-mismatch" ? button("Nu synchroniseren", "cloud-sync", "", phase === "syncing" ? "disabled" : "", "refresh") : ""}${cloud?.identity ? button("Afmelden & lokaal wissen", "cloud-logout", "ghost", "", "lock") : ""}</div><p class="small muted cloud-privacy">Geen gedeelde kaartendatabase. Iedere account heeft een eigen collectie. Sync is geen historische back-up; exporteer regelmatig ook JSON.</p>`;
+  return `<div class="cloud-status ${phase}"><span class="cloud-glyph">${icon(["synced"].includes(phase) ? "check" : ["conflict", "error"].includes(phase) ? "help" : phase === "local" ? "lock" : "refresh")}</span><div><h3>${title}</h3><p>${e(message)}</p>${cloud?.identity ? `<p class="cloud-account">${e(cloud.identity.label)}</p>` : ""}${last ? `<span class="small muted">Laatste sync: ${e(new Intl.DateTimeFormat("nl-BE", { dateStyle: "short", timeStyle: "short" }).format(new Date(last)))}</span>` : ""}</div></div><div class="actions">${!configured ? button("Sync instellen", "cloud-help", "", "", "settings") : !cloud.identity ? cloud.config.providers.map((p) => button("Aanmelden met " + (p === "email" ? "e-mail" : p === "google" ? "Google" : "GitHub"), "cloud-login", "", `data-provider="${p}"`, "lock")).join("") : phase === "recovering" ? button("Nieuw wachtwoord instellen", "email-mode", "primary", 'data-mode="update"', "lock") : phase === "unbound" ? button("Verbind deze bibliotheek", "cloud-connect", "primary", "", "refresh") : phase === "conflict" ? button("Vergelijk de wijzigingen", "cloud-conflicts", "primary", "", "help") : phase !== "account-mismatch" ? button("Nu synchroniseren", "cloud-sync", "", phase === "syncing" ? "disabled" : "", "refresh") : ""}${cloud?.identity ? button("Afmelden & lokaal wissen", "cloud-logout", "ghost", "", "lock") : ""}</div><p class="small muted cloud-privacy">Geen gedeelde kaartendatabase. Iedere account heeft een eigen collectie. Sync is geen historische back-up; exporteer regelmatig ook JSON.</p>`;
 }
 export function conflictBody(pending, button) {
   const value = (v) =>

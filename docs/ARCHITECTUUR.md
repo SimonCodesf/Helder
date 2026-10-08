@@ -1,4 +1,4 @@
-# Helder 3 — architectuur
+# Helder 3.1 — architectuur
 
 ## Platform
 
@@ -6,7 +6,7 @@ Statische HTML/CSS/ES-modules; geen bundlestap voor de app. Alleen de officiële
 
 ## Data en compatibiliteit
 
-Schema blijft `version: 1`, IndexedDB `helder-v1`, store `state`, key `collection`. V1/V2-back-ups blijven leesbaar. Nieuwe optionele velden: activities, note.learning, set.curriculum, card.practiceMark/practiceAt en instellingen dailyLimit/scaffold/application. Validatie vult ontbrekende defaults aan. Nieuwe publieke browsers starten leeg; een update wist bestaande lokale kaarten niet.
+Schema blijft `version: 1`, IndexedDB `helder-v1`, store `state`, key `collection`. V1/V2-back-ups blijven leesbaar. Nieuwe optionele velden: activities, note.learning, set.curriculum, card.practiceMark/practiceAt en instellingen dailyLimit/scaffold/application/exploreSize. Validatie vult ontbrekende defaults aan. Nieuwe publieke browsers starten leeg; een update wist bestaande lokale kaarten niet.
 
 `saveCollection(value, expectedRevision)` gebruikt een IndexedDB-transactie met CAS. Mutaties lopen via een promise-chain. BroadcastChannel meldt gewijzigde andere tabs; een stale tab schrijft niet over nieuwere data.
 
@@ -17,7 +17,9 @@ Schema blijft `version: 1`, IndexedDB `helder-v1`, store `state`, key `collectio
 - `scheduler.js` / `vendor/fsrs.mjs`: echte geheugenplanner. Alleen recall-ratings veranderen de FSRS-state.
 - `learning.js`: lesfasen, recent gebruikte hulp en gespreide ophaalevidentie. Geen getraind tutoringmodel.
 - `study.js`: UI-sessiequeue/ronde, geen tweede geheugenmodel.
-- `study-ui.js`: orientation/introduction/recognition/recall/application en flashcards.
+- `study-ui.js`: recall/application en flashcards; `exploration-ui.js`: kleine groepen, authored choice, definitie → term en uitleg als fallback.
+- `supportIds` markeert daadwerkelijk bekeken steun; `warmedIds` voorkomt herhaald opwarmen binnen dezelfde sessie. Overgeslagen groepen krijgen geen bekeken-teller.
+- `learning.term`/`verken-term:` is optioneel; geen nieuwe FSRS-template voor de losse reverse-verkenning.
 - `activities`: recognition/application/practice-uitkomsten. Geen getypte vrije antwoorden of fake semantische scores.
 
 Nieuwe vraagvormen vragen betrouwbare content. Choice: auteur schrijft prompt, options, correct-index, feedback. Application: prompt, modelantwoord, rubric. De front/back-canonieke recallprompt blijft gelijk voor een consistente FSRS-planning. Reverse templates gebruiken geen forward-only extra oefening.
@@ -28,7 +30,7 @@ Een swipe-mark is geen FSRS-rating. Een first-time of geholpen poging is geen ui
 
 ## Sync
 
-`sync-core.js` is transportonafhankelijk en puur testbaar. Het maakt een tokenvrije cloudsnapshot en een driewegmerge tussen laatst opgehaalde base, lokale wijzigingen en remote. Deviceprefs theme/answerMode blijven lokaal. Cloudtransport gebruikt Supabase REST via de officiële SDK; PKCE, authopslag en vernieuwing komen van de SDK.
+`sync-core.js` is transportonafhankelijk en puur testbaar. Het maakt een tokenvrije cloudsnapshot en een driewegmerge tussen laatst opgehaalde base, lokale wijzigingen en remote. Deviceprefs theme/answerMode blijven lokaal. Cloudtransport gebruikt Supabase REST via de officiële SDK; E-mail/wachtwoord via de SDK, e-mailbevestiging en herstel; daarnaast optionele OAuth/PKCE. Authopslag en vernieuwing komen van de SDK.
 
 Nieuwe opt-in binding: userId + project-URL. Binding aan ander account/project blokkeert sync. Metadata/OAuth-sessie staan in aparte `device:`-keys, nooit in de exporteerbare collectie. Na afmelden worden de lokale collectie/binding/conflictkopie gewist.
 
@@ -53,3 +55,7 @@ Geen forced skipWaiting tijdens leren. Bestaande worker blijft tot tabs gesloten
 5. Echte uitgestelde leerproeven: begrip/transfer apart van engagement.
 
 Geen onveilige shortcuts: geen secret keys in frontend, geen willekeurige generatie van antwoordopties, geen keywordgrade voor vrije uitleg, geen stil verlies bij syncconflict.
+
+## E-mailaanmelding (3.1)
+
+`email-ui.js` bevat native gelabelde formulieren; `cloud.js` gebruikt alleen SDK-methoden signUp/signInWithPassword/resetPasswordForEmail/updateUser/verifyOtp. Formulierwaarden gaan niet in draft/state, export of syncpayload; wachtwoordvelden worden na een poging leeggemaakt. Sessies staan apart in devicekeys. Herstelpauze blokkeert sync tot het nieuwe wachtwoord is ingesteld. Token-hash-links uit de meegeleverde templates kunnen in een andere browser bevestigd worden; URL-tokens worden na afhandeling verwijderd. Dit is geen bewijs van live mailbezorging of extern JWT-beleid.
