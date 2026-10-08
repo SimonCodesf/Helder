@@ -1,4 +1,4 @@
-import { normalize, shuffle } from "./utils.js?v=3.1.15";
+import { normalize, shuffle } from "./utils.js?v=3.1.16";
 
 // Pedagogical scaffolding is separate from the FSRS memory model.
 // Choice/application answers must be authored, never invented from other cards.
@@ -203,6 +203,9 @@ export function requeueExploration(session) {
 export function finishExploration(session) {
   const ids = session.exploration.ids;
   session.warmedIds = [...new Set([...(session.warmedIds ?? []), ...ids])];
+  // Learn rounds explore once, up front. Later new cards in the queue are
+  // recalled directly; the next round brings a fresh batch.
+  if (session.mode === "learn") session.batchSettled = true;
   if (session.mode === "explore") {
     session.exploredIds = [
       ...new Set([
@@ -226,9 +229,8 @@ export function prepareStep(session, state) {
     return;
   const id = session.queue[0];
   if (!id || session.preparedId === id) return;
-  const card = state.cards.find((c) => c.id === id),
-    note = state.notes.find((n) => n.id === card?.noteId);
-  if (!card || !note) return;
+  const card = state.cards.find((c) => c.id === id);
+  if (!card) return;
   session.preparedId = id;
   const explore =
     session.mode === "explore" ||
@@ -236,20 +238,16 @@ export function prepareStep(session, state) {
       card.schedule.state === 0 &&
       state.settings.scaffold &&
       !(session.warmedIds ?? []).includes(id));
-  if (explore) {
-    const tag = (n, prefix) => n.tags.find((t) => t.startsWith(prefix)) ?? "";
+  if (explore && (session.mode === "explore" || !session.batchSettled)) {
+    // Learn rounds explore exactly one batch up front. The queue already
+    // holds at most one group of new cards, in set and level order.
     const ids = session.queue
       .filter((candidate) => {
-        const c = state.cards.find((v) => v.id === candidate),
-          n = state.notes.find((v) => v.id === c?.noteId);
+        const c = state.cards.find((v) => v.id === candidate);
         return (
           c &&
-          n &&
           (session.mode === "explore" || c.schedule.state === 0) &&
-          !(session.warmedIds ?? []).includes(candidate) &&
-          n.setId === note.setId &&
-          tag(n, "niveau::") === tag(note, "niveau::") &&
-          tag(n, "hoofdstuk::") === tag(note, "hoofdstuk::")
+          !(session.warmedIds ?? []).includes(candidate)
         );
       })
       .slice(0, state.settings.exploreSize ?? 3);

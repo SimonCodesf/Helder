@@ -44,31 +44,36 @@ test("Warm group is bounded and leaves schedules/reviews unchanged", () => {
   assert.equal(ss.exploration.task.kind, "reverse");
   assert.deepEqual(s, before);
 });
-test("Warm batch never crosses level, chapter or set", () => {
-  const s = fixture();
-  s.notes[1].tags = ["niveau::2", "hoofdstuk::H1"];
-  s.notes[2].tags = ["niveau::1", "hoofdstuk::H2"];
-  const set = newSet(s, { title: "Ander" });
-  s.notes[3].setId = set.id;
-  const ss = createSession(s, { type: "all" });
+test("Learn round holds one bounded batch of new cards", () => {
+  const s = fixture(),
+    ss = createSession(s, { type: "all" });
+  // Six new cards, default group of three: the rest waits for later rounds.
+  assert.equal(ss.queue.length, 3);
   prepareStep(ss, s);
-  for (const id of ss.exploration.ids) {
-    const n = s.notes.find(
-      (n) => n.id === s.cards.find((c) => c.id === id).noteId,
-    );
-    assert.equal(n.setId, s.notes[0].setId);
-    assert.deepEqual(n.tags, ["niveau::1", "hoofdstuk::H1"]);
-  }
+  assert.deepEqual(ss.exploration.ids, ss.queue.slice(0, 3));
+  finishExploration(ss);
+  // No second group mid-round: the batch is recalled directly.
+  prepareStep(ss, s);
+  assert.equal(ss.exploration, undefined);
+  assert.equal(ss.phase, "recall");
 });
-test("Due recall is presented before warming new material", () => {
+test("New batch is explored first, then recalled with due reviews", () => {
   const s = fixture();
   s.cards[0].schedule.state = 2;
   s.cards[0].schedule.reps = 5;
   s.cards[0].schedule.due = Date.now() - 1000;
   const ss = createSession(s, { type: "all" });
+  assert.deepEqual(ss.queue.slice(0, 3), [
+    s.cards[1].id,
+    s.cards[2].id,
+    s.cards[3].id,
+  ]);
+  assert.equal(ss.queue.at(-1), s.cards[0].id);
+  prepareStep(ss, s);
+  assert.equal(ss.phase, "explore");
+  finishExploration(ss);
   prepareStep(ss, s);
   assert.equal(ss.phase, "recall");
-  assert.equal(ss.exploration, undefined);
 });
 test("Skipping start does not mark the later recall as assisted", () => {
   const s = fixture(),
@@ -97,8 +102,10 @@ test("All warmed cards receive recent-help flags on productive recall", () => {
     ss.queue.shift();
     ss.preparedId = null;
   }
+  // The batch is done: no second group mid-round.
   prepareStep(ss, s);
-  assert.ok(ss.exploration);
+  assert.equal(ss.exploration, undefined);
+  assert.equal(ss.phase, "recall");
 });
 test("Reverse clue masks exact term without replacing longer words", () => {
   const n = { front: "Kat", back: "De kat is geen kathedraal.", kind: "basic" };

@@ -89,8 +89,9 @@ try {
     "PASS automatic definition-first term guessing and independent exploratory round without FSRS changes",
   );
   await page.locator('[data-action="start-learn"]').click();
-  await page.locator(".exploration-intro").waitFor();
-  await click("intro-skip");
+  // All three cards were explored before: recall starts directly, no warm-up.
+  await page.locator(".study-card").waitFor();
+  assert.equal(await page.locator(".exploration-page").count(), 0);
   await click("reveal");
   assert.equal(await page.locator('[data-rating="4"]').isDisabled(), false);
   await page.locator('[data-rating="3"]').click();
@@ -103,11 +104,13 @@ try {
   await click("submit-settings");
   await page.goto(TEST_URL + "/#/set/" + before.sets[0].id);
   await click("start-learn");
-  assert.match(await page.locator(".study-counter").innerText(), /0\s*\/\s*1/);
-  await click("intro");
-  await finishWarmGroup(page);
+  // Steady batches: explored cards recall directly, no mid-round warm-up.
+  await page.locator(".study-card").waitFor();
+  assert.equal(await page.locator(".exploration-page").count(), 0);
+  assert.match(await page.locator(".study-counter").innerText(), /1\s*\/\s*2/);
   await click("reveal");
-  assert.equal(await page.locator('[data-rating="4"]').isDisabled(), true);
+  // Fresh round, no assistance this round: Makkelijk stays available.
+  assert.equal(await page.locator('[data-rating="4"]').isDisabled(), false);
   await page.setViewportSize({ width: 320, height: 844 });
   assert.equal(
     await page.evaluate(
@@ -116,7 +119,7 @@ try {
     false,
   );
   console.log(
-    "PASS configurable group size, assistance marker and narrow productive-recall layout",
+    "PASS steady batches recall directly without mid-round warm-up; narrow layout holds",
   );
   await click("end-study");
   await page.locator("#structure-title").waitFor();

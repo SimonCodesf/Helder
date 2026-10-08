@@ -135,9 +135,10 @@ try {
   await click("start-learn");
   await click("intro-skip");
   await click("reveal");
-  await page.locator(".understanding summary").scrollIntoViewIfNeeded();
+  await page.locator(".answer-text").scrollIntoViewIfNeeded();
   await page.waitForTimeout(150);
-  const summary = await page.locator(".understanding summary").boundingBox(),
+  await page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));
+  const summary = await page.locator(".study-card").boundingBox(),
     dock = await page.locator(".study-dock").boundingBox();
   assert.ok(summary.y + summary.height <= dock.y + 1);
   await capture("15-long-answer-mobile");

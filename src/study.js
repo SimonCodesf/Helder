@@ -1,6 +1,10 @@
-import { queueFor } from "./model.js?v=3.1.15";
-import { shuffle, uid } from "./utils.js?v=3.1.15";
-import { exploredCardIds } from "./learning.js?v=3.1.15";
+import { queueFor } from "./model.js?v=3.1.16";
+import { shuffle, uid } from "./utils.js?v=3.1.16";
+import { exploredCardIds } from "./learning.js?v=3.1.16";
+// A learn round stays steady: with fewer than this many due reviews, one
+// small batch of new cards is explored up front. Nothing new is added
+// mid-round; the rest waits for the next round.
+const MAX_DUE_WITH_NEW = 10;
 // Sessions are a UI concern, not a second scheduling algorithm. Only FSRS changes due dates.
 export function createSession(
   state,
@@ -19,6 +23,26 @@ export function createSession(
       return true;
     });
   }
+  // One batch of new cards per learn round: explored once up front, then
+  // recalled together with due reviews. Ten or more due reviews means a
+  // reviews-only round; extra new cards wait for later.
+  let batch = [];
+  if (mode === "learn" && !practice && state.settings.scaffold) {
+    const warmed = new Set(exploredCardIds(state)),
+      isNew = (id) =>
+        state.cards.find((c) => c.id === id)?.schedule.state === 0,
+      dueCount = queue.filter((id) => !isNew(id)).length;
+    batch =
+      dueCount < MAX_DUE_WITH_NEW
+        ? queue
+            .filter((id) => isNew(id) && !warmed.has(id))
+            .slice(0, state.settings.exploreSize ?? 3)
+        : [];
+    const keep = new Set(batch);
+    queue = queue.filter(
+      (id) => !isNew(id) || warmed.has(id) || keep.has(id),
+    );
+  }
   if (mode === "flash" ? state.settings.flashShuffle !== false : practice)
     queue = shuffle(queue);
   else if (state.settings.mix) {
@@ -29,6 +53,11 @@ export function createSession(
     );
     const review = queue.filter((id) => !fresh.includes(id));
     queue = [...shuffle(review), ...fresh];
+  }
+  if (batch.length) {
+    // The new batch is explored first, then recalled with the reviews.
+    const inBatch = new Set(batch);
+    queue = [...batch, ...queue.filter((id) => !inBatch.has(id))];
   }
   return {
     id: uid(),
