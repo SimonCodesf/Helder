@@ -1,10 +1,10 @@
-import { escapeHTML as e, intervalLabel, safeURL } from "./utils.js?v=3.1.12";
-import { icon } from "./icons.js?v=3.1.12";
-import { markdown } from "./markdown.js?v=3.1.12";
-import { faces } from "./model.js?v=3.1.12";
-import { previewRatings } from "./scheduler.js?v=3.1.12";
-import { currentCardId } from "./study.js?v=3.1.12";
-import { facet } from "./curriculum.js?v=3.1.12";
+import { escapeHTML as e, intervalLabel, safeURL } from "./utils.js?v=3.1.13";
+import { icon } from "./icons.js?v=3.1.13";
+import { markdown } from "./markdown.js?v=3.1.13";
+import { faces } from "./model.js?v=3.1.13";
+import { previewRatings } from "./scheduler.js?v=3.1.13";
+import { currentCardId } from "./study.js?v=3.1.13";
+import { facet } from "./curriculum.js?v=3.1.13";
 export function studyScreen(
   state,
   session,
@@ -35,10 +35,11 @@ export function studyScreen(
     const marks = Object.values(session.flashMarks ?? {}),
       knownCount = marks.filter((v) => v === "known").length,
       unknownCount = marks.filter((v) => v === "unknown").length,
+      todo = Math.max(0, session.total - done),
       mark = session.flashMarks?.[id];
     return (
       content +
-      `<div class="flash-tally"><span class="tally-known">${icon("check")} ${knownCount} gekend</span><span class="tally-todo">${Math.max(0, session.total - done)} te gaan</span></div><section class="study-card flash-card" data-swipe><span class="swipe-stamp known">${icon("check")} Gekend</span><span class="swipe-stamp unknown">${icon("refresh")} Nog niet</span>${header}<div class="flip-surface" role="button" tabindex="0" data-action="flip" aria-label="Kaart omdraaien"><div class="${session.revealed ? "answer-text" : "question"}">${markdown(session.revealed ? face.answer : face.question)}</div><p class="flip-hint">${mark ? `Gemarkeerd als ${mark === "known" ? "gekend" : "nog niet gekend"}` : "Tik om te draaien · swipe om te sorteren"}</p></div></section><div class="study-dock flash-dock"><div class="dock-heading"><p class="small muted">${knownCount} gekend · ${unknownCount} nog niet</p><div class="flash-history-actions">${button("", "flash-prev", "icon-button", session.index === 0 ? 'disabled aria-label="Vorige kaart"' : 'aria-label="Vorige kaart"', "back")}${button("", "flash-next", "icon-button", 'aria-label="Kaart overslaan"', "chevron")}${button("", "flash-shuffle", "icon-button", 'aria-label="Kaarten husselen"', "shuffle")}</div></div><div class="flash-flip-row">${session.flashUndo ? button("", "undo-flash", "icon-button", 'aria-label="Laatste swipe ongedaan"', "undo") : ""}${button("Omdraaien", "flip", "primary large", "", "refresh")}</div><div class="swipe-actions">${button("Nog niet", "flash-mark", "unknown", 'data-mark="unknown"', "back")}${button("Gekend", "flash-mark", "known", 'data-mark="known"', "check")}</div></div></div>`
+      `<div class="flash-tally" aria-label="${knownCount} gekend, ${todo} te gaan"><span class="tally-known" title="Gekend" aria-hidden="true">${icon("check")} ${knownCount}</span><span class="tally-todo" title="Te gaan" aria-hidden="true">${todo}</span></div><section class="study-card flash-card" data-swipe><span class="swipe-stamp known">${icon("check")} Gekend</span><span class="swipe-stamp unknown">${icon("refresh")} Nog niet</span>${header}<div class="flip-surface" role="button" tabindex="0" data-action="flip" aria-label="Kaart omdraaien"><div class="${session.revealed ? "answer-text" : "question"}">${markdown(session.revealed ? face.answer : face.question)}</div><p class="flip-hint">${mark ? `Gemarkeerd als ${mark === "known" ? "gekend" : "nog niet gekend"}` : "Tik om te draaien · swipe om te sorteren"}</p></div></section><div class="study-dock flash-dock"><div class="dock-heading"><p class="small muted">${knownCount} gekend · ${unknownCount} nog niet</p><div class="flash-history-actions">${button("", "flash-prev", "icon-button", session.index === 0 ? 'disabled aria-label="Vorige kaart"' : 'aria-label="Vorige kaart"', "back")}${button("", "flash-next", "icon-button", 'aria-label="Kaart overslaan"', "chevron")}${button("", "flash-shuffle", "icon-button", 'aria-label="Kaarten husselen"', "shuffle")}</div></div><div class="flash-flip-row">${session.flashUndo ? button("", "undo-flash", "icon-button", 'aria-label="Laatste swipe ongedaan"', "undo") : ""}${button("Omdraaien", "flip", "primary large", "", "refresh")}</div><div class="swipe-actions">${button("Nog niet", "flash-mark", "unknown", 'data-mark="unknown"', "back")}${button("Gekend", "flash-mark", "known", 'data-mark="known"', "check")}</div></div></div>`
     );
   }
   if (session.application) {
@@ -62,19 +63,14 @@ export function studyScreen(
       rated = [0, 0, 0, 0, 0];
     for (const done of session.completed)
       if (done.rating >= 1 && done.rating <= 4) rated[done.rating]++;
-    const chips = [
+    const ratings = [
       [1, "opnieuw", "tally-again"],
       [2, "moeilijk", "tally-hard"],
       [3, "goed", "tally-good"],
       [4, "makkelijk", "tally-easy"],
-    ]
-      .filter(([r]) => rated[r] > 0)
-      .map(
-        ([r, label, cls]) =>
-          `<span class="${cls}">${rated[r]} ${label}</span>`,
-      )
-      .join(" · ");
-    content += `<p class="study-stats">${warmed ? `${warmed} verkend · ` : ""}${fresh} nieuw · ${remaining.length - fresh} te herhalen${chips ? ` · ${chips}` : ""}</p>`;
+    ].filter(([r]) => rated[r] > 0);
+    const sentence = `${warmed ? `${warmed} verkend, ` : ""}${fresh} nieuw, ${remaining.length - fresh} te herhalen${ratings.length ? `, ${ratings.map(([r, label]) => `${rated[r]} ${label}`).join(", ")}` : ""}`;
+    content += `<p class="study-stats" aria-label="${sentence}"><span aria-hidden="true">${warmed ? `<span title="Verkend">✓ ${warmed}</span> · ` : ""}<span title="Nieuw">+${fresh}</span> · <span title="Te herhalen">↻ ${remaining.length - fresh}</span>${ratings.map(([r, label, cls]) => ` · <span class="${cls}" title="${label}">${rated[r]}</span>`).join("")}</span></p>`;
   }
   content += `<section class="study-card">${header}`;
   if (session.phase === "orient")

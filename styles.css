@@ -1335,12 +1335,12 @@ svg {
   background: var(--orange-soft);
 }
 .grade.good {
-  color: var(--on-blue);
-  background: var(--blue);
-  border-color: var(--blue);
+  color: var(--blue);
+  background: var(--blue-soft);
+  border-color: var(--blue-border);
 }
 .grade.good span {
-  color: var(--on-blue);
+  color: var(--blue);
 }
 .grade.easy {
   color: var(--green);
@@ -2462,9 +2462,6 @@ textarea {
   .grade {
     padding: 10px 4px;
     min-height: 64px;
-  }
-  .grade .grade-interval {
-    display: none;
   }
   .study-dock .grade-grid {
     gap: 6px;
