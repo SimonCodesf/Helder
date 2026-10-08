@@ -16,7 +16,7 @@ const paths = {
   close: '<path d="m6 6 12 12M6 18 18 6"/>',
   check: '<path d="m5 12 4 4 10-10"/>',
   refresh:
-    '<path d="M20 7v5h-5M4 17v-5h5"/><path d="M6 6a8 8 0 0 1 14 6M4 12a8 8 0 0 0 14 6"/>',
+    '<path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>',
   settings:
     '<path d="m9 3-.5 3-2 1.2-2.7-1L1.5 10l2.3 2-2.3 2 2.3 3.8 2.7-1 2 1.2.5 3h5l.5-3 2-1.2 2.7 1 2.3-3.8-2.3-2 2.3-2-2.3-3.8-2.7 1-2-1.2L14 3H9z"/><circle cx="11.5" cy="12" r="3"/>',
   help: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9a2.5 2.5 0 0 1 5 0c0 2-2.5 2-2.5 4M12 17h.01"/>',
@@ -35,7 +35,7 @@ const paths = {
   play: '<path d="m8 4 12 8-12 8V4z"/>',
   shuffle:
     '<path d="M3 5h3l12 14h3M3 19h3l12-14h3M18 2l3 3-3 3M18 16l3 3-3 3"/>',
-  undo: '<path d="M4 4v6h6M4 10a8 8 0 1 1 0 8"/>',
+  undo: '<path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5 5.5 5.5 0 0 1-5.5 5.5H11"/>',
   devices:
     '<rect x="3" y="3" width="12" height="11" rx="1.5"/><path d="M2 18h11M9 14v4"/><rect x="16" y="9" width="5" height="12" rx="1"/>',
   target:
