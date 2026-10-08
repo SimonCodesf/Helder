@@ -91,7 +91,6 @@ try {
   await page.locator('[data-action="start-learn"]').click();
   await page.locator(".exploration-intro").waitFor();
   await click("intro-skip");
-  await page.locator("#study-answer").fill("Een uitgangspunt in een argument.");
   await click("reveal");
   assert.equal(await page.locator('[data-rating="4"]').isDisabled(), false);
   await page.locator('[data-rating="3"]').click();
@@ -107,7 +106,6 @@ try {
   assert.match(await page.locator(".study-counter").innerText(), /0\s*\/\s*1/);
   await click("intro");
   await finishWarmGroup(page);
-  await page.locator("#study-answer").fill("De uitkomst van een argument.");
   await click("reveal");
   assert.equal(await page.locator('[data-rating="4"]').isDisabled(), true);
   await page.setViewportSize({ width: 320, height: 844 });

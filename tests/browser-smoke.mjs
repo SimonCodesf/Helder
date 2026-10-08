@@ -128,7 +128,6 @@ try {
   await finishWarmGroup(page);
   assert.equal((await collection()).reviews.length, 0);
   assert.equal((await collection()).activities.length, 4);
-  await page.locator("#study-answer").fill("Een kwart: 25 van elke 100.");
   await click("reveal");
   await snapshot("07-recall-mobile");
   assert.equal(await page.locator('[data-rating="4"]').isDisabled(), true);

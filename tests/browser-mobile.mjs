@@ -134,7 +134,6 @@ try {
   await page.locator("#modal").waitFor({ state: "hidden" });
   await click("start-learn");
   await click("intro-skip");
-  await page.locator("#study-answer").fill("Een kwart.");
   await click("reveal");
   await page.locator(".understanding summary").scrollIntoViewIfNeeded();
   await page.waitForTimeout(150);
