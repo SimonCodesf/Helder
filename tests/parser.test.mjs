@@ -131,6 +131,25 @@ test("Only http(s) links become links", () => {
   assert.equal(safeURL("https://example.org"), "https://example.org/");
   assert.ok(!markdown("[klik](javascript:alert(1))").includes("href="));
 });
+test("Markdown images render remote https pictures only", () => {
+  const html = markdown(
+    "Zie dit:\n\n![slagboom](https://example.org/boom.png)",
+  );
+  assert.ok(html.includes('<img src="https://example.org/boom.png"'));
+  assert.ok(html.includes('alt="slagboom"'));
+  assert.ok(html.includes('loading="lazy"'));
+  assert.ok(
+    !markdown("![onveilig](http://example.org/a.png)").includes("<img"),
+  );
+  assert.ok(
+    !markdown("![klik](javascript:alert(1))").includes("<img"),
+  );
+  assert.ok(
+    !markdown(
+      '![x](https://example.org/a.png" onerror="alert(1)',
+    ).includes("onerror="),
+  );
+});
 test("Code is escaped and formatting stays available", () => {
   const html = markdown("**vet** en *cursief*\n\n- item\n- nog een\n\n`<b>`");
   assert.ok(html.includes("<strong>vet</strong>"));

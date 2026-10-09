@@ -1207,6 +1207,14 @@ svg {
 .answer-text h3 {
   margin: 16px 0 8px;
 }
+.question img,
+.answer-text img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 12px auto;
+}
 .answer-text pre {
   overflow: auto;
   font-size: 14px;

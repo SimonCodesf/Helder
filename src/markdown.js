@@ -1,4 +1,4 @@
-import { escapeHTML, safeURL } from "./utils.js?v=3.1.24";
+import { escapeHTML, safeURL } from "./utils.js?v=3.1.25";
 // Deliberately small Markdown subset. Raw HTML is ALWAYS escaped, never executed.
 function inline(text) {
   const placeholders = [];
@@ -9,6 +9,17 @@ function inline(text) {
   let value = String(text).replace(/`([^`\n]+)`/g, (_, code) =>
     token(`<code>${escapeHTML(code)}</code>`),
   );
+  // Images first: plain links must not swallow the ![alt](url) syntax.
+  // Remote https only: http would be blocked as mixed content, data: URLs
+  // stay out to protect the 50k field limit and synced snapshots.
+  value = value.replace(/!\[([^\]\n]*)\]\(([^\s)]+)\)/g, (_, alt, url) => {
+    const safe = safeURL(url);
+    return token(
+      safe && safe.startsWith("https://")
+        ? `<img src="${escapeHTML(safe)}" alt="${escapeHTML(alt)}" loading="lazy">`
+        : escapeHTML(alt || "afbeelding"),
+    );
+  });
   value = value.replace(/\[([^\]\n]+)\]\(([^\s)]+)\)/g, (_, label, url) => {
     const safe = safeURL(url);
     return token(
