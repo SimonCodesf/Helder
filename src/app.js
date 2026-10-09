@@ -10,9 +10,9 @@ import {
   shuffle,
   downloadText,
   safeURL,
-} from "./utils.js?v=3.1.31";
-import { icon } from "./icons.js?v=3.1.31";
-import { markdown } from "./markdown.js?v=3.1.31";
+} from "./utils.js?v=3.1.32";
+import { icon } from "./icons.js?v=3.1.32";
+import { markdown } from "./markdown.js?v=3.1.32";
 import {
   parseImport,
   splitTags,
@@ -20,7 +20,7 @@ import {
   toMarkdown,
   toTSV,
   noteImportKey,
-} from "./parser.js?v=3.1.31";
+} from "./parser.js?v=3.1.32";
 import {
   emptyCollection,
   validateCollection,
@@ -39,21 +39,21 @@ import {
   isAvailable,
   faces,
   burySiblings,
-} from "./model.js?v=3.1.31";
+} from "./model.js?v=3.1.32";
 import {
   loadCollection,
   saveCollection,
   requestPersistentStorage,
   getDeviceValue,
   setDeviceValue,
-} from "./storage.js?v=3.1.31";
-import { previewRatings, scheduleRating, State } from "./scheduler.js?v=3.1.31";
+} from "./storage.js?v=3.1.32";
+import { previewRatings, scheduleRating, State } from "./scheduler.js?v=3.1.32";
 import {
   createSession,
   currentCardId,
   advanceSession,
-} from "./study.js?v=3.1.31";
-import { guideView } from "./guide.js?v=3.1.31";
+} from "./study.js?v=3.1.32";
+import { guideView } from "./guide.js?v=3.1.32";
 import {
   prepareStep,
   startExploration,
@@ -65,7 +65,7 @@ import {
   beginRecall,
   recognitionOptions,
   shouldApply,
-} from "./learning.js?v=3.1.31";
+} from "./learning.js?v=3.1.32";
 import {
   facet,
   structureFor,
@@ -74,19 +74,20 @@ import {
   progressFor,
   labelMap,
   labelText,
-} from "./curriculum.js?v=3.1.31";
+} from "./curriculum.js?v=3.1.32";
 import {
   progressStrip,
   courseStructure,
   folderTile,
-} from "./curriculum-ui.js?v=3.1.31";
-import { studyScreen } from "./study-ui.js?v=3.1.31";
-import { explorationScreen } from "./exploration-ui.js?v=3.1.31";
-import { emailView } from "./email-ui.js?v=3.1.31";
-import { setupSwipe } from "./swipe.js?v=3.1.31";
-import { CloudConnection } from "./cloud.js?v=3.1.31";
-import { cloudPanel, conflictBody } from "./cloud-ui.js?v=3.1.31";
-import { LocalChangedError, localFromCloud } from "./sync-core.js?v=3.1.31";
+  groupStrip,
+} from "./curriculum-ui.js?v=3.1.32";
+import { studyScreen } from "./study-ui.js?v=3.1.32";
+import { explorationScreen } from "./exploration-ui.js?v=3.1.32";
+import { emailView } from "./email-ui.js?v=3.1.32";
+import { setupSwipe } from "./swipe.js?v=3.1.32";
+import { CloudConnection } from "./cloud.js?v=3.1.32";
+import { cloudPanel, conflictBody } from "./cloud-ui.js?v=3.1.32";
+import { LocalChangedError, localFromCloud } from "./sync-core.js?v=3.1.32";
 import {
   setupInterface,
   syncInterface,
@@ -95,7 +96,7 @@ import {
   offlineUpdateReady,
   offlineAvailable,
   statusButton,
-} from "./interface.js?v=3.1.31";
+} from "./interface.js?v=3.1.32";
 
 let cloud;
 let state,
@@ -276,7 +277,7 @@ function chapterRow(set, chapter, scope, s) {
   if (s.newToday) parts.push(`${s.newToday} nieuw`);
   if (s.learning) parts.push(`${s.learning} in leren`);
   const label = chapterLabel(set, chapter === "__none" ? "" : chapter);
-  return `<article class="vak-card"><div class="vak-info"><h3><a href="${routeURL("set", set.id)}">${e(label)}</a></h3><p>${e(set.title)} · ${parts.join(" · ")}</p></div>${button("Leren", "start-learn", "primary", actionScope(scope) + ` aria-label="${e(label)} leren"`, "play")}</article>`;
+  return `<article class="vak-card"><div class="vak-info"><h3><a href="${routeURL("set", set.id)}">${e(label)}</a></h3><p>${e(set.title)} · ${parts.join(" · ")}</p>${groupStrip(state, scope)}</div>${button("Leren", "start-learn", "primary", actionScope(scope) + ` aria-label="${e(label)} leren"`, "play")}</article>`;
 }
 function todayView() {
   const s = stats(state),
@@ -450,7 +451,7 @@ function setContinue(set, fallbackScope) {
     );
   const label = `${ui.level ? levelLabel(set, ui.level) + " · " : ""}${chapterLabel(set, best.chapter === "__none" ? "" : best.chapter)}`;
   return button(
-    `<span class="btn-full">Ga verder: ${e(label)}</span><span class="btn-short">Ga verder</span>`,
+    `Ga verder: ${e(label)}`,
     "start-learn",
     "primary large",
     actionScope(best.scope) + ` aria-label="Ga verder met ${e(label)}"`,
@@ -2157,7 +2158,7 @@ async function boot() {
     state = saved ? validateCollection(saved) : emptyCollection();
     if (!saved) {
       try {
-        const response = await fetch("./data/starter.json?v=3.1.31");
+        const response = await fetch("./data/starter.json?v=3.1.32");
         if (!response.ok) throw new Error("Starterbestand ontbreekt.");
         const starters = await response.json();
         for (const data of starters) {

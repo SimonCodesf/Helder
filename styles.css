@@ -882,9 +882,6 @@ svg {
   flex-wrap: wrap;
   gap: 8px;
 }
-.set-study-actions .btn-short {
-  display: none;
-}
 .set-study-meta {
   display: flex;
   flex-wrap: wrap;
@@ -2383,19 +2380,7 @@ textarea {
   }
   .set-study-actions {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-  }
-  .set-study-actions .btn {
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-  .set-study-actions .btn-full {
-    display: none;
-  }
-  .set-study-actions .btn-short {
-    display: inline;
+    grid-template-columns: 1fr;
   }
   .set-study-meta {
     justify-content: space-between;

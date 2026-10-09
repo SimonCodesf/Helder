@@ -405,6 +405,35 @@
 .chapter-learn {
   font-weight: 600;
 }
+.groups {
+  width: 100%;
+  margin-top: 8px;
+}
+.groups-track {
+  height: 6px;
+  display: flex;
+  background: var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.groups-track span {
+  height: 100%;
+}
+.groups-track .g0 {
+  background: var(--control);
+}
+.groups-track .g1 {
+  background: var(--red);
+}
+.groups-track .g2 {
+  background: var(--orange);
+}
+.groups-track .g3 {
+  background: var(--blue);
+}
+.groups-track .g4 {
+  background: var(--green);
+}
 .evidence-disclaimer {
   margin-top: 16px;
   max-width: 72ch;
