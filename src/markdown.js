@@ -1,4 +1,4 @@
-import { escapeHTML, safeURL } from "./utils.js?v=3.1.29";
+import { escapeHTML, safeURL } from "./utils.js?v=3.1.30";
 // Deliberately small Markdown subset. Raw HTML is ALWAYS escaped, never executed.
 function inline(text) {
   const placeholders = [];

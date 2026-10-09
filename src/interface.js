@@ -1,5 +1,5 @@
 // Responsive chrome and device status only. No scheduling, grading or data writes.
-import { icon } from "./icons.js?v=3.1.29";
+import { icon } from "./icons.js?v=3.1.30";
 const MOBILE = 820;
 let offlinePhase = "local",
   dockObserver = null,
@@ -62,15 +62,15 @@ export function observeOfflineInstallation(registration) {
     }
     // Verify this release's actual offline entries, not merely an old active worker.
     try {
-      const cache = await caches.open("helder-v3.1.29"),
+      const cache = await caches.open("helder-v3.1.30"),
         base = new URL("../", import.meta.url);
       const entries = await Promise.all(
         [
           "index.html",
-          "styles.css?v=3.1.29",
-          "product.css?v=3.1.29",
-          "src/app.js?v=3.1.29",
-          "src/model.js?v=3.1.29",
+          "styles.css?v=3.1.30",
+          "product.css?v=3.1.30",
+          "src/app.js?v=3.1.30",
+          "src/model.js?v=3.1.30",
         ].map((path) => cache.match(new URL(path, base))),
       );
       // Registration may have changed while the cache was being read.
