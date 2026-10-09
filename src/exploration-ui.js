@@ -1,7 +1,7 @@
-import { escapeHTML as e } from "./utils.js?v=3.1.36";
-import { markdown } from "./markdown.js?v=3.1.36";
-import { icon } from "./icons.js?v=3.1.36";
-import { faces } from "./model.js?v=3.1.36";
+import { escapeHTML as e } from "./utils.js?v=3.1.37";
+import { markdown } from "./markdown.js?v=3.1.37";
+import { icon } from "./icons.js?v=3.1.37";
+import { faces } from "./model.js?v=3.1.37";
 
 export function explorationScreen(state, session, { button, scopeTitle }) {
   const warm = session.exploration,
