@@ -1261,11 +1261,41 @@ svg {
 }
 .question img,
 .answer-text img {
-  display: block;
+  display: inline-block;
+  vertical-align: middle;
   max-width: 100%;
   height: auto;
   border-radius: 8px;
-  margin: 12px auto;
+}
+/* Image-only paragraphs become tiles: side by side, never cropped. */
+.question p:has(img),
+.answer-text p:has(img) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  align-items: stretch;
+}
+.question p:has(img) br,
+.answer-text p:has(img) br {
+  display: none;
+}
+.question p:has(img) img,
+.answer-text p:has(img) img {
+  flex: 1 1 120px;
+  min-width: 0;
+  max-width: 100%;
+  height: 180px;
+  margin: 0;
+  object-fit: contain;
+  background: var(--surface-2);
+}
+@media (min-width: 900px) {
+  .question p:has(img) img,
+  .answer-text p:has(img) img {
+    flex-basis: 160px;
+    height: 220px;
+  }
 }
 .answer-text pre {
   overflow: auto;
