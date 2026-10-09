@@ -1,17 +1,17 @@
-import { escapeHTML as e, countLabel } from "./utils.js?v=3.1.27";
-import { icon } from "./icons.js?v=3.1.27";
+import { escapeHTML as e, countLabel } from "./utils.js?v=3.1.28";
+import { icon } from "./icons.js?v=3.1.28";
 import {
   scopeNotes,
   scopeCards,
   stats,
   folderDescendants,
-} from "./model.js?v=3.1.27";
+} from "./model.js?v=3.1.28";
 import {
   progressFor,
   structureFor,
   levelLabel,
   chapterLabel,
-} from "./curriculum.js?v=3.1.27";
+} from "./curriculum.js?v=3.1.28";
 export function progressStrip(state, scope, { labels = true } = {}) {
   const p = progressFor(state, scope);
   return `<div class="evidence"><div class="evidence-track" role="img" aria-label="${p.new} nieuw, ${p.building} in opbouw, ${p.spaced} op meerdere dagen correct beoordeeld">${p.total ? `<span class="evidence-spaced" style="width:${(p.spaced / p.total) * 100}%"></span><span class="evidence-building" style="width:${(p.building / p.total) * 100}%"></span>` : ""}</div>${labels ? `<div class="evidence-key"><span><i class="key-building"></i>${p.building} in opbouw</span><span><i class="key-spaced"></i>${p.spaced} gespreid opgehaald</span></div>` : ""}</div>`;
@@ -30,8 +30,9 @@ export function courseStructure(state, set, ui, button, actionScope) {
           .map((value, index) => {
             const sc = { ...scope, level: value },
               p = progressFor(state, sc),
-              s = stats(state, sc);
-            return `<button class="level-card ${ui.level === value ? "selected" : ""}" data-action="select-level" data-level="${e(value)}" aria-pressed="${ui.level === value}"><span class="level-index">${String(index + 1).padStart(2, "0")}</span><span class="level-title">${e(levelLabel(set, value))}</span><span class="small muted">${countLabel(p.total, "kaart", "kaarten")}${s.due ? ` · ${s.due} herhalen` : ""}</span>${progressStrip(state, sc, { labels: false })}<span class="level-status">${p.spaced ? `${p.spaced} gespreid opgehaald` : p.building ? `${p.building} in opbouw` : "Nog te ontdekken"} ${icon("arrow")}</span></button>`;
+              s = stats(state, sc),
+              open = s.due + s.newToday + s.learning;
+            return `<article class="level-card ${ui.level === value ? "selected" : ""}"><button class="level-main" data-action="select-level" data-level="${e(value)}" aria-pressed="${ui.level === value}" aria-label="${e(levelLabel(set, value))} filteren"><span class="level-index">${String(index + 1).padStart(2, "0")}</span><span class="level-title">${e(levelLabel(set, value))}</span><span class="small muted">${countLabel(p.total, "kaart", "kaarten")}${s.due ? ` · ${s.due} herhalen` : ""}</span>${progressStrip(state, sc, { labels: false })}<span class="level-status">${p.spaced ? `${p.spaced} gespreid opgehaald` : p.building ? `${p.building} in opbouw` : "Nog te ontdekken"} ${icon("arrow")}</span></button>${open ? `<div class="level-actions">${button("Leren", "start-learn", "chapter-learn", actionScope({ ...scope, level: value }) + ` aria-label="${e(levelLabel(set, value))} leren"`, "play")}</div>` : ""}</article>`;
           })
           .join(
             "",
