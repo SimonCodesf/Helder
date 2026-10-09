@@ -11,7 +11,13 @@ import {
   validateCollection,
 } from "../src/model.js";
 import { parseImport, toMarkdown, validateNote } from "../src/parser.js";
-import { progressFor, labelMap, labelText } from "../src/curriculum.js";
+import {
+  progressFor,
+  labelMap,
+  labelText,
+  resumeLevel,
+  resumeChapter,
+} from "../src/curriculum.js";
 import { prepareStep, evidenceState } from "../src/learning.js";
 import { createSession } from "../src/study.js";
 import {
@@ -440,4 +446,47 @@ test("Rename fields are prefilled with values in use", () => {
   set.curriculum = { chapters: { H1: "Inleiding" } };
   assert.equal(labelText(s, set, "chapters"), "H1 = Inleiding");
   assert.equal(labelMap(labelText(s, set, "chapters"))["H1"], "Inleiding");
+});
+
+test("Resume prefers engaged levels and chapters over pristine new", () => {
+  const s = emptyCollection(),
+    set = newSet(s, { title: "Vak" });
+  upsertNote(s, set.id, {
+    kind: "basic",
+    front: "Oud",
+    back: "O",
+    tags: ["niveau::1", "hoofdstuk::H1"],
+  });
+  for (let i = 0; i < 5; i++)
+    upsertNote(s, set.id, {
+      kind: "basic",
+      front: "Nieuw " + i,
+      back: "N" + i,
+      tags: ["niveau::2", "hoofdstuk::H9"],
+    });
+  const due = s.cards[0];
+  due.schedule.state = 2;
+  due.schedule.reps = 5;
+  due.schedule.due = Date.now() - 1000;
+  assert.equal(resumeLevel(s, set), "1");
+  assert.equal(resumeChapter(s, set, "").chapter, "H1");
+});
+
+test("Resume falls back to first new, then to nothing when done", () => {
+  const s = emptyCollection(),
+    set = newSet(s, { title: "Vak" });
+  upsertNote(s, set.id, {
+    kind: "basic",
+    front: "Nieuw",
+    back: "N",
+    tags: ["niveau::2", "hoofdstuk::H9"],
+  });
+  assert.equal(resumeLevel(s, set), "2");
+  assert.equal(resumeChapter(s, set, "").chapter, "H9");
+  const c = s.cards[0];
+  c.schedule.state = 2;
+  c.schedule.reps = 5;
+  c.schedule.due = Date.now() + 86400000;
+  assert.equal(resumeLevel(s, set), "");
+  assert.equal(resumeChapter(s, set, ""), null);
 });

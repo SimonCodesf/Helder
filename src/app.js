@@ -10,9 +10,9 @@ import {
   shuffle,
   downloadText,
   safeURL,
-} from "./utils.js?v=3.1.34";
-import { icon } from "./icons.js?v=3.1.34";
-import { markdown } from "./markdown.js?v=3.1.34";
+} from "./utils.js?v=3.1.35";
+import { icon } from "./icons.js?v=3.1.35";
+import { markdown } from "./markdown.js?v=3.1.35";
 import {
   parseImport,
   splitTags,
@@ -20,7 +20,7 @@ import {
   toMarkdown,
   toTSV,
   noteImportKey,
-} from "./parser.js?v=3.1.34";
+} from "./parser.js?v=3.1.35";
 import {
   emptyCollection,
   validateCollection,
@@ -40,21 +40,21 @@ import {
   isAvailable,
   faces,
   burySiblings,
-} from "./model.js?v=3.1.34";
+} from "./model.js?v=3.1.35";
 import {
   loadCollection,
   saveCollection,
   requestPersistentStorage,
   getDeviceValue,
   setDeviceValue,
-} from "./storage.js?v=3.1.34";
-import { previewRatings, scheduleRating, State } from "./scheduler.js?v=3.1.34";
+} from "./storage.js?v=3.1.35";
+import { previewRatings, scheduleRating, State } from "./scheduler.js?v=3.1.35";
 import {
   createSession,
   currentCardId,
   advanceSession,
-} from "./study.js?v=3.1.34";
-import { guideView } from "./guide.js?v=3.1.34";
+} from "./study.js?v=3.1.35";
+import { guideView } from "./guide.js?v=3.1.35";
 import {
   prepareStep,
   startExploration,
@@ -66,7 +66,7 @@ import {
   beginRecall,
   recognitionOptions,
   shouldApply,
-} from "./learning.js?v=3.1.34";
+} from "./learning.js?v=3.1.35";
 import {
   facet,
   structureFor,
@@ -75,20 +75,22 @@ import {
   progressFor,
   labelMap,
   labelText,
-} from "./curriculum.js?v=3.1.34";
+  resumeLevel,
+  resumeChapter,
+} from "./curriculum.js?v=3.1.35";
 import {
   progressStrip,
   courseStructure,
   folderTile,
   groupStrip,
-} from "./curriculum-ui.js?v=3.1.34";
-import { studyScreen } from "./study-ui.js?v=3.1.34";
-import { explorationScreen } from "./exploration-ui.js?v=3.1.34";
-import { emailView } from "./email-ui.js?v=3.1.34";
-import { setupSwipe } from "./swipe.js?v=3.1.34";
-import { CloudConnection } from "./cloud.js?v=3.1.34";
-import { cloudPanel, conflictBody } from "./cloud-ui.js?v=3.1.34";
-import { LocalChangedError, localFromCloud } from "./sync-core.js?v=3.1.34";
+} from "./curriculum-ui.js?v=3.1.35";
+import { studyScreen } from "./study-ui.js?v=3.1.35";
+import { explorationScreen } from "./exploration-ui.js?v=3.1.35";
+import { emailView } from "./email-ui.js?v=3.1.35";
+import { setupSwipe } from "./swipe.js?v=3.1.35";
+import { CloudConnection } from "./cloud.js?v=3.1.35";
+import { cloudPanel, conflictBody } from "./cloud-ui.js?v=3.1.35";
+import { LocalChangedError, localFromCloud } from "./sync-core.js?v=3.1.35";
 import {
   setupInterface,
   syncInterface,
@@ -97,7 +99,7 @@ import {
   offlineUpdateReady,
   offlineAvailable,
   statusButton,
-} from "./interface.js?v=3.1.34";
+} from "./interface.js?v=3.1.35";
 
 let cloud;
 let state,
@@ -320,16 +322,15 @@ function todayView() {
     for (const chapter of names) {
       const scope = { ...base, chapter },
         st = stats(state, scope);
-      if (st.due + st.newToday + st.learning > 0)
+      if (st.due + st.learning > 0)
         openChapters.push({ set, chapter, scope, stats: st });
     }
   }
   openChapters.sort(
     (a, b) =>
       b.stats.due +
-      b.stats.newToday +
       b.stats.learning -
-      (a.stats.due + a.stats.newToday + a.stats.learning),
+      (a.stats.due + a.stats.learning),
   );
   const topChapters = openChapters.slice(0, 6);
   const date = new Intl.DateTimeFormat("nl-BE", {
@@ -421,29 +422,10 @@ function noteRow(note) {
     )}</div><div class="note-state"><span class="pill">${cards.every((c) => c.suspended) ? "Gepauzeerd" : due ? "Te herhalen" : fresh ? "Nieuw" : "In je planning"}</span>${cards.some((c) => c.practiceMark === "unknown") ? '<span class="small attention">Nog oefenen</span>' : ""}${note.learning?.choice || note.learning?.application ? '<span class="small muted">Extra oefeningen</span>' : ""}</div></div><div class="note-answer">${markdown(note.back || "Invulkaart")}</div><div class="note-actions"><button class="icon-button ${note.starred ? "is-starred" : ""}" data-action="star-note" data-id="${e(note.id)}" aria-label="${note.starred ? "Ster verwijderen" : "Ster toevoegen"}" aria-pressed="${!!note.starred}">${icon("star")}</button><button class="icon-button" data-action="edit-note" data-id="${e(note.id)}" aria-label="Kaart bewerken">${icon("edit")}</button></div></article>`;
 }
 function setContinue(set, fallbackScope) {
-  // Set pages default to resuming the most urgent chapter, never the whole
-  // set at once. Chapter rows below stay available for the rest.
-  const base = {
-    type: "set",
-    id: set.id,
-    ...(ui.level ? { level: ui.level } : {}),
-  };
-  const chapters = [...structureFor(state, base).chapters];
-  if (
-    scopeNotes(state, base).some(
-      (n) => !n.tags.some((t) => t.startsWith("hoofdstuk::")),
-    )
-  )
-    chapters.push("__none");
-  let best = null;
-  for (const chapter of chapters) {
-    const sc = { ...base, chapter },
-      st = stats(state, sc),
-      open = st.due + st.newToday + st.learning;
-    if (open > 0 && (!best || open > best.open))
-      best = { chapter, scope: sc };
-  }
-  if (!best)
+  // Set pages default to resuming the busiest engaged chapter, never the
+  // whole set at once. Chapter rows below stay available for the rest.
+  const found = resumeChapter(state, set, ui.level || "");
+  if (!found)
     return button(
       "Vrij oefenen",
       "start-practice",
@@ -451,12 +433,12 @@ function setContinue(set, fallbackScope) {
       actionScope(fallbackScope),
       "refresh",
     );
-  const label = `${ui.level ? levelLabel(set, ui.level) + " · " : ""}${chapterLabel(set, best.chapter === "__none" ? "" : best.chapter)}`;
+  const label = `${ui.level ? levelLabel(set, ui.level) + " · " : ""}${chapterLabel(set, found.chapter === "__none" ? "" : found.chapter)}`;
   return button(
     `Ga verder: ${e(label)}`,
     "start-learn",
     "primary large",
-    actionScope(best.scope) + ` aria-label="Ga verder met ${e(label)}"`,
+    actionScope(found.scope) + ` aria-label="Ga verder met ${e(label)}"`,
     "arrow",
   );
 }
@@ -465,15 +447,10 @@ function notesView(r) {
     set = r.type === "set" ? state.sets.find((s) => s.id === r.id) : null;
   if (r.type === "set" && !set) return notFoundView();
   if (set && !ui.level && !ui.chapter && !ui.levelChoice) {
-    // One level is always selected: default to where the most work is open,
-    // so same-named chapters from other levels never merge.
-    let best = null;
-    for (const level of structureFor(state, scope).levels) {
-      const st = stats(state, { ...scope, level }),
-        open = st.due + st.newToday + st.learning;
-      if (open > 0 && (!best || open > best.open)) best = { level, open };
-    }
-    if (best) ui.level = best.level;
+    // One level is always selected: default to where you are busy, so
+    // same-named chapters from other levels never merge.
+    const busy = resumeLevel(state, set);
+    if (busy) ui.level = busy;
   }
   const allNotes = scopeNotes(state, scope),
     selectedScope = {
@@ -2224,7 +2201,7 @@ async function boot() {
     state = saved ? validateCollection(saved) : emptyCollection();
     if (!saved) {
       try {
-        const response = await fetch("./data/starter.json?v=3.1.34");
+        const response = await fetch("./data/starter.json?v=3.1.35");
         if (!response.ok) throw new Error("Starterbestand ontbreekt.");
         const starters = await response.json();
         for (const data of starters) {

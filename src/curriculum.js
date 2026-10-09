@@ -1,5 +1,5 @@
-import { scopeNotes, scopeCards } from "./model.js?v=3.1.34";
-import { evidenceState } from "./learning.js?v=3.1.34";
+import { scopeNotes, scopeCards, stats } from "./model.js?v=3.1.35";
+import { evidenceState } from "./learning.js?v=3.1.35";
 export function facet(note, prefix) {
   return (
     note.tags
@@ -80,4 +80,49 @@ export function labelText(state, set, kind) {
   for (const [k, v] of Object.entries(custom))
     if (!seen.has(k)) lines.push(`${k} = ${v}`);
   return lines.join("\n");
+}
+
+// Where are you busy? Engaged work (due reviews plus explored-but-unrated)
+// outranks untouched new cards, so pristine material never hijacks a
+// default. Falls back to the first chapter or level with new cards.
+export function engagedOpen(state, scope) {
+  const st = stats(state, scope);
+  return st.due + st.learning;
+}
+export function resumeLevel(state, set) {
+  const scope = { type: "set", id: set.id };
+  let best = null,
+    firstNew = null;
+  for (const level of structureFor(state, scope).levels) {
+    const st = stats(state, { ...scope, level }),
+      engaged = st.due + st.learning;
+    if (engaged > 0 && (!best || engaged > best.open))
+      best = { level, open: engaged };
+    if (firstNew == null && st.newToday > 0) firstNew = level;
+  }
+  return best ? best.level : (firstNew ?? "");
+}
+export function resumeChapter(state, set, level) {
+  const base = { type: "set", id: set.id, ...(level ? { level } : {}) },
+    names = [...structureFor(state, base).chapters];
+  if (
+    scopeNotes(state, base).some(
+      (n) => !n.tags.some((t) => t.startsWith("hoofdstuk::")),
+    )
+  )
+    names.push("__none");
+  let best = null,
+    firstNew = null;
+  for (const chapter of names) {
+    const st = stats(state, { ...base, chapter }),
+      engaged = st.due + st.learning;
+    if (engaged > 0 && (!best || engaged > best.open))
+      best = { chapter, open: engaged };
+    if (firstNew == null && st.newToday > 0) firstNew = chapter;
+  }
+  if (best)
+    return { chapter: best.chapter, scope: { ...base, chapter: best.chapter } };
+  if (firstNew != null)
+    return { chapter: firstNew, scope: { ...base, chapter: firstNew } };
+  return null;
 }
