@@ -1,17 +1,17 @@
-import { escapeHTML as e, countLabel } from "./utils.js?v=3.1.35";
-import { icon } from "./icons.js?v=3.1.35";
+import { escapeHTML as e, countLabel } from "./utils.js?v=3.1.36";
+import { icon } from "./icons.js?v=3.1.36";
 import {
   scopeNotes,
   scopeCards,
   stats,
   folderDescendants,
-} from "./model.js?v=3.1.35";
+} from "./model.js?v=3.1.36";
 import {
   progressFor,
   structureFor,
   levelLabel,
   chapterLabel,
-} from "./curriculum.js?v=3.1.35";
+} from "./curriculum.js?v=3.1.36";
 export function progressStrip(state, scope, { labels = true } = {}) {
   const p = progressFor(state, scope);
   return `<div class="evidence"><div class="evidence-track" role="img" aria-label="${p.new} nieuw, ${p.building} in opbouw, ${p.spaced} op meerdere dagen correct beoordeeld">${p.total ? `<span class="evidence-spaced" style="width:${(p.spaced / p.total) * 100}%"></span><span class="evidence-building" style="width:${(p.building / p.total) * 100}%"></span>` : ""}</div>${labels ? `<div class="evidence-key"><span><i class="key-building"></i>${p.building} in opbouw</span><span><i class="key-spaced"></i>${p.spaced} gespreid opgehaald</span></div>` : ""}</div>`;
@@ -29,15 +29,10 @@ export function courseStructure(state, set, ui, button, actionScope) {
       ? `<div class="level-grid">${structure.levels
           .map((value, index) => {
             const sc = { ...scope, level: value },
-              p = progressFor(state, sc),
               s = stats(state, sc),
-              open = s.due + s.newToday + s.learning,
-              sub = [`${countLabel(p.total, "kaart", "kaarten")}`];
-            if (s.due) sub.push(`${s.due} herhalen`);
-            if (s.newToday) sub.push(`${s.newToday} nieuw`);
-            if (s.learning) sub.push(`${s.learning} in leren`);
+              open = s.due + s.newToday + s.learning;
             const idx = `<span class="level-index">${String(index + 1).padStart(2, "0")}</span>`;
-            return `<article class="level-card ${ui.level === value ? "selected" : ""}">${idx}<button class="level-main" data-action="select-level" data-level="${e(value)}" aria-pressed="${ui.level === value}" aria-label="${e(levelLabel(set, value))} filteren"><span class="level-title">${e(levelLabel(set, value))}</span><span class="small muted">${sub.join(" · ")}</span></button>${open ? `<button class="icon-button level-play" data-action="start-learn" ${actionScope({ ...scope, level: value })} aria-label="${e(levelLabel(set, value))} leren">${icon("play")}</button>` : ""}</article>`;
+            return `<article class="level-card ${ui.level === value ? "selected" : ""}">${idx}<button class="level-main" data-action="select-level" data-level="${e(value)}" aria-pressed="${ui.level === value}" aria-label="${e(levelLabel(set, value))} filteren"><span class="level-title">${e(levelLabel(set, value))}</span>${groupStrip(state, sc)}</button>${open ? `<button class="icon-button level-play" data-action="start-learn" ${actionScope({ ...scope, level: value })} aria-label="${e(levelLabel(set, value))} leren">${icon("play")}</button>` : ""}</article>`;
           })
           .join(
             "",
@@ -52,10 +47,8 @@ export function courseStructure(state, set, ui, button, actionScope) {
       : []),
   ]
     .map((value) => {
-      const sc = { ...baseScope, chapter: value },
-        s = stats(state, sc),
-        p = progressFor(state, sc);
-      return `<article class="chapter-row"><div class="chapter-symbol">${icon("book")}</div><button class="chapter-open" data-action="select-chapter" data-chapter="${e(value)}"><strong>${e(chapterLabel(set, value === "__none" ? "" : value))}</strong><span>${countLabel(s.total, "kaart", "kaarten")} · ${s.due ? `${s.due} te herhalen` : p.spaced ? `${p.spaced} gespreid opgehaald` : "Op jouw tempo"}</span>${groupStrip(state, sc)}</button>${button("Leren", "start-learn", "chapter-learn", actionScope(sc) + ` aria-label="${e(chapterLabel(set, value === "__none" ? "" : value))} leren"`, "play")}<button class="icon-button" data-action="select-chapter" data-chapter="${e(value)}" aria-label="${e(chapterLabel(set, value === "__none" ? "" : value))} bekijken">${icon("chevron")}</button></article>`;
+      const sc = { ...baseScope, chapter: value };
+      return `<article class="chapter-row"><div class="chapter-symbol">${icon("book")}</div><button class="chapter-open" data-action="select-chapter" data-chapter="${e(value)}"><strong>${e(chapterLabel(set, value === "__none" ? "" : value))}</strong>${groupStrip(state, sc)}</button>${button("Leren", "start-learn", "chapter-learn", actionScope(sc) + ` aria-label="${e(chapterLabel(set, value === "__none" ? "" : value))} leren"`, "play")}<button class="icon-button" data-action="select-chapter" data-chapter="${e(value)}" aria-label="${e(chapterLabel(set, value === "__none" ? "" : value))} bekijken">${icon("chevron")}</button></article>`;
     })
     .join("")}</div>
   <p class="small muted evidence-disclaimer">“Gespreid opgehaald” = op minstens twee verschillende dagen, met minstens 24 uur ertussen, zonder hulp als correct beoordeeld. Geen garantie op begrip of examenresultaat.</p></section>`;
