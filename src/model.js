@@ -1,7 +1,7 @@
-import { uid, localDay, nextMidnight, normalize } from "./utils.js?v=3.1.25";
-import { emptySchedule, State, retrievability } from "./scheduler.js?v=3.1.25";
-import { validateNote, clozeMatches } from "./parser.js?v=3.1.25";
-import { exploredCardIds } from "./learning.js?v=3.1.25";
+import { uid, localDay, nextMidnight, normalize } from "./utils.js?v=3.1.26";
+import { emptySchedule, State, retrievability } from "./scheduler.js?v=3.1.26";
+import { validateNote, clozeMatches } from "./parser.js?v=3.1.26";
+import { exploredCardIds } from "./learning.js?v=3.1.26";
 export const SCHEMA_VERSION = 1;
 export const DEFAULT_SETTINGS = {
   newPerDay: 15,
@@ -196,6 +196,29 @@ export function deleteNotes(state, ids) {
   state.activities = (state.activities ?? []).filter(
     (a) => !cards.has(a.cardId),
   );
+}
+// Swap question and answer for a whole set (e.g. French term to Dutch term).
+// Basic and reverse notes flip; cloze notes are skipped because their
+// fill-in markers live in the question. Planning is kept: only the
+// direction changes.
+export function swapSetQA(state, setId) {
+  let swapped = 0,
+    skipped = 0;
+  for (const note of state.notes) {
+    if (note.setId !== setId) continue;
+    if (note.kind === "cloze") {
+      skipped++;
+      continue;
+    }
+    const front = note.front;
+    note.front = note.back;
+    note.back = front;
+    note.updatedAt = Date.now();
+    swapped++;
+  }
+  const set = state.sets.find((s) => s.id === setId);
+  if (set) set.updatedAt = Date.now();
+  return { swapped, skipped };
 }
 export function resetSet(state, setId) {
   const wanted = new Set(

@@ -15,6 +15,7 @@ import {
   faces,
   deleteNotes,
   resetSet,
+  swapSetQA,
   validateCollection,
 } from "../src/model.js";
 import {
@@ -287,4 +288,26 @@ test("Flashcards husselen staat aan en volgt de instelling", () => {
     expected = queueFor(s, scope, Date.now(), { practice: true }),
     session = createSession(s, scope, { mode: "flash" });
   assert.deepEqual(session.queue, expected);
+});
+
+test("Set swap flips basic and reverse, skips cloze", () => {
+  const s = emptyCollection(),
+    set = newSet(s, { title: "Frans" }),
+    other = newSet(s, { title: "Latijn" });
+  upsertNote(s, set.id, { kind: "basic", front: "pomme", back: "appel" });
+  upsertNote(s, set.id, { kind: "reverse", front: "lire", back: "lezen" });
+  upsertNote(s, set.id, {
+    kind: "cloze",
+    front: "De {{c1::kat}} slaapt.",
+    back: "Uitleg",
+  });
+  upsertNote(s, other.id, { kind: "basic", front: "aqua", back: "water" });
+  assert.deepEqual(swapSetQA(s, set.id), { swapped: 2, skipped: 1 });
+  const [a, b, c, d] = s.notes;
+  assert.equal(a.front, "appel");
+  assert.equal(a.back, "pomme");
+  assert.equal(b.front, "lezen");
+  assert.equal(b.back, "lire");
+  assert.ok(c.front.includes("{{c1::kat}}"));
+  assert.equal(d.front, "aqua");
 });

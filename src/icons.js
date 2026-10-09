@@ -33,6 +33,7 @@ const paths = {
   more: '<circle cx="5" cy="12" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/>',
   pause: '<path d="M8 4v16M16 4v16"/>',
   play: '<path d="m8 4 12 8-12 8V4z"/>',
+  swap: '<path d="M8 3 4 7l4 4"/><path d="M4 7h16"/><path d="m16 21 4-4-4-4"/><path d="M20 17H4"/>',
   shuffle:
     '<path d="M3 5h3l12 14h3M3 19h3l12-14h3M18 2l3 3-3 3M18 16l3 3-3 3"/>',
   undo: '<path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 5.5 5.5 5.5 5.5 0 0 1-5.5 5.5H11"/>',

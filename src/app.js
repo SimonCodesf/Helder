@@ -10,9 +10,9 @@ import {
   shuffle,
   downloadText,
   safeURL,
-} from "./utils.js?v=3.1.25";
-import { icon } from "./icons.js?v=3.1.25";
-import { markdown } from "./markdown.js?v=3.1.25";
+} from "./utils.js?v=3.1.26";
+import { icon } from "./icons.js?v=3.1.26";
+import { markdown } from "./markdown.js?v=3.1.26";
 import {
   parseImport,
   splitTags,
@@ -20,7 +20,7 @@ import {
   toMarkdown,
   toTSV,
   noteImportKey,
-} from "./parser.js?v=3.1.25";
+} from "./parser.js?v=3.1.26";
 import {
   emptyCollection,
   validateCollection,
@@ -31,6 +31,7 @@ import {
   upsertNote,
   deleteNotes,
   resetSet,
+  swapSetQA,
   scopeNotes,
   scopeCards,
   stats,
@@ -38,21 +39,21 @@ import {
   isAvailable,
   faces,
   burySiblings,
-} from "./model.js?v=3.1.25";
+} from "./model.js?v=3.1.26";
 import {
   loadCollection,
   saveCollection,
   requestPersistentStorage,
   getDeviceValue,
   setDeviceValue,
-} from "./storage.js?v=3.1.25";
-import { previewRatings, scheduleRating, State } from "./scheduler.js?v=3.1.25";
+} from "./storage.js?v=3.1.26";
+import { previewRatings, scheduleRating, State } from "./scheduler.js?v=3.1.26";
 import {
   createSession,
   currentCardId,
   advanceSession,
-} from "./study.js?v=3.1.25";
-import { guideView } from "./guide.js?v=3.1.25";
+} from "./study.js?v=3.1.26";
+import { guideView } from "./guide.js?v=3.1.26";
 import {
   prepareStep,
   startExploration,
@@ -64,7 +65,7 @@ import {
   beginRecall,
   recognitionOptions,
   shouldApply,
-} from "./learning.js?v=3.1.25";
+} from "./learning.js?v=3.1.26";
 import {
   facet,
   structureFor,
@@ -73,19 +74,19 @@ import {
   progressFor,
   labelMap,
   mapText,
-} from "./curriculum.js?v=3.1.25";
+} from "./curriculum.js?v=3.1.26";
 import {
   progressStrip,
   courseStructure,
   folderTile,
-} from "./curriculum-ui.js?v=3.1.25";
-import { studyScreen } from "./study-ui.js?v=3.1.25";
-import { explorationScreen } from "./exploration-ui.js?v=3.1.25";
-import { emailView } from "./email-ui.js?v=3.1.25";
-import { setupSwipe } from "./swipe.js?v=3.1.25";
-import { CloudConnection } from "./cloud.js?v=3.1.25";
-import { cloudPanel, conflictBody } from "./cloud-ui.js?v=3.1.25";
-import { LocalChangedError, localFromCloud } from "./sync-core.js?v=3.1.25";
+} from "./curriculum-ui.js?v=3.1.26";
+import { studyScreen } from "./study-ui.js?v=3.1.26";
+import { explorationScreen } from "./exploration-ui.js?v=3.1.26";
+import { emailView } from "./email-ui.js?v=3.1.26";
+import { setupSwipe } from "./swipe.js?v=3.1.26";
+import { CloudConnection } from "./cloud.js?v=3.1.26";
+import { cloudPanel, conflictBody } from "./cloud-ui.js?v=3.1.26";
+import { LocalChangedError, localFromCloud } from "./sync-core.js?v=3.1.26";
 import {
   setupInterface,
   syncInterface,
@@ -94,7 +95,7 @@ import {
   offlineUpdateReady,
   offlineAvailable,
   statusButton,
-} from "./interface.js?v=3.1.25";
+} from "./interface.js?v=3.1.26";
 
 let cloud;
 let state,
@@ -956,7 +957,7 @@ function openSetEditor(id) {
     "Set beheren",
     "Verplaatsen of exporteren verandert de leerplanning niet.",
     `<div class="field"><label for="set-title">Naam</label><input type="text" id="set-title" maxlength="200" value="${e(set.title)}"></div><div class="field"><label for="set-description">Beschrijving</label><textarea id="set-description">${e(set.description)}</textarea></div><div class="field"><label for="set-folder">Map</label><select id="set-folder">${folderOptions(set.folderId)}</select></div><details class="editor-extras"><summary>${icon("folder")}<span>Niveau- en hoofdstuknamen</span>${icon("down")}</summary><p class="small muted">Dit verandert alleen de namen in het overzicht, niet de tags of planning.</p><div class="field"><label for="set-levels">Niveaus</label><textarea id="set-levels" placeholder="1 = Basis&#10;2 = Verdieping&#10;3 = Toepassen">${e(mapText(set.curriculum?.levels))}</textarea></div><div class="field"><label for="set-chapters">Hoofdstukken</label><textarea id="set-chapters" placeholder="H1 = Inleiding">${e(mapText(set.curriculum?.chapters))}</textarea></div></details><div class="actions">${button("Markdown exporteren", "export-set", "", `data-id="${e(id)}" data-format="markdown"`, "download")}${button("TSV exporteren", "export-set", "", `data-id="${e(id)}" data-format="tsv"`, "download")}</div><p class="small muted" style="margin-top:12px">Deze exports bewaren kaartinhoud, geen voortgang. Gebruik voor voortgang de volledige back-up.</p>`,
-    `<div class="actions">${button("Opnieuw beginnen", "reset-set", "ghost", `data-id="${e(id)}"`, "refresh")}${button("Set verwijderen", "delete-set", "danger", `data-id="${e(id)}"`, "trash")}${button("Annuleren", "close-modal")}${button("Bewaren", "save-set", "primary")}</div>`,
+    `<div class="actions">${button("Opnieuw beginnen", "reset-set", "ghost", `data-id="${e(id)}"`, "refresh")}${button("Vraag en antwoord omdraaien", "swap-set", "ghost", `data-id="${e(id)}"`, "swap")}${button("Set verwijderen", "delete-set", "danger", `data-id="${e(id)}"`, "trash")}${button("Annuleren", "close-modal")}${button("Bewaren", "save-set", "primary")}</div>`,
   );
 }
 function openFolderEditor(id = null) {
@@ -1605,6 +1606,23 @@ async function handleClick(event) {
           },
         );
         break;
+      case "swap-set":
+        confirmModal(
+          "Vraag en antwoord omdraaien?",
+          "Alle gewone kaarten in deze set wisselen van richting. Je planning blijft bewaard. Invulkaarten worden overgeslagen.",
+          async () => {
+            let result = { swapped: 0, skipped: 0 };
+            await mutate((next) => {
+              result = swapSetQA(next, id);
+            });
+            modal.close();
+            draft = null;
+            toast(
+              `${result.swapped} omgedraaid${result.skipped ? `, ${result.skipped} invulkaarten overgeslagen` : ""}.`,
+            );
+          },
+        );
+        break;
       case "save-folder": {
         const name = $("#folder-name").value.trim(),
           parentId = $("#folder-parent").value || null,
@@ -2036,7 +2054,7 @@ async function boot() {
     state = saved ? validateCollection(saved) : emptyCollection();
     if (!saved) {
       try {
-        const response = await fetch("./data/starter.json?v=3.1.25");
+        const response = await fetch("./data/starter.json?v=3.1.26");
         if (!response.ok) throw new Error("Starterbestand ontbreekt.");
         const starters = await response.json();
         for (const data of starters) {
