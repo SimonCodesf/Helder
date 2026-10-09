@@ -1,5 +1,5 @@
-import { normalize } from "./utils.js?v=3.1.40";
-import { validateLearning } from "./learning.js?v=3.1.40";
+import { normalize } from "./utils.js?v=3.1.41";
+import { validateLearning } from "./learning.js?v=3.1.41";
 export class ImportError extends Error {
   constructor(message) {
     super(message);
@@ -218,10 +218,17 @@ export function parseMarkdown(text) {
       }
     }
     if (card) answer.push(raw);
-    else if (raw.trim())
-      throw new ImportError(
-        "Begin een kaart met ## Vraag. Een setnaam begint met # Setnaam.",
-      );
+    else if (raw.trim()) {
+      if (result.notes.length)
+        throw new ImportError(
+          "Begin een kaart met ## Vraag. Een setnaam begint met # Setnaam.",
+        );
+      // Prose before the first card (reading guide, safety notes): keep it
+      // as part of the set description instead of rejecting the import.
+      result.description = [result.description, raw.trim()]
+        .filter(Boolean)
+        .join("\n\n");
+    }
   }
   if (exercise) throw new ImportError("Sluit je extra oefening af met :::.");
   if (inCode)

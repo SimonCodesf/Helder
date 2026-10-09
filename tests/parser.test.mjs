@@ -183,3 +183,12 @@ test("List titles hide raw image code", () => {
   assert.equal(stripImages("![](https://example.org/b.png)"), "[afbeelding]");
   assert.equal(stripImages("Gewone vraag?"), "Gewone vraag?");
 });
+
+test("Prose before the first card joins the set description", () => {
+  const out = parseMarkdown(
+    "# Titel\nbeschrijving: Kort.\n\n**Leeswijzer:** eerst dit.\n\n## Vraag\n\nAntwoord\n",
+  );
+  assert.equal(out.notes.length, 1);
+  assert.ok(out.description.includes("Kort."));
+  assert.ok(out.description.includes("eerst dit"));
+});
