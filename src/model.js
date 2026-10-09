@@ -1,7 +1,7 @@
-import { uid, localDay, nextMidnight, normalize } from "./utils.js?v=3.1.32";
-import { emptySchedule, State, retrievability } from "./scheduler.js?v=3.1.32";
-import { validateNote, clozeMatches } from "./parser.js?v=3.1.32";
-import { exploredCardIds } from "./learning.js?v=3.1.32";
+import { uid, localDay, nextMidnight, normalize } from "./utils.js?v=3.1.33";
+import { emptySchedule, State, retrievability } from "./scheduler.js?v=3.1.33";
+import { validateNote, clozeMatches } from "./parser.js?v=3.1.33";
+import { exploredCardIds } from "./learning.js?v=3.1.33";
 export const SCHEMA_VERSION = 1;
 export const DEFAULT_SETTINGS = {
   newPerDay: 15,
@@ -219,6 +219,22 @@ export function swapSetQA(state, setId) {
   const set = state.sets.find((s) => s.id === setId);
   if (set) set.updatedAt = Date.now();
   return { swapped, skipped };
+}
+// Give a whole selection one chapter at once. Existing chapter tags are
+// replaced; all other tags stay untouched.
+export function setChapter(state, ids, chapter) {
+  const wanted = new Set(ids);
+  let changed = 0;
+  for (const note of state.notes) {
+    if (!wanted.has(note.id)) continue;
+    note.tags = [
+      ...note.tags.filter((t) => !t.startsWith("hoofdstuk::")),
+      `hoofdstuk::${chapter}`,
+    ];
+    note.updatedAt = Date.now();
+    changed++;
+  }
+  return changed;
 }
 export function resetSet(state, setId) {
   const wanted = new Set(

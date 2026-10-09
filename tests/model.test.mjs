@@ -16,6 +16,7 @@ import {
   deleteNotes,
   resetSet,
   swapSetQA,
+  setChapter,
   validateCollection,
 } from "../src/model.js";
 import {
@@ -310,4 +311,27 @@ test("Set swap flips basic and reverse, skips cloze", () => {
   assert.equal(b.back, "lire");
   assert.ok(c.front.includes("{{c1::kat}}"));
   assert.equal(d.front, "aqua");
+});
+
+test("Bulk chapter replaces chapter tags, keeps the rest", () => {
+  const s = emptyCollection(),
+    set = newSet(s, { title: "Vak" });
+  const a = upsertNote(s, set.id, {
+    kind: "basic",
+    front: "V1",
+    back: "A1",
+    tags: ["niveau::1"],
+  });
+  const b = upsertNote(s, set.id, {
+    kind: "basic",
+    front: "V2",
+    back: "A2",
+    tags: ["niveau::1", "hoofdstuk::H0", "kern"],
+  });
+  assert.equal(setChapter(s, [a.id, b.id], "H1"), 2);
+  assert.ok(s.notes[0].tags.includes("hoofdstuk::H1"));
+  assert.ok(s.notes[0].tags.includes("niveau::1"));
+  assert.ok(!s.notes[1].tags.includes("hoofdstuk::H0"));
+  assert.ok(s.notes[1].tags.includes("kern"));
+  assert.equal(setChapter(s, ["missing"], "H2"), 0);
 });

@@ -10,9 +10,9 @@ import {
   shuffle,
   downloadText,
   safeURL,
-} from "./utils.js?v=3.1.32";
-import { icon } from "./icons.js?v=3.1.32";
-import { markdown } from "./markdown.js?v=3.1.32";
+} from "./utils.js?v=3.1.33";
+import { icon } from "./icons.js?v=3.1.33";
+import { markdown } from "./markdown.js?v=3.1.33";
 import {
   parseImport,
   splitTags,
@@ -20,7 +20,7 @@ import {
   toMarkdown,
   toTSV,
   noteImportKey,
-} from "./parser.js?v=3.1.32";
+} from "./parser.js?v=3.1.33";
 import {
   emptyCollection,
   validateCollection,
@@ -32,6 +32,7 @@ import {
   deleteNotes,
   resetSet,
   swapSetQA,
+  setChapter,
   scopeNotes,
   scopeCards,
   stats,
@@ -39,21 +40,21 @@ import {
   isAvailable,
   faces,
   burySiblings,
-} from "./model.js?v=3.1.32";
+} from "./model.js?v=3.1.33";
 import {
   loadCollection,
   saveCollection,
   requestPersistentStorage,
   getDeviceValue,
   setDeviceValue,
-} from "./storage.js?v=3.1.32";
-import { previewRatings, scheduleRating, State } from "./scheduler.js?v=3.1.32";
+} from "./storage.js?v=3.1.33";
+import { previewRatings, scheduleRating, State } from "./scheduler.js?v=3.1.33";
 import {
   createSession,
   currentCardId,
   advanceSession,
-} from "./study.js?v=3.1.32";
-import { guideView } from "./guide.js?v=3.1.32";
+} from "./study.js?v=3.1.33";
+import { guideView } from "./guide.js?v=3.1.33";
 import {
   prepareStep,
   startExploration,
@@ -65,7 +66,7 @@ import {
   beginRecall,
   recognitionOptions,
   shouldApply,
-} from "./learning.js?v=3.1.32";
+} from "./learning.js?v=3.1.33";
 import {
   facet,
   structureFor,
@@ -74,20 +75,20 @@ import {
   progressFor,
   labelMap,
   labelText,
-} from "./curriculum.js?v=3.1.32";
+} from "./curriculum.js?v=3.1.33";
 import {
   progressStrip,
   courseStructure,
   folderTile,
   groupStrip,
-} from "./curriculum-ui.js?v=3.1.32";
-import { studyScreen } from "./study-ui.js?v=3.1.32";
-import { explorationScreen } from "./exploration-ui.js?v=3.1.32";
-import { emailView } from "./email-ui.js?v=3.1.32";
-import { setupSwipe } from "./swipe.js?v=3.1.32";
-import { CloudConnection } from "./cloud.js?v=3.1.32";
-import { cloudPanel, conflictBody } from "./cloud-ui.js?v=3.1.32";
-import { LocalChangedError, localFromCloud } from "./sync-core.js?v=3.1.32";
+} from "./curriculum-ui.js?v=3.1.33";
+import { studyScreen } from "./study-ui.js?v=3.1.33";
+import { explorationScreen } from "./exploration-ui.js?v=3.1.33";
+import { emailView } from "./email-ui.js?v=3.1.33";
+import { setupSwipe } from "./swipe.js?v=3.1.33";
+import { CloudConnection } from "./cloud.js?v=3.1.33";
+import { cloudPanel, conflictBody } from "./cloud-ui.js?v=3.1.33";
+import { LocalChangedError, localFromCloud } from "./sync-core.js?v=3.1.33";
 import {
   setupInterface,
   syncInterface,
@@ -96,7 +97,7 @@ import {
   offlineUpdateReady,
   offlineAvailable,
   statusButton,
-} from "./interface.js?v=3.1.32";
+} from "./interface.js?v=3.1.33";
 
 let cloud;
 let state,
@@ -483,7 +484,7 @@ function notesView(r) {
   );
   const shown = filtered.slice(ui.page * perPage, (ui.page + 1) * perPage);
   return `<div class="page set-page"><header class="page-head"><div><div class="breadcrumb"><a href="#/library">Bibliotheek</a>${set?.folderId ? `<span>/</span><a href="${routeURL("folder", set.folderId)}">${e(folderPath(state, set.folderId).replaceAll("::", " / "))}</a>` : ""}</div><h1>${e(scopeTitle(scope))}</h1><p>${e(set?.description ?? (r.type === "difficult" ? "Je swipes naar “nog niet” en kaarten die vaker moeilijk bleken." : r.type === "starred" ? "Bewaar wat je wilt terugvinden, uit al je vakken." : "Alle kaarten met deze tag."))}</p></div><div class="head-actions detail-actions">${set ? button('<span class="btn-label">Kaarten toevoegen</span>', "add-cards", "detail-action", `data-id="${e(set.id)}" aria-label="Kaarten toevoegen"`, "plus") + button('<span class="btn-label">Set beheren</span>', "edit-set", "detail-action", `data-id="${e(set.id)}" aria-label="Set beheren"`, "more") : ""}</div></header>${hasStructure ? `<nav class="course-tabs" aria-label="Setweergave"><button class="${overview ? "active" : ""}" data-action="course-tab" data-view="overview" aria-pressed="${overview}">Overzicht</button><button class="${!overview ? "active" : ""}" data-action="course-tab" data-view="cards" aria-pressed="${!overview}">Kaarten <span>${allNotes.length}</span></button></nav>` : ""}<div class="set-study-actions">${set && hasStructure ? setContinue(set, selectedScope) : button("Leren", "start-learn", "primary large", actionScope(selectedScope), "arrow")}${button("Flashcards", "start-flash", "large", actionScope(selectedScope), "stack")}</div><div class="set-study-meta"><span class="small muted">${countLabel(s.total, "kaart", "kaarten")} · ${s.due} te herhalen${s.learning ? ` · ${s.learning} in leren` : ""}${ui.level ? " · " + e(levelLabel(set, ui.level)) : ""}${ui.chapter ? " · " + e(chapterLabel(set, ui.chapter === "__none" ? "" : ui.chapter)) : ""}</span><div class="practice-modes">${button("Verkennen", "start-explore", "ghost", actionScope(selectedScope), "book")}${button("Toepassen", "start-transfer", "ghost", actionScope(selectedScope), "bulb")}</div></div>
-  ${overview ? courseStructure(state, set, ui, button, actionScope) : `<div class="toolbar course-filters"><label class="search-field">${icon("search")}<input type="search" id="live-query" data-live-search="notes" placeholder="Zoek een kaart…" aria-label="Kaarten zoeken" value="${e(ui.query)}"></label>${structure.levels.length ? `<select id="level-filter" aria-label="Niveau"><option value="">Alle niveaus</option>${structure.levels.map((v) => `<option value="${e(v)}" ${ui.level === v ? "selected" : ""}>${e(levelLabel(set, v))}</option>`).join("")}</select>` : ""}${structure.chapters.length ? `<select id="chapter-filter" aria-label="Hoofdstuk"><option value="">Alle hoofdstukken</option>${structure.chapters.map((v) => `<option value="${e(v)}" ${ui.chapter === v ? "selected" : ""}>${e(chapterLabel(set, v))}</option>`).join("")}<option value="__none" ${ui.chapter === "__none" ? "selected" : ""}>Zonder hoofdstuk</option></select>` : ""}<select id="tag-filter" aria-label="Overige tags">${tagOptions(allNotes)}</select></div><div class="section-head"><h2>Kaarten</h2><span class="small muted">${filtered.length} notities</span></div>${shown.length ? `<div class="cards-list">${shown.map(noteRow).join("")}</div><div class="pagination"><span>${ui.page * perPage + 1}–${Math.min((ui.page + 1) * perPage, filtered.length)} van ${filtered.length}</span><div class="actions">${button("Vorige", "page-prev", "", ui.page ? "" : "disabled", "back")}${button("Volgende", "page-next", "", (ui.page + 1) * perPage < filtered.length ? "" : "disabled", "chevron")}</div></div>` : emptyHTML("Geen kaarten in deze selectie.", "Kies een ander niveau of hoofdstuk, of maak een kaart.")}`}
+  ${overview ? courseStructure(state, set, ui, button, actionScope) : `<div class="toolbar course-filters"><label class="search-field">${icon("search")}<input type="search" id="live-query" data-live-search="notes" placeholder="Zoek een kaart…" aria-label="Kaarten zoeken" value="${e(ui.query)}"></label>${structure.levels.length ? `<select id="level-filter" aria-label="Niveau"><option value="">Alle niveaus</option>${structure.levels.map((v) => `<option value="${e(v)}" ${ui.level === v ? "selected" : ""}>${e(levelLabel(set, v))}</option>`).join("")}</select>` : ""}${structure.chapters.length ? `<select id="chapter-filter" aria-label="Hoofdstuk"><option value="">Alle hoofdstukken</option>${structure.chapters.map((v) => `<option value="${e(v)}" ${ui.chapter === v ? "selected" : ""}>${e(chapterLabel(set, v))}</option>`).join("")}<option value="__none" ${ui.chapter === "__none" ? "selected" : ""}>Zonder hoofdstuk</option></select>` : ""}<select id="tag-filter" aria-label="Overige tags">${tagOptions(allNotes)}</select></div><div class="section-head"><h2>Kaarten</h2><span class="small muted">${filtered.length} notities</span>${set ? button("Hoofdstuk instellen", "bulk-chapter", "soft", `data-id="${e(set.id)}"`, "folder") : ""}</div>${shown.length ? `<div class="cards-list">${shown.map(noteRow).join("")}</div><div class="pagination"><span>${ui.page * perPage + 1}–${Math.min((ui.page + 1) * perPage, filtered.length)} van ${filtered.length}</span><div class="actions">${button("Vorige", "page-prev", "", ui.page ? "" : "disabled", "back")}${button("Volgende", "page-next", "", (ui.page + 1) * perPage < filtered.length ? "" : "disabled", "chevron")}</div></div>` : emptyHTML("Geen kaarten in deze selectie.", "Kies een ander niveau of hoofdstuk, of maak een kaart.")}`}
   <div class="scope-practice">${button("Extra ophalen oefenen", "start-practice", "ghost", actionScope(selectedScope), "refresh")}<span class="small muted">Buiten je planning</span></div></div>`;
 }
 function settingsView() {
@@ -1045,6 +1046,27 @@ function openNoteEditor(id) {
     "Typo aanpassen? Je planning blijft staan. Nieuwe betekenis? Start de planning opnieuw.",
     `<form id="note-edit-form">${noteFields(note)}<div class="check-field"><input type="checkbox" id="note-reset"><label for="note-reset">Leerplanning opnieuw starten<div class="help">Wist de beoordelingen en planning van alle kaarten van deze notitie.</div></label></div><div class="actions">${button("Voorbeeld", "note-preview", "ghost", "", "book")}${button(state.cards.filter((c) => c.noteId === id).every((c) => c.suspended) ? "Hervatten" : "Pauzeren", "pause-note", "ghost", `data-id="${e(id)}"`, "pause")}</div><div id="note-preview"></div></form>`,
     `<div class="actions">${button("Verwijderen", "delete-note", "danger", `data-id="${e(id)}"`, "trash")}${button("Annuleren", "close-modal")}${button("Bewaren", "save-note", "primary")}</div>`,
+  );
+}
+function openBulkChapter(id) {
+  const selected = scopeNotes(state, {
+    ...routeScope(),
+    query: ui.query,
+    tag: ui.tag,
+    level: ui.level,
+    chapter: ui.chapter,
+  });
+  if (!selected.length) {
+    toast("Geen kaarten in deze selectie.");
+    return;
+  }
+  const current = ui.chapter && ui.chapter !== "__none" ? ui.chapter : "";
+  draft = { type: "bulk-chapter", id };
+  openModal(
+    "Hoofdstuk instellen",
+    `${selected.length} kaarten in deze selectie krijgen samen één hoofdstuk. Bestaande hoofdstukken worden vervangen; andere tags blijven staan.`,
+    `<div class="field"><label for="bulk-chapter">Hoofdstuk</label><input id="bulk-chapter" maxlength="100" placeholder="Bijv. H1" value="${e(current)}"></div>`,
+    `<div class="actions">${button("Annuleren", "close-modal")}${button("Bewaren", "bulk-chapter-save", "primary")}</div>`,
   );
 }
 function openSetEditor(id) {
@@ -1727,6 +1749,33 @@ async function handleClick(event) {
           },
         );
         break;
+      case "bulk-chapter":
+        openBulkChapter(id);
+        break;
+      case "bulk-chapter-save": {
+        const raw = $("#bulk-chapter")
+          .value.trim()
+          .replace(/^hoofdstuk::/i, "");
+        if (!raw)
+          throw new Error("Geef een hoofdstuk, bijvoorbeeld H1.");
+        if (/[,;\n]/.test(raw) || raw.includes("::") || raw.length > 100)
+          throw new Error(
+            "Gebruik een korte naam zonder leestekens, bijvoorbeeld H1.",
+          );
+        const ids = scopeNotes(state, {
+          ...routeScope(),
+          query: ui.query,
+          tag: ui.tag,
+          level: ui.level,
+          chapter: ui.chapter,
+        }).map((n) => n.id);
+        const n = await mutate((next) => setChapter(next, ids, raw));
+        ui.chapter = raw;
+        modal.close();
+        draft = null;
+        toast(`${n} kaarten in ${raw} gezet.`);
+        break;
+      }
       case "save-folder": {
         const name = $("#folder-name").value.trim(),
           parentId = $("#folder-parent").value || null,
@@ -2158,7 +2207,7 @@ async function boot() {
     state = saved ? validateCollection(saved) : emptyCollection();
     if (!saved) {
       try {
-        const response = await fetch("./data/starter.json?v=3.1.32");
+        const response = await fetch("./data/starter.json?v=3.1.33");
         if (!response.ok) throw new Error("Starterbestand ontbreekt.");
         const starters = await response.json();
         for (const data of starters) {
