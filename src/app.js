@@ -10,9 +10,9 @@ import {
   shuffle,
   downloadText,
   safeURL,
-} from "./utils.js?v=3.1.33";
-import { icon } from "./icons.js?v=3.1.33";
-import { markdown } from "./markdown.js?v=3.1.33";
+} from "./utils.js?v=3.1.34";
+import { icon } from "./icons.js?v=3.1.34";
+import { markdown } from "./markdown.js?v=3.1.34";
 import {
   parseImport,
   splitTags,
@@ -20,7 +20,7 @@ import {
   toMarkdown,
   toTSV,
   noteImportKey,
-} from "./parser.js?v=3.1.33";
+} from "./parser.js?v=3.1.34";
 import {
   emptyCollection,
   validateCollection,
@@ -40,21 +40,21 @@ import {
   isAvailable,
   faces,
   burySiblings,
-} from "./model.js?v=3.1.33";
+} from "./model.js?v=3.1.34";
 import {
   loadCollection,
   saveCollection,
   requestPersistentStorage,
   getDeviceValue,
   setDeviceValue,
-} from "./storage.js?v=3.1.33";
-import { previewRatings, scheduleRating, State } from "./scheduler.js?v=3.1.33";
+} from "./storage.js?v=3.1.34";
+import { previewRatings, scheduleRating, State } from "./scheduler.js?v=3.1.34";
 import {
   createSession,
   currentCardId,
   advanceSession,
-} from "./study.js?v=3.1.33";
-import { guideView } from "./guide.js?v=3.1.33";
+} from "./study.js?v=3.1.34";
+import { guideView } from "./guide.js?v=3.1.34";
 import {
   prepareStep,
   startExploration,
@@ -66,7 +66,7 @@ import {
   beginRecall,
   recognitionOptions,
   shouldApply,
-} from "./learning.js?v=3.1.33";
+} from "./learning.js?v=3.1.34";
 import {
   facet,
   structureFor,
@@ -75,20 +75,20 @@ import {
   progressFor,
   labelMap,
   labelText,
-} from "./curriculum.js?v=3.1.33";
+} from "./curriculum.js?v=3.1.34";
 import {
   progressStrip,
   courseStructure,
   folderTile,
   groupStrip,
-} from "./curriculum-ui.js?v=3.1.33";
-import { studyScreen } from "./study-ui.js?v=3.1.33";
-import { explorationScreen } from "./exploration-ui.js?v=3.1.33";
-import { emailView } from "./email-ui.js?v=3.1.33";
-import { setupSwipe } from "./swipe.js?v=3.1.33";
-import { CloudConnection } from "./cloud.js?v=3.1.33";
-import { cloudPanel, conflictBody } from "./cloud-ui.js?v=3.1.33";
-import { LocalChangedError, localFromCloud } from "./sync-core.js?v=3.1.33";
+} from "./curriculum-ui.js?v=3.1.34";
+import { studyScreen } from "./study-ui.js?v=3.1.34";
+import { explorationScreen } from "./exploration-ui.js?v=3.1.34";
+import { emailView } from "./email-ui.js?v=3.1.34";
+import { setupSwipe } from "./swipe.js?v=3.1.34";
+import { CloudConnection } from "./cloud.js?v=3.1.34";
+import { cloudPanel, conflictBody } from "./cloud-ui.js?v=3.1.34";
+import { LocalChangedError, localFromCloud } from "./sync-core.js?v=3.1.34";
 import {
   setupInterface,
   syncInterface,
@@ -97,7 +97,7 @@ import {
   offlineUpdateReady,
   offlineAvailable,
   statusButton,
-} from "./interface.js?v=3.1.33";
+} from "./interface.js?v=3.1.34";
 
 let cloud;
 let state,
@@ -115,6 +115,7 @@ const ui = {
   collapsed: new Set(),
   grading: false,
   level: "",
+  levelChoice: false,
   chapter: "",
   detailTab: "overview",
 };
@@ -463,6 +464,17 @@ function notesView(r) {
   const scope = routeScope(r),
     set = r.type === "set" ? state.sets.find((s) => s.id === r.id) : null;
   if (r.type === "set" && !set) return notFoundView();
+  if (set && !ui.level && !ui.chapter && !ui.levelChoice) {
+    // One level is always selected: default to where the most work is open,
+    // so same-named chapters from other levels never merge.
+    let best = null;
+    for (const level of structureFor(state, scope).levels) {
+      const st = stats(state, { ...scope, level }),
+        open = st.due + st.newToday + st.learning;
+      if (open > 0 && (!best || open > best.open)) best = { level, open };
+    }
+    if (best) ui.level = best.level;
+  }
   const allNotes = scopeNotes(state, scope),
     selectedScope = {
       ...scope,
@@ -478,13 +490,16 @@ function notesView(r) {
     hasStructure =
       set && (structure.levels.length || structure.chapters.length),
     overview = hasStructure && ui.detailTab === "overview";
+  const filterChapters = ui.level
+    ? structureFor(state, { ...scope, level: ui.level }).chapters
+    : structure.chapters;
   ui.page = Math.min(
     ui.page,
     Math.max(0, Math.ceil(filtered.length / perPage) - 1),
   );
   const shown = filtered.slice(ui.page * perPage, (ui.page + 1) * perPage);
   return `<div class="page set-page"><header class="page-head"><div><div class="breadcrumb"><a href="#/library">Bibliotheek</a>${set?.folderId ? `<span>/</span><a href="${routeURL("folder", set.folderId)}">${e(folderPath(state, set.folderId).replaceAll("::", " / "))}</a>` : ""}</div><h1>${e(scopeTitle(scope))}</h1><p>${e(set?.description ?? (r.type === "difficult" ? "Je swipes naar “nog niet” en kaarten die vaker moeilijk bleken." : r.type === "starred" ? "Bewaar wat je wilt terugvinden, uit al je vakken." : "Alle kaarten met deze tag."))}</p></div><div class="head-actions detail-actions">${set ? button('<span class="btn-label">Kaarten toevoegen</span>', "add-cards", "detail-action", `data-id="${e(set.id)}" aria-label="Kaarten toevoegen"`, "plus") + button('<span class="btn-label">Set beheren</span>', "edit-set", "detail-action", `data-id="${e(set.id)}" aria-label="Set beheren"`, "more") : ""}</div></header>${hasStructure ? `<nav class="course-tabs" aria-label="Setweergave"><button class="${overview ? "active" : ""}" data-action="course-tab" data-view="overview" aria-pressed="${overview}">Overzicht</button><button class="${!overview ? "active" : ""}" data-action="course-tab" data-view="cards" aria-pressed="${!overview}">Kaarten <span>${allNotes.length}</span></button></nav>` : ""}<div class="set-study-actions">${set && hasStructure ? setContinue(set, selectedScope) : button("Leren", "start-learn", "primary large", actionScope(selectedScope), "arrow")}${button("Flashcards", "start-flash", "large", actionScope(selectedScope), "stack")}</div><div class="set-study-meta"><span class="small muted">${countLabel(s.total, "kaart", "kaarten")} · ${s.due} te herhalen${s.learning ? ` · ${s.learning} in leren` : ""}${ui.level ? " · " + e(levelLabel(set, ui.level)) : ""}${ui.chapter ? " · " + e(chapterLabel(set, ui.chapter === "__none" ? "" : ui.chapter)) : ""}</span><div class="practice-modes">${button("Verkennen", "start-explore", "ghost", actionScope(selectedScope), "book")}${button("Toepassen", "start-transfer", "ghost", actionScope(selectedScope), "bulb")}</div></div>
-  ${overview ? courseStructure(state, set, ui, button, actionScope) : `<div class="toolbar course-filters"><label class="search-field">${icon("search")}<input type="search" id="live-query" data-live-search="notes" placeholder="Zoek een kaart…" aria-label="Kaarten zoeken" value="${e(ui.query)}"></label>${structure.levels.length ? `<select id="level-filter" aria-label="Niveau"><option value="">Alle niveaus</option>${structure.levels.map((v) => `<option value="${e(v)}" ${ui.level === v ? "selected" : ""}>${e(levelLabel(set, v))}</option>`).join("")}</select>` : ""}${structure.chapters.length ? `<select id="chapter-filter" aria-label="Hoofdstuk"><option value="">Alle hoofdstukken</option>${structure.chapters.map((v) => `<option value="${e(v)}" ${ui.chapter === v ? "selected" : ""}>${e(chapterLabel(set, v))}</option>`).join("")}<option value="__none" ${ui.chapter === "__none" ? "selected" : ""}>Zonder hoofdstuk</option></select>` : ""}<select id="tag-filter" aria-label="Overige tags">${tagOptions(allNotes)}</select></div><div class="section-head"><h2>Kaarten</h2><span class="small muted">${filtered.length} notities</span>${set ? button("Hoofdstuk instellen", "bulk-chapter", "soft", `data-id="${e(set.id)}"`, "folder") : ""}</div>${shown.length ? `<div class="cards-list">${shown.map(noteRow).join("")}</div><div class="pagination"><span>${ui.page * perPage + 1}–${Math.min((ui.page + 1) * perPage, filtered.length)} van ${filtered.length}</span><div class="actions">${button("Vorige", "page-prev", "", ui.page ? "" : "disabled", "back")}${button("Volgende", "page-next", "", (ui.page + 1) * perPage < filtered.length ? "" : "disabled", "chevron")}</div></div>` : emptyHTML("Geen kaarten in deze selectie.", "Kies een ander niveau of hoofdstuk, of maak een kaart.")}`}
+  ${overview ? courseStructure(state, set, ui, button, actionScope) : `<div class="toolbar course-filters"><label class="search-field">${icon("search")}<input type="search" id="live-query" data-live-search="notes" placeholder="Zoek een kaart…" aria-label="Kaarten zoeken" value="${e(ui.query)}"></label>${structure.levels.length ? `<select id="level-filter" aria-label="Niveau"><option value="">Alle niveaus</option>${structure.levels.map((v) => `<option value="${e(v)}" ${ui.level === v ? "selected" : ""}>${e(levelLabel(set, v))}</option>`).join("")}</select>` : ""}${filterChapters.length ? `<select id="chapter-filter" aria-label="Hoofdstuk"><option value="">Alle hoofdstukken</option>${filterChapters.map((v) => `<option value="${e(v)}" ${ui.chapter === v ? "selected" : ""}>${e(chapterLabel(set, v))}</option>`).join("")}<option value="__none" ${ui.chapter === "__none" ? "selected" : ""}>Zonder hoofdstuk</option></select>` : ""}<select id="tag-filter" aria-label="Overige tags">${tagOptions(allNotes)}</select></div><div class="section-head"><h2>Kaarten</h2><span class="small muted">${filtered.length} notities</span>${set ? button("Hoofdstuk instellen", "bulk-chapter", "soft", `data-id="${e(set.id)}"`, "folder") : ""}</div>${shown.length ? `<div class="cards-list">${shown.map(noteRow).join("")}</div><div class="pagination"><span>${ui.page * perPage + 1}–${Math.min((ui.page + 1) * perPage, filtered.length)} van ${filtered.length}</span><div class="actions">${button("Vorige", "page-prev", "", ui.page ? "" : "disabled", "back")}${button("Volgende", "page-next", "", (ui.page + 1) * perPage < filtered.length ? "" : "disabled", "chevron")}</div></div>` : emptyHTML("Geen kaarten in deze selectie.", "Kies een ander niveau of hoofdstuk, of maak een kaart.")}`}
   <div class="scope-practice">${button("Extra ophalen oefenen", "start-practice", "ghost", actionScope(selectedScope), "refresh")}<span class="small muted">Buiten je planning</span></div></div>`;
 }
 function settingsView() {
@@ -1197,6 +1212,7 @@ async function handleClick(event) {
         break;
       case "select-level":
         ui.level = el.dataset.level || "";
+        ui.levelChoice = true;
         ui.chapter = "";
         ui.page = 0;
         renderApp();
@@ -2164,6 +2180,7 @@ window.addEventListener("hashchange", () => {
   ui.query = "";
   ui.tag = "";
   ui.level = "";
+  ui.levelChoice = false;
   ui.chapter = "";
   ui.detailTab = "overview";
   ui.page = 0;
@@ -2207,7 +2224,7 @@ async function boot() {
     state = saved ? validateCollection(saved) : emptyCollection();
     if (!saved) {
       try {
-        const response = await fetch("./data/starter.json?v=3.1.33");
+        const response = await fetch("./data/starter.json?v=3.1.34");
         if (!response.ok) throw new Error("Starterbestand ontbreekt.");
         const starters = await response.json();
         for (const data of starters) {

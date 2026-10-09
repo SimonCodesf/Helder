@@ -1,5 +1,5 @@
-import { escapeHTML as e } from "./utils.js?v=3.1.33";
-import { icon } from "./icons.js?v=3.1.33";
+import { escapeHTML as e } from "./utils.js?v=3.1.34";
+import { icon } from "./icons.js?v=3.1.34";
 export function cloudPanel(cloud, button) {
   const phase = cloud?.phase ?? "local",
     configured = !!cloud?.config;
