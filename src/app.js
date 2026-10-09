@@ -3,6 +3,7 @@ import {
   uid,
   clone,
   countLabel,
+  stripImages,
   localDay,
   nextMidnight,
   dateLabel,
@@ -10,9 +11,9 @@ import {
   shuffle,
   downloadText,
   safeURL,
-} from "./utils.js?v=3.1.39";
-import { icon } from "./icons.js?v=3.1.39";
-import { markdown } from "./markdown.js?v=3.1.39";
+} from "./utils.js?v=3.1.40";
+import { icon } from "./icons.js?v=3.1.40";
+import { markdown } from "./markdown.js?v=3.1.40";
 import {
   parseImport,
   splitTags,
@@ -20,7 +21,7 @@ import {
   toMarkdown,
   toTSV,
   noteImportKey,
-} from "./parser.js?v=3.1.39";
+} from "./parser.js?v=3.1.40";
 import {
   emptyCollection,
   validateCollection,
@@ -40,21 +41,21 @@ import {
   isAvailable,
   faces,
   burySiblings,
-} from "./model.js?v=3.1.39";
+} from "./model.js?v=3.1.40";
 import {
   loadCollection,
   saveCollection,
   requestPersistentStorage,
   getDeviceValue,
   setDeviceValue,
-} from "./storage.js?v=3.1.39";
-import { previewRatings, scheduleRating, State } from "./scheduler.js?v=3.1.39";
+} from "./storage.js?v=3.1.40";
+import { previewRatings, scheduleRating, State } from "./scheduler.js?v=3.1.40";
 import {
   createSession,
   currentCardId,
   advanceSession,
-} from "./study.js?v=3.1.39";
-import { guideView } from "./guide.js?v=3.1.39";
+} from "./study.js?v=3.1.40";
+import { guideView } from "./guide.js?v=3.1.40";
 import {
   prepareStep,
   startExploration,
@@ -66,7 +67,7 @@ import {
   beginRecall,
   recognitionOptions,
   shouldApply,
-} from "./learning.js?v=3.1.39";
+} from "./learning.js?v=3.1.40";
 import {
   facet,
   structureFor,
@@ -76,20 +77,20 @@ import {
   labelText,
   resumeLevel,
   resumeChapter,
-} from "./curriculum.js?v=3.1.39";
+} from "./curriculum.js?v=3.1.40";
 import {
   progressStrip,
   courseStructure,
   folderTile,
   groupStrip,
-} from "./curriculum-ui.js?v=3.1.39";
-import { studyScreen } from "./study-ui.js?v=3.1.39";
-import { explorationScreen } from "./exploration-ui.js?v=3.1.39";
-import { emailView } from "./email-ui.js?v=3.1.39";
-import { setupSwipe } from "./swipe.js?v=3.1.39";
-import { CloudConnection } from "./cloud.js?v=3.1.39";
-import { cloudPanel, conflictBody } from "./cloud-ui.js?v=3.1.39";
-import { LocalChangedError, localFromCloud } from "./sync-core.js?v=3.1.39";
+} from "./curriculum-ui.js?v=3.1.40";
+import { studyScreen } from "./study-ui.js?v=3.1.40";
+import { explorationScreen } from "./exploration-ui.js?v=3.1.40";
+import { emailView } from "./email-ui.js?v=3.1.40";
+import { setupSwipe } from "./swipe.js?v=3.1.40";
+import { CloudConnection } from "./cloud.js?v=3.1.40";
+import { cloudPanel, conflictBody } from "./cloud-ui.js?v=3.1.40";
+import { LocalChangedError, localFromCloud } from "./sync-core.js?v=3.1.40";
 import {
   setupInterface,
   syncInterface,
@@ -98,7 +99,7 @@ import {
   offlineUpdateReady,
   offlineAvailable,
   statusButton,
-} from "./interface.js?v=3.1.39";
+} from "./interface.js?v=3.1.40";
 
 let cloud;
 let state,
@@ -404,7 +405,7 @@ function noteRow(note) {
   const generic = note.tags.filter(
     (t) => !t.startsWith("niveau::") && !t.startsWith("hoofdstuk::"),
   );
-  return `<article class="note-row"><div class="note-title"><strong>${e(note.front)}</strong><div class="tags">${level ? `<span class="pill blue">${e(levelLabel(set, level))}</span>` : ""}${chapter ? `<span class="pill">${e(chapterLabel(set, chapter))}</span>` : ""}${generic
+  return `<article class="note-row"><div class="note-title"><strong>${e(stripImages(note.front))}</strong><div class="tags">${level ? `<span class="pill blue">${e(levelLabel(set, level))}</span>` : ""}${chapter ? `<span class="pill">${e(chapterLabel(set, chapter))}</span>` : ""}${generic
     .slice(0, 3)
     .map((t) => `<a class="tag-link" href="${routeURL("tag", t)}">${e(t)}</a>`)
     .join(
@@ -905,7 +906,7 @@ function builderSync() {
 }
 function renderBuilder() {
   const manual = draft.tab === "manual";
-  const body = `${!draft.setId ? `<div class="field"><label for="set-title">Naam van je set</label><input type="text" id="set-title" maxlength="200" placeholder="Bijvoorbeeld: Algemene filosofie" value="${e(draft.title)}"></div><details class="editor-extras set-options" ${draft.folderId || draft.description ? "open" : ""}><summary>${icon("folder")}<span>Map & beschrijving</span>${icon("down")}</summary><div class="form-row"><div class="field"><label for="set-folder">Map</label><select id="set-folder">${folderOptions(draft.folderId)}</select></div><div class="field"><label for="set-description">Korte beschrijving</label><input type="text" id="set-description" value="${e(draft.description)}" maxlength="500"></div></div></details>` : ""}<div class="tabs" role="tablist" aria-label="Kaarten invoeren"><button class="tab ${manual ? "active" : ""}" role="tab" aria-selected="${manual}" data-action="builder-tab" data-tab="manual">Handmatig</button><button class="tab ${manual ? "" : "active"}" role="tab" aria-selected="${!manual}" data-action="builder-tab" data-tab="import">Markdown / import</button></div>${manual ? `${noteFields(draft.pending)}<div class="actions">${button("Voeg kaart toe", "draft-add", "soft", "", "plus")}${button("Voorbeeld", "note-preview", "ghost", "", "book")}</div><div id="note-preview"></div><ul class="draft-list">${draft.notes.map((n, i) => `<li><span>${i + 1}. ${e(n.front)}</span><button class="icon-button" data-action="draft-remove" data-index="${i}" aria-label="Conceptkaart verwijderen">${icon("close")}</button></li>`).join("")}</ul>` : `<div class="form-row"><div class="field"><label for="import-format">Formaat</label><select id="import-format"><option value="auto" ${draft.format === "auto" ? "selected" : ""}>Automatisch herkennen</option><option value="markdown" ${draft.format === "markdown" ? "selected" : ""}>Markdown</option><option value="tsv" ${draft.format === "tsv" ? "selected" : ""}>TSV / Quizlet (tab)</option><option value="csv" ${draft.format === "csv" ? "selected" : ""}>CSV (komma)</option></select></div><div class="field"><label for="import-file">Of open een bestand</label><input class="input" type="file" id="import-file" accept=".md,.txt,.tsv,.csv,text/plain,text/markdown,text/csv"></div></div><div class="field"><label for="import-text">Plak je kaarten</label><textarea id="import-text" class="code-input" placeholder="# Mijn set&#10;&#10;## Wat is kennis?&#10;Een goed onderbouwde overtuiging.&#10;&#10;---&#10;&#10;## Volgende vraag&#10;Het antwoord.">${e(draft.importText)}</textarea><span class="help">Markdown: ## Vraag gevolgd door het antwoord. TSV: term [tab] definitie. <a href="#" data-action="import-example">Vul een voorbeeld in</a>.</span></div><div id="import-preview"></div>`}`;
+  const body = `${!draft.setId ? `<div class="field"><label for="set-title">Naam van je set</label><input type="text" id="set-title" maxlength="200" placeholder="Bijvoorbeeld: Algemene filosofie" value="${e(draft.title)}"></div><details class="editor-extras set-options" ${draft.folderId || draft.description ? "open" : ""}><summary>${icon("folder")}<span>Map & beschrijving</span>${icon("down")}</summary><div class="form-row"><div class="field"><label for="set-folder">Map</label><select id="set-folder">${folderOptions(draft.folderId)}</select></div><div class="field"><label for="set-description">Korte beschrijving</label><input type="text" id="set-description" value="${e(draft.description)}" maxlength="500"></div></div></details>` : ""}<div class="tabs" role="tablist" aria-label="Kaarten invoeren"><button class="tab ${manual ? "active" : ""}" role="tab" aria-selected="${manual}" data-action="builder-tab" data-tab="manual">Handmatig</button><button class="tab ${manual ? "" : "active"}" role="tab" aria-selected="${!manual}" data-action="builder-tab" data-tab="import">Markdown / import</button></div>${manual ? `${noteFields(draft.pending)}<div class="actions">${button("Voeg kaart toe", "draft-add", "soft", "", "plus")}${button("Voorbeeld", "note-preview", "ghost", "", "book")}</div><div id="note-preview"></div><ul class="draft-list">${draft.notes.map((n, i) => `<li><span>${i + 1}. ${e(stripImages(n.front))}</span><button class="icon-button" data-action="draft-remove" data-index="${i}" aria-label="Conceptkaart verwijderen">${icon("close")}</button></li>`).join("")}</ul>` : `<div class="form-row"><div class="field"><label for="import-format">Formaat</label><select id="import-format"><option value="auto" ${draft.format === "auto" ? "selected" : ""}>Automatisch herkennen</option><option value="markdown" ${draft.format === "markdown" ? "selected" : ""}>Markdown</option><option value="tsv" ${draft.format === "tsv" ? "selected" : ""}>TSV / Quizlet (tab)</option><option value="csv" ${draft.format === "csv" ? "selected" : ""}>CSV (komma)</option></select></div><div class="field"><label for="import-file">Of open een bestand</label><input class="input" type="file" id="import-file" accept=".md,.txt,.tsv,.csv,text/plain,text/markdown,text/csv"></div></div><div class="field"><label for="import-text">Plak je kaarten</label><textarea id="import-text" class="code-input" placeholder="# Mijn set&#10;&#10;## Wat is kennis?&#10;Een goed onderbouwde overtuiging.&#10;&#10;---&#10;&#10;## Volgende vraag&#10;Het antwoord.">${e(draft.importText)}</textarea><span class="help">Markdown: ## Vraag gevolgd door het antwoord. TSV: term [tab] definitie. <a href="#" data-action="import-example">Vul een voorbeeld in</a>.</span></div><div id="import-preview"></div>`}`;
   openModal(
     draft.setId ? "Kaarten toevoegen" : "Een nieuwe set",
     draft.setId ? `Toevoegen aan ${draft.title}` : "Eén helder idee per kaart.",
@@ -940,7 +941,7 @@ function updateImportPreview() {
       .slice(0, 3)
       .map(
         (n) =>
-          `<div class="preview-row"><strong>${e(n.front)}</strong><p>${e(n.back.slice(0, 200) || "Invulkaart")}</p></div>`,
+          `<div class="preview-row"><strong>${e(stripImages(n.front))}</strong><p>${e(n.back.slice(0, 200) || "Invulkaart")}</p></div>`,
       )
       .join(
         "",
@@ -2191,7 +2192,7 @@ async function boot() {
     state = saved ? validateCollection(saved) : emptyCollection();
     if (!saved) {
       try {
-        const response = await fetch("./data/starter.json?v=3.1.39");
+        const response = await fetch("./data/starter.json?v=3.1.40");
         if (!response.ok) throw new Error("Starterbestand ontbreekt.");
         const starters = await response.json();
         for (const data of starters) {

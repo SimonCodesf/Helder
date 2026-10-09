@@ -10,7 +10,7 @@ import {
   splitTags,
 } from "../src/parser.js";
 import { markdown } from "../src/markdown.js";
-import { safeURL, normalize } from "../src/utils.js";
+import { safeURL, normalize, stripImages } from "../src/utils.js";
 const basic = {
   front: "Vraag",
   back: "Een antwoord.",
@@ -173,4 +173,13 @@ test("Cloze requires a nonempty answer, not only a hint", () => {
     () => validateNote({ ...basic, kind: "cloze", front: "{{c1::::hint}}" }),
     /mist het antwoord/,
   );
+});
+
+test("List titles hide raw image code", () => {
+  assert.equal(
+    stripImages("![blad](https://example.org/b.png) ![schors](https://example.org/s.png)"),
+    "[blad] [schors]",
+  );
+  assert.equal(stripImages("![](https://example.org/b.png)"), "[afbeelding]");
+  assert.equal(stripImages("Gewone vraag?"), "Gewone vraag?");
 });

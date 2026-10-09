@@ -73,3 +73,9 @@ export function downloadText(name, text, type = "text/plain;charset=utf-8") {
 
 export const countLabel = (number, singular, plural) =>
   `${number} ${number === 1 ? singular : plural}`;
+// List titles show no raw image code: ![alt](url) becomes [alt].
+export const stripImages = (value) =>
+  String(value ?? "").replace(
+    /!\[([^\]\n]*)\]\(([^\s)]+)\)/g,
+    (_, alt) => (alt.trim() ? `[${alt.trim()}]` : "[afbeelding]"),
+  );
