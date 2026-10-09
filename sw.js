@@ -1,47 +1,57 @@
 /* All application assets are local. First successful online visit primes offline use. */
-const CACHE = "helder-v3.1.38";
+const CACHE = "helder-v3.1.39";
+const IMAGE_CACHE = "helder-images",
+  MAX_IMAGES = 200;
+async function trimImages() {
+  const cache = await caches.open(IMAGE_CACHE),
+    keys = await cache.keys();
+  if (keys.length > MAX_IMAGES)
+    await Promise.all(
+      keys.slice(0, keys.length - MAX_IMAGES).map((key) => cache.delete(key)),
+    );
+}
 const ASSETS = [
   "./",
   "./index.html",
-  "./styles.css?v=3.1.38",
-  "./product.css?v=3.1.38",
+  "./styles.css?v=3.1.39",
+  "./product.css?v=3.1.39",
   "./manifest.webmanifest",
   "./config.json",
-  "./src/app.js?v=3.1.38",
-  "./src/cloud-ui.js?v=3.1.38",
-  "./src/cloud.js?v=3.1.38",
-  "./src/curriculum-ui.js?v=3.1.38",
-  "./src/curriculum.js?v=3.1.38",
-  "./src/exploration-ui.js?v=3.1.38",
-  "./src/email-ui.js?v=3.1.38",
-  "./src/guide.js?v=3.1.38",
-  "./src/icons.js?v=3.1.38",
-  "./src/interface.js?v=3.1.38",
-  "./src/learning.js?v=3.1.38",
-  "./src/markdown.js?v=3.1.38",
-  "./src/model.js?v=3.1.38",
-  "./src/parser.js?v=3.1.38",
-  "./src/scheduler.js?v=3.1.38",
-  "./src/start-check.js?v=3.1.38",
-  "./src/storage.js?v=3.1.38",
-  "./src/study-ui.js?v=3.1.38",
-  "./src/study.js?v=3.1.38",
-  "./src/swipe.js?v=3.1.38",
-  "./src/sync-core.js?v=3.1.38",
-  "./src/utils.js?v=3.1.38",
-  "./vendor/fsrs.mjs?v=3.1.38",
-  "./vendor/supabase.mjs?v=3.1.38",
-  "./data/starter.json?v=3.1.38",
-  "./data/voorbeeld.md?v=3.1.38",
-  "./data/verkennen.md?v=3.1.38",
+  "./src/app.js?v=3.1.39",
+  "./src/cloud-ui.js?v=3.1.39",
+  "./src/cloud.js?v=3.1.39",
+  "./src/curriculum-ui.js?v=3.1.39",
+  "./src/curriculum.js?v=3.1.39",
+  "./src/exploration-ui.js?v=3.1.39",
+  "./src/email-ui.js?v=3.1.39",
+  "./src/guide.js?v=3.1.39",
+  "./src/icons.js?v=3.1.39",
+  "./src/interface.js?v=3.1.39",
+  "./src/learning.js?v=3.1.39",
+  "./src/markdown.js?v=3.1.39",
+  "./src/model.js?v=3.1.39",
+  "./src/parser.js?v=3.1.39",
+  "./src/scheduler.js?v=3.1.39",
+  "./src/start-check.js?v=3.1.39",
+  "./src/storage.js?v=3.1.39",
+  "./src/study-ui.js?v=3.1.39",
+  "./src/study.js?v=3.1.39",
+  "./src/swipe.js?v=3.1.39",
+  "./src/sync-core.js?v=3.1.39",
+  "./src/utils.js?v=3.1.39",
+  "./vendor/fsrs.mjs?v=3.1.39",
+  "./vendor/supabase.mjs?v=3.1.39",
+  "./data/starter.json?v=3.1.39",
+  "./data/voorbeeld.md?v=3.1.39",
+  "./data/verkennen.md?v=3.1.39",
   "./icons/icon.svg",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
-  "./README.md?v=3.1.38",
-  "./docs/ONDERZOEK.md?v=3.1.38",
-  "./docs/ARCHITECTUUR.md?v=3.1.38",
-  "./docs/ONTWERP.md?v=3.1.38",
-  "./docs/SYNC.md?v=3.1.38",
+  "./README.md?v=3.1.39",
+  "./docs/ONDERZOEK.md?v=3.1.39",
+  "./docs/ARCHITECTUUR.md?v=3.1.39",
+  "./docs/ONTWERP.md?v=3.1.39",
+  "./docs/SYNC.md?v=3.1.39",
 ];
 self.addEventListener("install", (event) =>
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(ASSETS))),
@@ -54,7 +64,12 @@ self.addEventListener("activate", (event) =>
         .then((keys) =>
           Promise.all(
             keys
-              .filter((key) => key.startsWith("helder-") && key !== CACHE)
+              .filter(
+                (key) =>
+                  key.startsWith("helder-") &&
+                  key !== CACHE &&
+                  key !== IMAGE_CACHE,
+              )
               .map((key) => caches.delete(key)),
           ),
         ),
@@ -64,8 +79,33 @@ self.addEventListener("activate", (event) =>
 );
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
-  if (event.request.method !== "GET" || url.origin !== self.location.origin)
+  if (event.request.method !== "GET") return;
+  // Card pictures load from anywhere; keep seen ones for offline rounds.
+  if (
+    event.request.destination === "image" &&
+    url.origin !== self.location.origin
+  ) {
+    event.respondWith(
+      caches.open(IMAGE_CACHE).then((cache) =>
+        cache.match(event.request).then(
+          (cached) =>
+            cached ||
+            fetch(event.request).then((response) => {
+              if (response && (response.ok || response.type === "opaque"))
+                event.waitUntil(
+                  cache
+                    .put(event.request, response.clone())
+                    .then(trimImages)
+                    .catch(() => {}),
+                );
+              return response;
+            }),
+        ),
+      ),
+    );
     return;
+  }
+  if (url.origin !== self.location.origin) return;
   if (url.pathname.endsWith("/config.json")) {
     event.respondWith(
       fetch(event.request)
