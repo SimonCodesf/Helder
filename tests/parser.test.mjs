@@ -144,10 +144,15 @@ test("Markdown images render remote https pictures only", () => {
   assert.ok(
     !markdown("![klik](javascript:alert(1))").includes("<img"),
   );
+  const hostile = markdown(
+    '![x](https://example.org/a.png" onerror="alert(1)',
+  );
+  assert.ok(!hostile.includes("<img"));
+  assert.ok(!hostile.includes('onerror="'));
   assert.ok(
-    !markdown(
-      '![x](https://example.org/a.png" onerror="alert(1)',
-    ).includes("onerror="),
+    !markdown('![a" onerror="x](https://example.org/a.png)').includes(
+      'onerror="',
+    ),
   );
 });
 test("Code is escaped and formatting stays available", () => {

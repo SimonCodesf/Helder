@@ -146,8 +146,9 @@ test("A selected round, not the whole due backlog, is shuffled", () => {
   s.settings.sessionSize = 5;
   s.settings.newPerDay = 15;
   const session = createSession(s, { type: "all" });
-  assert.equal(session.queue.length, 5);
+  assert.equal(session.queue.length, 3);
   assert.equal(session.queue[0], s.cards[0].id);
+  assert.equal(queueFor(s).length, 15);
 });
 test("Deleting notes removes cards and review entries", () => {
   const { s, n, c } = fixture();
