@@ -894,6 +894,48 @@ svg {
   margin-left: auto;
   padding: 10px 8px;
 }
+.vak-list {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.vak-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+}
+.vak-info {
+  min-width: 0;
+  flex: 1;
+}
+.vak-info h3 {
+  font-size: 17px;
+  margin: 0;
+}
+.vak-info h3 a {
+  color: inherit;
+  text-decoration: none;
+}
+.vak-info p {
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+.vak-card .btn {
+  flex-shrink: 0;
+}
+.vak-done {
+  display: inline-flex;
+  color: var(--green);
+}
+.vak-done svg {
+  width: 22px;
+  height: 22px;
+}
 .cards-list {
   background: var(--surface);
   border: 1px solid var(--border);

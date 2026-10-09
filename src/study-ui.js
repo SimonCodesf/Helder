@@ -1,10 +1,10 @@
-import { escapeHTML as e, intervalLabel, safeURL } from "./utils.js?v=3.1.26";
-import { icon } from "./icons.js?v=3.1.26";
-import { markdown } from "./markdown.js?v=3.1.26";
-import { faces, scopeCards } from "./model.js?v=3.1.26";
-import { previewRatings } from "./scheduler.js?v=3.1.26";
-import { currentCardId } from "./study.js?v=3.1.26";
-import { facet } from "./curriculum.js?v=3.1.26";
+import { escapeHTML as e, intervalLabel, safeURL } from "./utils.js?v=3.1.27";
+import { icon } from "./icons.js?v=3.1.27";
+import { markdown } from "./markdown.js?v=3.1.27";
+import { faces, scopeCards } from "./model.js?v=3.1.27";
+import { previewRatings } from "./scheduler.js?v=3.1.27";
+import { currentCardId } from "./study.js?v=3.1.27";
+import { facet } from "./curriculum.js?v=3.1.27";
 export function studyScreen(
   state,
   session,
