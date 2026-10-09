@@ -1,5 +1,5 @@
-import { scopeNotes, scopeCards } from "./model.js?v=3.1.30";
-import { evidenceState } from "./learning.js?v=3.1.30";
+import { scopeNotes, scopeCards } from "./model.js?v=3.1.31";
+import { evidenceState } from "./learning.js?v=3.1.31";
 export function facet(note, prefix) {
   return (
     note.tags
@@ -63,4 +63,21 @@ export function mapText(value = {}) {
   return Object.entries(value)
     .map(([k, v]) => `${k} = ${v}`)
     .join("\n");
+}
+// Prefill the rename fields with every value in use, so an empty box never
+// suggests there is nothing to rename. Saving keeps the shown names unless
+// edited; mappings for values no longer in use are preserved as-is.
+export function labelText(state, set, kind) {
+  const prefix = kind === "levels" ? "niveau" : "hoofdstuk",
+    label = kind === "levels" ? levelLabel : chapterLabel,
+    values = facetValues(
+      scopeNotes(state, { type: "set", id: set.id }),
+      prefix,
+    ),
+    custom = set.curriculum?.[kind] ?? {},
+    seen = new Set(values),
+    lines = values.map((v) => `${v} = ${label(set, v)}`);
+  for (const [k, v] of Object.entries(custom))
+    if (!seen.has(k)) lines.push(`${k} = ${v}`);
+  return lines.join("\n");
 }

@@ -11,7 +11,7 @@ import {
   validateCollection,
 } from "../src/model.js";
 import { parseImport, toMarkdown, validateNote } from "../src/parser.js";
-import { progressFor, labelMap } from "../src/curriculum.js";
+import { progressFor, labelMap, labelText } from "../src/curriculum.js";
 import { prepareStep, evidenceState } from "../src/learning.js";
 import { createSession } from "../src/study.js";
 import {
@@ -430,4 +430,14 @@ test("Valid curriculum is cloned and survives collection validation", () => {
     validateCollection(s).sets[0].curriculum.chapters.H1,
     "Inleiding",
   );
+});
+
+test("Rename fields are prefilled with values in use", () => {
+  const s = fixture(),
+    set = s.sets[0];
+  assert.equal(labelText(s, set, "chapters"), "H1 = Hoofdstuk H1");
+  assert.equal(labelText(s, set, "levels"), "1 = Niveau 1");
+  set.curriculum = { chapters: { H1: "Inleiding" } };
+  assert.equal(labelText(s, set, "chapters"), "H1 = Inleiding");
+  assert.equal(labelMap(labelText(s, set, "chapters"))["H1"], "Inleiding");
 });
