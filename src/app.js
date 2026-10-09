@@ -10,9 +10,9 @@ import {
   shuffle,
   downloadText,
   safeURL,
-} from "./utils.js?v=3.1.37";
-import { icon } from "./icons.js?v=3.1.37";
-import { markdown } from "./markdown.js?v=3.1.37";
+} from "./utils.js?v=3.1.38";
+import { icon } from "./icons.js?v=3.1.38";
+import { markdown } from "./markdown.js?v=3.1.38";
 import {
   parseImport,
   splitTags,
@@ -20,7 +20,7 @@ import {
   toMarkdown,
   toTSV,
   noteImportKey,
-} from "./parser.js?v=3.1.37";
+} from "./parser.js?v=3.1.38";
 import {
   emptyCollection,
   validateCollection,
@@ -40,21 +40,21 @@ import {
   isAvailable,
   faces,
   burySiblings,
-} from "./model.js?v=3.1.37";
+} from "./model.js?v=3.1.38";
 import {
   loadCollection,
   saveCollection,
   requestPersistentStorage,
   getDeviceValue,
   setDeviceValue,
-} from "./storage.js?v=3.1.37";
-import { previewRatings, scheduleRating, State } from "./scheduler.js?v=3.1.37";
+} from "./storage.js?v=3.1.38";
+import { previewRatings, scheduleRating, State } from "./scheduler.js?v=3.1.38";
 import {
   createSession,
   currentCardId,
   advanceSession,
-} from "./study.js?v=3.1.37";
-import { guideView } from "./guide.js?v=3.1.37";
+} from "./study.js?v=3.1.38";
+import { guideView } from "./guide.js?v=3.1.38";
 import {
   prepareStep,
   startExploration,
@@ -66,7 +66,7 @@ import {
   beginRecall,
   recognitionOptions,
   shouldApply,
-} from "./learning.js?v=3.1.37";
+} from "./learning.js?v=3.1.38";
 import {
   facet,
   structureFor,
@@ -76,20 +76,20 @@ import {
   labelText,
   resumeLevel,
   resumeChapter,
-} from "./curriculum.js?v=3.1.37";
+} from "./curriculum.js?v=3.1.38";
 import {
   progressStrip,
   courseStructure,
   folderTile,
   groupStrip,
-} from "./curriculum-ui.js?v=3.1.37";
-import { studyScreen } from "./study-ui.js?v=3.1.37";
-import { explorationScreen } from "./exploration-ui.js?v=3.1.37";
-import { emailView } from "./email-ui.js?v=3.1.37";
-import { setupSwipe } from "./swipe.js?v=3.1.37";
-import { CloudConnection } from "./cloud.js?v=3.1.37";
-import { cloudPanel, conflictBody } from "./cloud-ui.js?v=3.1.37";
-import { LocalChangedError, localFromCloud } from "./sync-core.js?v=3.1.37";
+} from "./curriculum-ui.js?v=3.1.38";
+import { studyScreen } from "./study-ui.js?v=3.1.38";
+import { explorationScreen } from "./exploration-ui.js?v=3.1.38";
+import { emailView } from "./email-ui.js?v=3.1.38";
+import { setupSwipe } from "./swipe.js?v=3.1.38";
+import { CloudConnection } from "./cloud.js?v=3.1.38";
+import { cloudPanel, conflictBody } from "./cloud-ui.js?v=3.1.38";
+import { LocalChangedError, localFromCloud } from "./sync-core.js?v=3.1.38";
 import {
   setupInterface,
   syncInterface,
@@ -98,7 +98,7 @@ import {
   offlineUpdateReady,
   offlineAvailable,
   statusButton,
-} from "./interface.js?v=3.1.37";
+} from "./interface.js?v=3.1.38";
 
 let cloud;
 let state,
@@ -424,8 +424,8 @@ function setContinue(set, fallbackScope) {
       "refresh",
     );
   const label = `${ui.level ? levelLabel(set, ui.level) + " · " : ""}${chapterLabel(set, found.chapter === "__none" ? "" : found.chapter)}`;
-  return button(
-    `Ga verder: ${e(label)}`,
+  return `<p class="continue-now">Verder met <strong>${e(label)}</strong></p>` + button(
+    "Ga verder",
     "start-learn",
     "primary large",
     actionScope(found.scope) + ` aria-label="Ga verder met ${e(label)}"`,
@@ -2191,7 +2191,7 @@ async function boot() {
     state = saved ? validateCollection(saved) : emptyCollection();
     if (!saved) {
       try {
-        const response = await fetch("./data/starter.json?v=3.1.37");
+        const response = await fetch("./data/starter.json?v=3.1.38");
         if (!response.ok) throw new Error("Starterbestand ontbreekt.");
         const starters = await response.json();
         for (const data of starters) {

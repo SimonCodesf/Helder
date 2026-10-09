@@ -1,6 +1,6 @@
-import { queueFor, stats } from "./model.js?v=3.1.37";
-import { shuffle, uid } from "./utils.js?v=3.1.37";
-import { exploredCardIds } from "./learning.js?v=3.1.37";
+import { queueFor, stats } from "./model.js?v=3.1.38";
+import { shuffle, uid } from "./utils.js?v=3.1.38";
+import { exploredCardIds } from "./learning.js?v=3.1.38";
 // A learn round stays steady: new terms are only explored while due
 // reviews plus terms still awaiting their first rating stay below this
 // total. Nothing new is added mid-round; the rest waits for later rounds.

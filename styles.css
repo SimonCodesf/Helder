@@ -882,6 +882,16 @@ svg {
   flex-wrap: wrap;
   gap: 8px;
 }
+.continue-now {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+.continue-now strong {
+  color: var(--text);
+  font-weight: 650;
+}
 .set-study-meta {
   display: flex;
   flex-wrap: wrap;

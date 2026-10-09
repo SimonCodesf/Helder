@@ -1,4 +1,4 @@
-import { clone } from "./utils.js?v=3.1.37";
+import { clone } from "./utils.js?v=3.1.38";
 // Atomic snapshot persistence. IndexedDB also works offline and avoids localStorage's small quota.
 const DB_NAME = "helder-v1";
 let dbPromise;
