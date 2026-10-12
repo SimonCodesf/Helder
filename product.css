@@ -423,16 +423,16 @@
   background: var(--muted);
 }
 .groups-track .g1 {
-  background: var(--red);
+  background: #e5484d;
 }
 .groups-track .g2 {
-  background: var(--orange);
+  background: #f76b15;
 }
 .groups-track .g3 {
-  background: var(--blue);
+  background: #2783de;
 }
 .groups-track .g4 {
-  background: var(--green);
+  background: #30a46c;
 }
 .evidence-disclaimer {
   margin-top: 16px;
