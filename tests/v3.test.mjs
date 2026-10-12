@@ -490,3 +490,32 @@ test("Resume falls back to first new, then to nothing when done", () => {
   assert.equal(resumeLevel(s, set), "");
   assert.equal(resumeChapter(s, set, ""), null);
 });
+
+test("Resume follows most recent activity, not biggest pile", () => {
+  const s = emptyCollection(),
+    set = newSet(s, { title: "Vak" });
+  upsertNote(s, set.id, {
+    kind: "basic",
+    front: "Oud",
+    back: "O",
+    tags: ["niveau::1", "hoofdstuk::H1"],
+  });
+  upsertNote(s, set.id, {
+    kind: "basic",
+    front: "Recent",
+    back: "R",
+    tags: ["niveau::2", "hoofdstuk::H9"],
+  });
+  for (const c of s.cards) {
+    c.schedule.state = 2;
+    c.schedule.reps = 5;
+    c.schedule.due = Date.now() - 1000;
+  }
+  const now = Date.now();
+  s.reviews.push(
+    { id: "old", cardId: s.cards[0].id, time: now - 100000, rating: 3, day: "2026-10-01" },
+    { id: "new", cardId: s.cards[1].id, time: now - 1000, rating: 3, day: "2026-10-12" },
+  );
+  assert.equal(resumeLevel(s, set), "2");
+  assert.equal(resumeChapter(s, set, "").chapter, "H9");
+});

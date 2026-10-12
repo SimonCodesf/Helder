@@ -1,5 +1,5 @@
-import { scopeNotes, scopeCards, stats } from "./model.js?v=3.1.46";
-import { evidenceState } from "./learning.js?v=3.1.46";
+import { scopeNotes, scopeCards, stats } from "./model.js?v=3.1.47";
+import { evidenceState } from "./learning.js?v=3.1.47";
 export function facet(note, prefix) {
   return (
     note.tags
@@ -82,6 +82,21 @@ export function labelText(state, set, kind) {
   return lines.join("\n");
 }
 
+// Latest touch (rating or exploration) inside a scope. Drives "continue
+// where you left off": recency first, volume second.
+export function lastActive(state, scope) {
+  const ids = new Set(scopeCards(state, scope).map((c) => c.id));
+  let latest = 0;
+  for (const r of state.reviews ?? []) {
+    if (Number.isFinite(r?.time) && r.time > latest && ids.has(r.cardId))
+      latest = r.time;
+  }
+  for (const a of state.activities ?? []) {
+    if (Number.isFinite(a?.time) && a.time > latest && ids.has(a.cardId))
+      latest = a.time;
+  }
+  return latest;
+}
 // Where are you busy? Engaged work (due reviews plus explored-but-unrated)
 // outranks untouched new cards, so pristine material never hijacks a
 // default. Falls back to the first chapter or level with new cards.
@@ -96,8 +111,16 @@ export function resumeLevel(state, set) {
   for (const level of structureFor(state, scope).levels) {
     const st = stats(state, { ...scope, level }),
       engaged = st.due + st.learning;
-    if (engaged > 0 && (!best || engaged > best.open))
-      best = { level, open: engaged };
+    if (engaged > 0) {
+      const active = lastActive(state, { ...scope, level }),
+        candidate = { level, engaged, active };
+      if (
+        !best ||
+        active > best.active ||
+        (active === best.active && engaged > best.engaged)
+      )
+        best = candidate;
+    }
     if (firstNew == null && st.newToday > 0) firstNew = level;
   }
   return best ? best.level : (firstNew ?? "");
@@ -114,10 +137,19 @@ export function resumeChapter(state, set, level) {
   let best = null,
     firstNew = null;
   for (const chapter of names) {
-    const st = stats(state, { ...base, chapter }),
+    const scope = { ...base, chapter },
+      st = stats(state, scope),
       engaged = st.due + st.learning;
-    if (engaged > 0 && (!best || engaged > best.open))
-      best = { chapter, open: engaged };
+    if (engaged > 0) {
+      const active = lastActive(state, scope),
+        candidate = { chapter, scope, engaged, active };
+      if (
+        !best ||
+        active > best.active ||
+        (active === best.active && engaged > best.engaged)
+      )
+        best = candidate;
+    }
     if (firstNew == null && st.newToday > 0) firstNew = chapter;
   }
   if (best)

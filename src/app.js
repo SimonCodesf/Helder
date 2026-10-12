@@ -11,9 +11,9 @@ import {
   shuffle,
   downloadText,
   safeURL,
-} from "./utils.js?v=3.1.46";
-import { icon } from "./icons.js?v=3.1.46";
-import { markdown } from "./markdown.js?v=3.1.46";
+} from "./utils.js?v=3.1.47";
+import { icon } from "./icons.js?v=3.1.47";
+import { markdown } from "./markdown.js?v=3.1.47";
 import {
   parseImport,
   splitTags,
@@ -21,7 +21,7 @@ import {
   toMarkdown,
   toTSV,
   noteImportKey,
-} from "./parser.js?v=3.1.46";
+} from "./parser.js?v=3.1.47";
 import {
   emptyCollection,
   validateCollection,
@@ -44,21 +44,21 @@ import {
   isAvailable,
   faces,
   burySiblings,
-} from "./model.js?v=3.1.46";
+} from "./model.js?v=3.1.47";
 import {
   loadCollection,
   saveCollection,
   requestPersistentStorage,
   getDeviceValue,
   setDeviceValue,
-} from "./storage.js?v=3.1.46";
-import { previewRatings, scheduleRating, State } from "./scheduler.js?v=3.1.46";
+} from "./storage.js?v=3.1.47";
+import { previewRatings, scheduleRating, State } from "./scheduler.js?v=3.1.47";
 import {
   createSession,
   currentCardId,
   advanceSession,
-} from "./study.js?v=3.1.46";
-import { guideView } from "./guide.js?v=3.1.46";
+} from "./study.js?v=3.1.47";
+import { guideView } from "./guide.js?v=3.1.47";
 import {
   prepareStep,
   startExploration,
@@ -70,7 +70,7 @@ import {
   beginRecall,
   recognitionOptions,
   shouldApply,
-} from "./learning.js?v=3.1.46";
+} from "./learning.js?v=3.1.47";
 import {
   facet,
   structureFor,
@@ -80,20 +80,21 @@ import {
   labelText,
   resumeLevel,
   resumeChapter,
-} from "./curriculum.js?v=3.1.46";
+  lastActive,
+} from "./curriculum.js?v=3.1.47";
 import {
   progressStrip,
   courseStructure,
   folderTile,
   groupStrip,
-} from "./curriculum-ui.js?v=3.1.46";
-import { studyScreen } from "./study-ui.js?v=3.1.46";
-import { explorationScreen } from "./exploration-ui.js?v=3.1.46";
-import { emailView } from "./email-ui.js?v=3.1.46";
-import { setupSwipe } from "./swipe.js?v=3.1.46";
-import { CloudConnection } from "./cloud.js?v=3.1.46";
-import { cloudPanel, conflictBody } from "./cloud-ui.js?v=3.1.46";
-import { LocalChangedError, localFromCloud } from "./sync-core.js?v=3.1.46";
+} from "./curriculum-ui.js?v=3.1.47";
+import { studyScreen } from "./study-ui.js?v=3.1.47";
+import { explorationScreen } from "./exploration-ui.js?v=3.1.47";
+import { emailView } from "./email-ui.js?v=3.1.47";
+import { setupSwipe } from "./swipe.js?v=3.1.47";
+import { CloudConnection } from "./cloud.js?v=3.1.47";
+import { cloudPanel, conflictBody } from "./cloud-ui.js?v=3.1.47";
+import { LocalChangedError, localFromCloud } from "./sync-core.js?v=3.1.47";
 import {
   setupInterface,
   syncInterface,
@@ -102,7 +103,7 @@ import {
   offlineUpdateReady,
   offlineAvailable,
   statusButton,
-} from "./interface.js?v=3.1.46";
+} from "./interface.js?v=3.1.47";
 
 let cloud;
 let state,
@@ -273,9 +274,9 @@ function vakRow(row) {
   const strip = groupStrip(state, row.scope);
   return `<article class="vak-card"><div class="vak-info"><h3><a href="${row.href}">${e(row.title)}</a></h3>${strip || "<p>Nog geen kaarten</p>"}</div><a class="icon-button" href="${row.href}" aria-label="${e(row.title)} openen">${icon("chevron")}</a></article>`;
 }
-function chapterRow(set, chapter, scope) {
+function chapterRow(set, chapter, scope, last) {
   const label = chapterLabel(set, chapter === "__none" ? "" : chapter);
-  return `<article class="vak-card"><div class="vak-info"><h3><a href="${routeURL("set", set.id)}">${e(label)}</a></h3><p>${e(set.title)}</p>${groupStrip(state, scope)}</div>${button("Leren", "start-learn", "primary", actionScope(scope) + ` aria-label="${e(label)} leren"`, "play")}</article>`;
+  return `<article class="vak-card"><div class="vak-info"><h3><a href="${routeURL("set", set.id)}">${e(label)}</a></h3><p>${e(set.title)}${last ? " · laatst geoefend" : ""}</p>${groupStrip(state, scope)}</div>${button("Leren", "start-learn", "primary", actionScope(scope) + ` aria-label="${e(label)} leren"`, "play")}</article>`;
 }
 function habitCard() {
   const week = habitWeek(state.rounds),
@@ -325,14 +326,21 @@ function todayView() {
       const scope = { ...base, chapter },
         st = stats(state, scope);
       if (st.due + st.learning > 0)
-        openChapters.push({ set, chapter, scope, stats: st });
+        openChapters.push({
+          set,
+          chapter,
+          scope,
+          stats: st,
+          active: lastActive(state, scope),
+        });
     }
   }
   openChapters.sort(
     (a, b) =>
+      b.active - a.active ||
       b.stats.due +
-      b.stats.learning -
-      (a.stats.due + a.stats.learning),
+        b.stats.learning -
+        (a.stats.due + a.stats.learning),
   );
   const topChapters = openChapters.slice(0, 6);
   const date = new Intl.DateTimeFormat("nl-BE", {
@@ -342,7 +350,7 @@ function todayView() {
   }).format(new Date());
   if (!state.notes.length)
     return `<div class="page today-page welcome-page"><header class="page-head"><div><div class="eyebrow">Jouw eigen leerplek</div><h1>Welkom bij helder<span class="accent-dot">.</span></h1><p>Van een eerste begrip naar kennis die je zelf kunt gebruiken.</p></div></header><section class="welcome-card"><div class="welcome-symbol">${icon("book")}</div><span class="eyebrow">Begin met één onderwerp</span><h2>Wat wil je leren?</h2><p>Maak je eerste set, of importeer kaarten die je al hebt. Geen account nodig om te beginnen.</p><div class="welcome-actions">${button("Maak een set", "new-set", "primary large", "", "plus")}${button("Importeer kaarten", "new-import", "large", "", "upload")}</div><div class="welcome-features"><span>${icon("lock")} Privé op dit apparaat</span><span>${icon("refresh")} Werkt ook offline</span></div></section><div class="section-head"><h2>Een rustige leerroute</h2></div><ol class="welcome-steps"><li><span>01</span><div><h3>Begrijp de kern</h3><p>Begin met uitleg en een goed voorbeeld.</p></div></li><li><span>02</span><div><h3>Probeer zonder hulp</h3><p>De steun verdwijnt; jij haalt de kennis op.</p></div></li><li><span>03</span><div><h3>Kom erop terug</h3><p>Gespreid herhalen. Daarna ook toepassen.</p></div></li></ol><a class="section-link" href="#/guide">Zo werkt Helder ${icon("arrow")}</a></div>`;
-  return `<div class="page today-page"><header class="page-head"><div><div class="eyebrow">${e(date.charAt(0).toUpperCase() + date.slice(1))}</div><h1>Vandaag</h1><p>Begrijpen. Zelf ophalen. Er later op terugkomen.</p></div><div class="head-actions">${button("Nieuwe set", "new-set", "", "", "plus")}</div></header>${habitCard()}${topChapters.length ? `<div class="section-head"><div><h2>Verder gaan</h2><p class="section-caption">Pak een hoofdstuk op</p></div></div><div class="vak-list">${topChapters.map((c) => chapterRow(c.set, c.chapter, c.scope)).join("")}${openChapters.length > 6 ? `<p class="small muted">Nog ${openChapters.length - 6} hoofdstukken open — zie <a href="#/library">Bibliotheek</a></p>` : ""}</div>` : ""}<div class="section-head"><div><h2>Je vakken</h2><p class="section-caption">Wat er per vak openstaat</p></div></div><div class="vak-list">${rows.map(vakRow).join("")}</div><div class="section-head"><div><h2>Je sets</h2><p class="section-caption">${countLabel(s.total, "kaart", "kaarten")} · ${state.sets.length} sets</p></div><a class="section-link" href="#/library">Alles ${icon("arrow")}</a></div><div class="set-grid">${state.sets.slice(0, 4).map(setTile).join("")}</div><details class="learning-note"><summary>${icon("help")} Wat betekenen “gekend” en “geleerd”? ${icon("down")}</summary><p>Een swipe betekent dat jij een kaart herkent. Alleen gespreide, zelfstandige ophaalpogingen leveren herinneringsdata op voor de planner. Toepassen oefen je apart.</p></details></div>`;
+  return `<div class="page today-page"><header class="page-head"><div><div class="eyebrow">${e(date.charAt(0).toUpperCase() + date.slice(1))}</div><h1>Vandaag</h1><p>Begrijpen. Zelf ophalen. Er later op terugkomen.</p></div><div class="head-actions">${button("Nieuwe set", "new-set", "", "", "plus")}</div></header>${habitCard()}${topChapters.length ? `<div class="section-head"><div><h2>Verder gaan</h2><p class="section-caption">Pak een hoofdstuk op</p></div></div><div class="vak-list">${topChapters.map((c, i) => chapterRow(c.set, c.chapter, c.scope, i === 0 && c.active > 0)).join("")}${openChapters.length > 6 ? `<p class="small muted">Nog ${openChapters.length - 6} hoofdstukken open — zie <a href="#/library">Bibliotheek</a></p>` : ""}</div>` : ""}<div class="section-head"><div><h2>Je vakken</h2><p class="section-caption">Wat er per vak openstaat</p></div></div><div class="vak-list">${rows.map(vakRow).join("")}</div><div class="section-head"><div><h2>Je sets</h2><p class="section-caption">${countLabel(s.total, "kaart", "kaarten")} · ${state.sets.length} sets</p></div><a class="section-link" href="#/library">Alles ${icon("arrow")}</a></div><div class="set-grid">${state.sets.slice(0, 4).map(setTile).join("")}</div><details class="learning-note"><summary>${icon("help")} Wat betekenen “gekend” en “geleerd”? ${icon("down")}</summary><p>Een swipe betekent dat jij een kaart herkent. Alleen gespreide, zelfstandige ophaalpogingen leveren herinneringsdata op voor de planner. Toepassen oefen je apart.</p></details></div>`;
 }
 function emptyHTML(title, text, label = "", action = "") {
   return `<div class="empty-state"><div class="empty-icon">${icon("stack")}</div><h2>${e(title)}</h2><p>${e(text)}</p>${action ? button(e(label), action, "primary") : ""}</div>`;
@@ -2241,7 +2249,7 @@ async function boot() {
     state = saved ? validateCollection(saved) : emptyCollection();
     if (!saved) {
       try {
-        const response = await fetch("./data/starter.json?v=3.1.46");
+        const response = await fetch("./data/starter.json?v=3.1.47");
         if (!response.ok) throw new Error("Starterbestand ontbreekt.");
         const starters = await response.json();
         for (const data of starters) {
