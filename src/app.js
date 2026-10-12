@@ -11,9 +11,9 @@ import {
   shuffle,
   downloadText,
   safeURL,
-} from "./utils.js?v=3.1.45";
-import { icon } from "./icons.js?v=3.1.45";
-import { markdown } from "./markdown.js?v=3.1.45";
+} from "./utils.js?v=3.1.46";
+import { icon } from "./icons.js?v=3.1.46";
+import { markdown } from "./markdown.js?v=3.1.46";
 import {
   parseImport,
   splitTags,
@@ -21,7 +21,7 @@ import {
   toMarkdown,
   toTSV,
   noteImportKey,
-} from "./parser.js?v=3.1.45";
+} from "./parser.js?v=3.1.46";
 import {
   emptyCollection,
   validateCollection,
@@ -37,25 +37,28 @@ import {
   scopeNotes,
   scopeCards,
   stats,
+  roundsByDay,
+  habitWeek,
+  streakDays,
   queueFor,
   isAvailable,
   faces,
   burySiblings,
-} from "./model.js?v=3.1.45";
+} from "./model.js?v=3.1.46";
 import {
   loadCollection,
   saveCollection,
   requestPersistentStorage,
   getDeviceValue,
   setDeviceValue,
-} from "./storage.js?v=3.1.45";
-import { previewRatings, scheduleRating, State } from "./scheduler.js?v=3.1.45";
+} from "./storage.js?v=3.1.46";
+import { previewRatings, scheduleRating, State } from "./scheduler.js?v=3.1.46";
 import {
   createSession,
   currentCardId,
   advanceSession,
-} from "./study.js?v=3.1.45";
-import { guideView } from "./guide.js?v=3.1.45";
+} from "./study.js?v=3.1.46";
+import { guideView } from "./guide.js?v=3.1.46";
 import {
   prepareStep,
   startExploration,
@@ -67,7 +70,7 @@ import {
   beginRecall,
   recognitionOptions,
   shouldApply,
-} from "./learning.js?v=3.1.45";
+} from "./learning.js?v=3.1.46";
 import {
   facet,
   structureFor,
@@ -77,20 +80,20 @@ import {
   labelText,
   resumeLevel,
   resumeChapter,
-} from "./curriculum.js?v=3.1.45";
+} from "./curriculum.js?v=3.1.46";
 import {
   progressStrip,
   courseStructure,
   folderTile,
   groupStrip,
-} from "./curriculum-ui.js?v=3.1.45";
-import { studyScreen } from "./study-ui.js?v=3.1.45";
-import { explorationScreen } from "./exploration-ui.js?v=3.1.45";
-import { emailView } from "./email-ui.js?v=3.1.45";
-import { setupSwipe } from "./swipe.js?v=3.1.45";
-import { CloudConnection } from "./cloud.js?v=3.1.45";
-import { cloudPanel, conflictBody } from "./cloud-ui.js?v=3.1.45";
-import { LocalChangedError, localFromCloud } from "./sync-core.js?v=3.1.45";
+} from "./curriculum-ui.js?v=3.1.46";
+import { studyScreen } from "./study-ui.js?v=3.1.46";
+import { explorationScreen } from "./exploration-ui.js?v=3.1.46";
+import { emailView } from "./email-ui.js?v=3.1.46";
+import { setupSwipe } from "./swipe.js?v=3.1.46";
+import { CloudConnection } from "./cloud.js?v=3.1.46";
+import { cloudPanel, conflictBody } from "./cloud-ui.js?v=3.1.46";
+import { LocalChangedError, localFromCloud } from "./sync-core.js?v=3.1.46";
 import {
   setupInterface,
   syncInterface,
@@ -99,7 +102,7 @@ import {
   offlineUpdateReady,
   offlineAvailable,
   statusButton,
-} from "./interface.js?v=3.1.45";
+} from "./interface.js?v=3.1.46";
 
 let cloud;
 let state,
@@ -274,6 +277,14 @@ function chapterRow(set, chapter, scope) {
   const label = chapterLabel(set, chapter === "__none" ? "" : chapter);
   return `<article class="vak-card"><div class="vak-info"><h3><a href="${routeURL("set", set.id)}">${e(label)}</a></h3><p>${e(set.title)}</p>${groupStrip(state, scope)}</div>${button("Leren", "start-learn", "primary", actionScope(scope) + ` aria-label="${e(label)} leren"`, "play")}</article>`;
 }
+function habitCard() {
+  const week = habitWeek(state.rounds),
+    met = week.filter((w) => w.done).length,
+    streak = streakDays(state.rounds),
+    goal = state.settings.dailyGoal ?? 1,
+    today = (roundsByDay(state.rounds).get(localDay()) ?? 0) >= goal;
+  return `<section class="habit-card" aria-label="Je weekritme"><div class="week-dots">${week.map((w) => `<span class="week-day${w.done ? " done" : ""}${w.today ? " today" : ""}" title="${w.day}"><span class="week-dot"></span><i>${w.initial}</i></span>`).join("")}</div><p>${met} van 7 dagen${streak ? ` · ${streak} ${streak === 1 ? "dag" : "dagen"} op rij` : ""} · ${today ? "Doel gehaald ✓" : `Nog ${goal} ${goal === 1 ? "ronde" : "rondes"} voor je doel`}</p></section>`;
+}
 function todayView() {
   const s = stats(state),
     rows = [
@@ -331,7 +342,7 @@ function todayView() {
   }).format(new Date());
   if (!state.notes.length)
     return `<div class="page today-page welcome-page"><header class="page-head"><div><div class="eyebrow">Jouw eigen leerplek</div><h1>Welkom bij helder<span class="accent-dot">.</span></h1><p>Van een eerste begrip naar kennis die je zelf kunt gebruiken.</p></div></header><section class="welcome-card"><div class="welcome-symbol">${icon("book")}</div><span class="eyebrow">Begin met één onderwerp</span><h2>Wat wil je leren?</h2><p>Maak je eerste set, of importeer kaarten die je al hebt. Geen account nodig om te beginnen.</p><div class="welcome-actions">${button("Maak een set", "new-set", "primary large", "", "plus")}${button("Importeer kaarten", "new-import", "large", "", "upload")}</div><div class="welcome-features"><span>${icon("lock")} Privé op dit apparaat</span><span>${icon("refresh")} Werkt ook offline</span></div></section><div class="section-head"><h2>Een rustige leerroute</h2></div><ol class="welcome-steps"><li><span>01</span><div><h3>Begrijp de kern</h3><p>Begin met uitleg en een goed voorbeeld.</p></div></li><li><span>02</span><div><h3>Probeer zonder hulp</h3><p>De steun verdwijnt; jij haalt de kennis op.</p></div></li><li><span>03</span><div><h3>Kom erop terug</h3><p>Gespreid herhalen. Daarna ook toepassen.</p></div></li></ol><a class="section-link" href="#/guide">Zo werkt Helder ${icon("arrow")}</a></div>`;
-  return `<div class="page today-page"><header class="page-head"><div><div class="eyebrow">${e(date.charAt(0).toUpperCase() + date.slice(1))}</div><h1>Vandaag</h1><p>Begrijpen. Zelf ophalen. Er later op terugkomen.</p></div><div class="head-actions">${button("Nieuwe set", "new-set", "", "", "plus")}</div></header>${topChapters.length ? `<div class="section-head"><div><h2>Verder gaan</h2><p class="section-caption">Pak een hoofdstuk op</p></div></div><div class="vak-list">${topChapters.map((c) => chapterRow(c.set, c.chapter, c.scope)).join("")}${openChapters.length > 6 ? `<p class="small muted">Nog ${openChapters.length - 6} hoofdstukken open — zie <a href="#/library">Bibliotheek</a></p>` : ""}</div>` : ""}<div class="section-head"><div><h2>Je vakken</h2><p class="section-caption">Wat er per vak openstaat</p></div></div><div class="vak-list">${rows.map(vakRow).join("")}</div><div class="section-head"><div><h2>Je sets</h2><p class="section-caption">${countLabel(s.total, "kaart", "kaarten")} · ${state.sets.length} sets</p></div><a class="section-link" href="#/library">Alles ${icon("arrow")}</a></div><div class="set-grid">${state.sets.slice(0, 4).map(setTile).join("")}</div><details class="learning-note"><summary>${icon("help")} Wat betekenen “gekend” en “geleerd”? ${icon("down")}</summary><p>Een swipe betekent dat jij een kaart herkent. Alleen gespreide, zelfstandige ophaalpogingen leveren herinneringsdata op voor de planner. Toepassen oefen je apart.</p></details></div>`;
+  return `<div class="page today-page"><header class="page-head"><div><div class="eyebrow">${e(date.charAt(0).toUpperCase() + date.slice(1))}</div><h1>Vandaag</h1><p>Begrijpen. Zelf ophalen. Er later op terugkomen.</p></div><div class="head-actions">${button("Nieuwe set", "new-set", "", "", "plus")}</div></header>${habitCard()}${topChapters.length ? `<div class="section-head"><div><h2>Verder gaan</h2><p class="section-caption">Pak een hoofdstuk op</p></div></div><div class="vak-list">${topChapters.map((c) => chapterRow(c.set, c.chapter, c.scope)).join("")}${openChapters.length > 6 ? `<p class="small muted">Nog ${openChapters.length - 6} hoofdstukken open — zie <a href="#/library">Bibliotheek</a></p>` : ""}</div>` : ""}<div class="section-head"><div><h2>Je vakken</h2><p class="section-caption">Wat er per vak openstaat</p></div></div><div class="vak-list">${rows.map(vakRow).join("")}</div><div class="section-head"><div><h2>Je sets</h2><p class="section-caption">${countLabel(s.total, "kaart", "kaarten")} · ${state.sets.length} sets</p></div><a class="section-link" href="#/library">Alles ${icon("arrow")}</a></div><div class="set-grid">${state.sets.slice(0, 4).map(setTile).join("")}</div><details class="learning-note"><summary>${icon("help")} Wat betekenen “gekend” en “geleerd”? ${icon("down")}</summary><p>Een swipe betekent dat jij een kaart herkent. Alleen gespreide, zelfstandige ophaalpogingen leveren herinneringsdata op voor de planner. Toepassen oefen je apart.</p></details></div>`;
 }
 function emptyHTML(title, text, label = "", action = "") {
   return `<div class="empty-state"><div class="empty-icon">${icon("stack")}</div><h2>${e(title)}</h2><p>${e(text)}</p>${action ? button(e(label), action, "primary") : ""}</div>`;
@@ -489,7 +500,7 @@ function settingsView() {
     )
     .join(
       "",
-    )}</select><span class="help">Hoger betekent vaker oefenen. Geen voorspelling van examenresultaat of werkelijk begrip. Nieuwe beoordelingen gebruiken je keuze; bestaande vervaldata blijven staan.</span></div><div class="check-field"><input type="checkbox" id="scaffold" name="scaffold" ${s.scaffold ? "checked" : ""}><label for="scaffold">Nieuwe stof geleidelijk opbouwen<div class="help">Eerst een groep verkennen: meerkeuze waar beschikbaar, definitie → term of uitleg. Daarna verdwijnen de opties en uitleg. Herhalingen blijven zonder deze opwarming. Eens verkend, blijft verkend — ook als je tussendoor stopt.</div></label></div><div class="field"><label for="explore-size">Kaarten per verkenningsgroep</label><select id="explore-size" name="exploreSize">${[1, 3, 5].map((n) => `<option value="${n}" ${s.exploreSize === n ? "selected" : ""}>${n} ${n === 1 ? "kaart" : "kaarten"}</option>`).join("")}</select><span class="help">Eén groep nieuwe kaarten per leer­ronde: eerst verkennen, daarna direct ophalen met de herhalingen. Blijven herhalingen plus nog-te-beoordelen samen onder de tien, dan komen er nieuwe kaarten bij.</span></div><div class="check-field"><input type="checkbox" id="application" name="application" ${s.application ? "checked" : ""}><label for="application">Toepassingen aanbieden na gespreid ophalen<div class="help">Alleen wanneer je kaart een eigen scenario en modelredenering heeft. Los toepassen oefenen kan altijd.</div></label></div><div class="check-field"><input type="checkbox" id="mix" name="mix" ${s.mix ? "checked" : ""}><label for="mix">Herhalingen door elkaar aanbieden<div class="help">Nieuwe kaarten gaan per set van het laagste naar het hoogste niveau. Herhalingen houden voorrang.</div></label></div><div class="check-field"><input type="checkbox" id="flash-shuffle" name="flashShuffle" ${s.flashShuffle !== false ? "checked" : ""}><label for="flash-shuffle">Flashcards husselen<div class="help">Uit = vaste volgorde van de set. Husselen kan altijd nog met de husselknop.</div></label></div></section><section class="setting-section"><h2>Uiterlijk</h2><div class="field"><label for="theme">Thema</label><select id="theme" name="theme"><option value="system" ${s.theme === "system" ? "selected" : ""}>Volg mijn apparaat</option><option value="light" ${s.theme === "light" ? "selected" : ""}>Licht</option><option value="dark" ${s.theme === "dark" ? "selected" : ""}>Donker</option></select></div>${button("Instellingen opslaan", "submit-settings", "primary")}</section></form><section class="setting-section"><h2>Je apparaten</h2><div id="cloud-panel">${cloudPanel(cloud, button)}</div></section><section class="setting-section"><h2>Je gegevens</h2><p>Alles wordt eerst lokaal bewaard. Sync is optioneel via je eigen backend. Een JSON-back-up bewaart ook je leerlogboek, maar nooit aanmeldtokens.</p><div class="actions">${button("Volledige back-up", "backup", "primary", "", "download")}${button("Back-up herstellen", "restore", "", "", "upload")}${button("Opslag beschermen", "persist", "", "", "lock")}</div><p class="backup-note">Laatste export: ${state.lastBackup ? e(new Intl.DateTimeFormat("nl-BE", { dateStyle: "medium", timeStyle: "short" }).format(new Date(state.lastBackup))) : "nog geen back-up gemaakt"}.</p><p class="small muted">Een back-up bevat kaarten, tags, mappen, FSRS-planning en het leerlogboek. Open de app altijd op hetzelfde websiteadres; een ander adres of andere browser heeft een aparte collectie.</p></section><section class="setting-section"><h2>Wat je logboek zegt</h2><p>${logs.length} beoordelingen opgeslagen. ${reviews.length} daarvan waren herhalingen van eerder geziene kaarten.</p><p><strong>${rate}</strong>${reviews.length >= 5 ? " van die herhalingen beoordeelde je als correct (Moeilijk, Goed of Makkelijk)." : ""}</p><p class="small muted">Dit is je eigen beoordeling, geen objectieve meting. Nieuwe kaarten zijn uitgesloten; herhaalde pogingen op dezelfde dag tellen mee. Een afgeronde ronde zegt niet dat je de stof blijvend beheerst.</p></section><section class="setting-section"><h2>Op je beginscherm</h2><p>Op HTTPS kun je Helder als gratis webapp installeren. Open de site één keer volledig online; daarna werkt de gecachete app offline.</p><div class="actions">${installPrompt ? button("App installeren", "install", "soft", "", "download") : ""}<a class="btn" href="#/guide">${icon("help")} Installatie en uitleg</a></div><p class="backup-note">Helder 3.1 · ts-fsrs 5.4.2 · Geen telemetry</p></section></div>`;
+    )}</select><span class="help">Hoger betekent vaker oefenen. Geen voorspelling van examenresultaat of werkelijk begrip. Nieuwe beoordelingen gebruiken je keuze; bestaande vervaldata blijven staan.</span></div><div class="check-field"><input type="checkbox" id="scaffold" name="scaffold" ${s.scaffold ? "checked" : ""}><label for="scaffold">Nieuwe stof geleidelijk opbouwen<div class="help">Eerst een groep verkennen: meerkeuze waar beschikbaar, definitie → term of uitleg. Daarna verdwijnen de opties en uitleg. Herhalingen blijven zonder deze opwarming. Eens verkend, blijft verkend — ook als je tussendoor stopt.</div></label></div><div class="field"><label for="explore-size">Kaarten per verkenningsgroep</label><select id="explore-size" name="exploreSize">${[1, 3, 5].map((n) => `<option value="${n}" ${s.exploreSize === n ? "selected" : ""}>${n} ${n === 1 ? "kaart" : "kaarten"}</option>`).join("")}</select><span class="help">Eén groep nieuwe kaarten per leer­ronde: eerst verkennen, daarna direct ophalen met de herhalingen. Blijven herhalingen plus nog-te-beoordelen samen onder de tien, dan komen er nieuwe kaarten bij.</span></div><div class="check-field"><input type="checkbox" id="application" name="application" ${s.application ? "checked" : ""}><label for="application">Toepassingen aanbieden na gespreid ophalen<div class="help">Alleen wanneer je kaart een eigen scenario en modelredenering heeft. Los toepassen oefenen kan altijd.</div></label></div><div class="check-field"><input type="checkbox" id="mix" name="mix" ${s.mix ? "checked" : ""}><label for="mix">Herhalingen door elkaar aanbieden<div class="help">Nieuwe kaarten gaan per set van het laagste naar het hoogste niveau. Herhalingen houden voorrang.</div></label></div><div class="field"><label for="daily-goal">Rondes per dag (dagdoel)</label><input type="number" id="daily-goal" name="dailyGoal" min="1" max="10" step="1" value="${s.dailyGoal ?? 1}" required><span class="help">Eén afgeronde ronde vult je weekbolletje. Rustig aan telt ook.</span></div><div class="check-field"><input type="checkbox" id="flash-shuffle" name="flashShuffle" ${s.flashShuffle !== false ? "checked" : ""}><label for="flash-shuffle">Flashcards husselen<div class="help">Uit = vaste volgorde van de set. Husselen kan altijd nog met de husselknop.</div></label></div></section><section class="setting-section"><h2>Uiterlijk</h2><div class="field"><label for="theme">Thema</label><select id="theme" name="theme"><option value="system" ${s.theme === "system" ? "selected" : ""}>Volg mijn apparaat</option><option value="light" ${s.theme === "light" ? "selected" : ""}>Licht</option><option value="dark" ${s.theme === "dark" ? "selected" : ""}>Donker</option></select></div>${button("Instellingen opslaan", "submit-settings", "primary")}</section></form><section class="setting-section"><h2>Je apparaten</h2><div id="cloud-panel">${cloudPanel(cloud, button)}</div></section><section class="setting-section"><h2>Je gegevens</h2><p>Alles wordt eerst lokaal bewaard. Sync is optioneel via je eigen backend. Een JSON-back-up bewaart ook je leerlogboek, maar nooit aanmeldtokens.</p><div class="actions">${button("Volledige back-up", "backup", "primary", "", "download")}${button("Back-up herstellen", "restore", "", "", "upload")}${button("Opslag beschermen", "persist", "", "", "lock")}</div><p class="backup-note">Laatste export: ${state.lastBackup ? e(new Intl.DateTimeFormat("nl-BE", { dateStyle: "medium", timeStyle: "short" }).format(new Date(state.lastBackup))) : "nog geen back-up gemaakt"}.</p><p class="small muted">Een back-up bevat kaarten, tags, mappen, FSRS-planning en het leerlogboek. Open de app altijd op hetzelfde websiteadres; een ander adres of andere browser heeft een aparte collectie.</p></section><section class="setting-section"><h2>Wat je logboek zegt</h2><p>${logs.length} beoordelingen opgeslagen. ${reviews.length} daarvan waren herhalingen van eerder geziene kaarten.</p><p><strong>${rate}</strong>${reviews.length >= 5 ? " van die herhalingen beoordeelde je als correct (Moeilijk, Goed of Makkelijk)." : ""}</p><p class="small muted">Dit is je eigen beoordeling, geen objectieve meting. Nieuwe kaarten zijn uitgesloten; herhaalde pogingen op dezelfde dag tellen mee. Een afgeronde ronde zegt niet dat je de stof blijvend beheerst.</p></section><section class="setting-section"><h2>Op je beginscherm</h2><p>Op HTTPS kun je Helder als gratis webapp installeren. Open de site één keer volledig online; daarna werkt de gecachete app offline.</p><div class="actions">${installPrompt ? button("App installeren", "install", "soft", "", "download") : ""}<a class="btn" href="#/guide">${icon("help")} Installatie en uitleg</a></div><p class="backup-note">Helder 3.1 · ts-fsrs 5.4.2 · Geen telemetry</p></section></div>`;
 }
 function notFoundView() {
   return `<div class="page">${emptyHTML("Deze plek bestaat niet meer.", "Misschien is de set of map verwijderd.", "Naar de bibliotheek", "go-library")}</div>`;
@@ -565,6 +576,28 @@ function studyView() {
 function finishedView() {
   if (session.mode === "explore")
     return `<div class="study-page"><header class="study-header">${button("Terug", "end-study", "ghost", "", "back")}<div class="study-context"><h1>Je verkenningsronde</h1><p>${e(scopeTitle(session.scope))}</p></div><span></span></header><section class="finish-card"><div class="finish-icon">${icon("book")}</div><h1>Een eerste kennismaking.</h1><p>Je hebt ${session.exploredIds?.length ?? 0} kaarten verkend. Dat is een ingang, geen bewijs van zelfstandig onthouden. Je herhalingsplanning is niet veranderd.</p><div class="actions">${button("Nu zelf ophalen", "start-learn", "primary", actionScope(session.scope), "arrow")}${button("Terug naar overzicht", "end-study")}</div></section></div>`;
+  let justFinished = false;
+  if (!session.roundLogged) {
+    session.roundLogged = true;
+    const done =
+      session.mode === "flash"
+        ? Object.keys(session.flashMarks ?? {}).length > 0
+        : session.completed.length > 0;
+    if (done) {
+      justFinished = true;
+      mutate((next) => {
+        next.rounds ??= [];
+        next.rounds.push({ id: uid(), day: localDay() });
+        if (next.rounds.length > 2000)
+          next.rounds = next.rounds.slice(-2000);
+      }, { render: false }).catch(errorMessage);
+    }
+  }
+  const goal = state.settings.dailyGoal ?? 1,
+    goalMet =
+      (roundsByDay(state.rounds).get(localDay()) ?? 0) +
+        (justFinished ? 1 : 0) >=
+      goal;
   if (session.mode === "flash") {
     const marks = session.flashMarks ?? {},
       known = Object.values(marks).filter((v) => v === "known").length,
@@ -583,7 +616,7 @@ function finishedView() {
     1,
     Math.round((Date.now() - session.startedAt) / 60000),
   );
-  return `<div class="study-page"><header class="study-header">${button("Terug", "end-study", "ghost", "", "back")}<div class="study-context"><h1>${e(scopeTitle(session.scope))}</h1></div><span></span></header><section class="finish-card"><div class="finish-icon">${icon("check")}</div><h1>${flash ? "Je hebt de set bekeken." : completed ? "Deze ronde zit erop." : "Voor nu is er niets aan de beurt."}</h1><p>${flash ? "Je planning is niet veranderd. Herhaal gerust vrij, of gebruik Leren voor gespreide herhaling." : session.practice ? "Je hebt extra geoefend, zonder de gewone FSRS-planning te veranderen." : "Dat is een goede tussenstap, geen bewijs dat alles voorgoed blijft zitten. De planner bewaart de volgende herhalingen."}</p>${!flash && completed ? `<div class="finish-stats"><div><strong>${completed}</strong><span>beoordeeld</span></div><div><strong>${good}</strong><span>als correct beoordeeld</span></div><div><strong>${minutes}</strong><span>${minutes === 1 ? "minuut" : "minuten"}</span></div></div>` : ""}${next ? `<div class="timer-line" id="pending-time" data-due="${next.schedule.due}">${countLabel(pending.length, "kaart", "kaarten")} in de leerfase. Volgende ${next.schedule.due <= Date.now() ? "is nu beschikbaar" : "over " + intervalLabel(next.schedule.due)}.</div>` : ""}<div class="actions">${canContinue ? button("Volgende ronde", "continue-learning", "primary", "", "arrow") : ""}${flash ? button("Nog eens bekijken", "restart-flash", "primary", "", "refresh") : ""}${button("Terug naar overzicht", "end-study", canContinue || flash ? "" : "primary")}${!flash ? button("Vrij oefenen", "switch-flash", "ghost", "", "stack") : ""}</div>${session.lastUndo ? `<div class="actions" style="margin-top:16px">${button("Laatste beoordeling ongedaan", "undo-grade", "ghost", "", "undo")}</div>` : ""}</section><p class="small muted" style="margin-top:24px;text-align:center">Reeds beoordeelde kaarten zijn direct opgeslagen. Een nieuwe ronde gebruikt je actuele planning.</p></div>`;
+  return `<div class="study-page"><header class="study-header">${button("Terug", "end-study", "ghost", "", "back")}<div class="study-context"><h1>${e(scopeTitle(session.scope))}</h1></div><span></span></header><section class="finish-card"><div class="finish-icon">${icon("check")}</div><h1>${flash ? "Je hebt de set bekeken." : completed ? "Deze ronde zit erop." : "Voor nu is er niets aan de beurt."}</h1><p>${flash ? "Je planning is niet veranderd. Herhaal gerust vrij, of gebruik Leren voor gespreide herhaling." : session.practice ? "Je hebt extra geoefend, zonder de gewone FSRS-planning te veranderen." : "Dat is een goede tussenstap, geen bewijs dat alles voorgoed blijft zitten. De planner bewaart de volgende herhalingen."}</p>${!flash && completed ? `<div class="finish-stats"><div><strong>${completed}</strong><span>beoordeeld</span></div><div><strong>${good}</strong><span>als correct beoordeeld</span></div><div><strong>${minutes}</strong><span>${minutes === 1 ? "minuut" : "minuten"}</span></div></div>` : ""}${next ? `<div class="timer-line" id="pending-time" data-due="${next.schedule.due}">${countLabel(pending.length, "kaart", "kaarten")} in de leerfase. Volgende ${next.schedule.due <= Date.now() ? "is nu beschikbaar" : "over " + intervalLabel(next.schedule.due)}.</div>` : ""}<div class="actions">${canContinue ? button("Volgende ronde", "continue-learning", "primary", "", "arrow") : ""}${flash ? button("Nog eens bekijken", "restart-flash", "primary", "", "refresh") : ""}${button("Terug naar overzicht", "end-study", canContinue || flash ? "" : "primary")}${!flash ? button("Vrij oefenen", "switch-flash", "ghost", "", "stack") : ""}</div>${session.lastUndo ? `<div class="actions" style="margin-top:16px">${button("Laatste beoordeling ongedaan", "undo-grade", "ghost", "", "undo")}</div>` : ""}${goalMet ? `<p class="goal-met">${icon("check")} Dagdoel gehaald</p>` : ""}</section><p class="small muted" style="margin-top:24px;text-align:center">Reeds beoordeelde kaarten zijn direct opgeslagen. Een nieuwe ronde gebruikt je actuele planning.</p></div>`;
 }
 async function grade(rating) {
   if (
@@ -2088,6 +2121,7 @@ document.addEventListener("submit", async (event) => {
       theme: f.get("theme"),
       mix: f.get("mix") === "on",
       flashShuffle: f.get("flashShuffle") === "on",
+      dailyGoal: Number(f.get("dailyGoal") ?? 1),
     };
     validateCollection({ ...state, settings });
     await mutate((next) => (next.settings = settings));
@@ -2207,7 +2241,7 @@ async function boot() {
     state = saved ? validateCollection(saved) : emptyCollection();
     if (!saved) {
       try {
-        const response = await fetch("./data/starter.json?v=3.1.45");
+        const response = await fetch("./data/starter.json?v=3.1.46");
         if (!response.ok) throw new Error("Starterbestand ontbreekt.");
         const starters = await response.json();
         for (const data of starters) {

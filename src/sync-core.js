@@ -1,5 +1,5 @@
-import { emptyCollection, validateCollection } from "./model.js?v=3.1.45";
-const groups = ["folders", "sets", "notes", "cards", "reviews", "activities"];
+import { emptyCollection, validateCollection } from "./model.js?v=3.1.46";
+const groups = ["folders", "sets", "notes", "cards", "reviews", "activities", "rounds"];
 const localSettings = ["theme", "answerMode"];
 const copy = (v) => (v === undefined ? undefined : structuredClone(v));
 export function canonical(v) {

@@ -1,7 +1,7 @@
-import { uid, localDay, nextMidnight, normalize } from "./utils.js?v=3.1.45";
-import { emptySchedule, State, retrievability } from "./scheduler.js?v=3.1.45";
-import { validateNote, clozeMatches } from "./parser.js?v=3.1.45";
-import { exploredCardIds } from "./learning.js?v=3.1.45";
+import { uid, localDay, nextMidnight, normalize } from "./utils.js?v=3.1.46";
+import { emptySchedule, State, retrievability } from "./scheduler.js?v=3.1.46";
+import { validateNote, clozeMatches } from "./parser.js?v=3.1.46";
+import { exploredCardIds } from "./learning.js?v=3.1.46";
 export const SCHEMA_VERSION = 1;
 export const DEFAULT_SETTINGS = {
   newPerDay: 15,
@@ -15,6 +15,7 @@ export const DEFAULT_SETTINGS = {
   exploreSize: 3,
   application: true,
   flashShuffle: true,
+  dailyGoal: 1,
 };
 export function emptyCollection() {
   return {
@@ -26,6 +27,7 @@ export function emptyCollection() {
     cards: [],
     reviews: [],
     activities: [],
+    rounds: [],
     settings: { ...DEFAULT_SETTINGS },
     seeded: false,
     lastBackup: null,
@@ -564,6 +566,15 @@ export function validateCollection(raw) {
       typeof a.success !== "boolean"
     )
       throw new Error("Ongeldig oefenlogboek.");
+  if (raw.rounds != null && (!Array.isArray(raw.rounds) || raw.rounds.length > 10000))
+    throw new Error("Ongeldig rondelogboek.");
+  for (const rd of raw.rounds ?? [])
+    if (
+      typeof rd?.id !== "string" ||
+      typeof rd?.day !== "string" ||
+      !/^\d{4}-\d{2}-\d{2}$/.test(rd.day)
+    )
+      throw new Error("Ongeldig rondelogboek.");
   for (const c of raw.cards)
     if (
       (c.practiceMark && !["known", "unknown"].includes(c.practiceMark)) ||
@@ -596,13 +607,76 @@ export function validateCollection(raw) {
     typeof settings.scaffold !== "boolean" ||
     ![1, 3, 5].includes(settings.exploreSize) ||
     typeof settings.application !== "boolean" ||
-    typeof settings.flashShuffle !== "boolean"
+    typeof settings.flashShuffle !== "boolean" ||
+    !Number.isInteger(settings.dailyGoal) ||
+    settings.dailyGoal < 1 ||
+    settings.dailyGoal > 10
   )
     throw new Error("Ongeldige instellingen.");
   return {
     ...raw,
     activities: raw.activities ?? [],
+    rounds: raw.rounds ?? [],
     settings,
     revision: Number.isInteger(raw.revision) ? raw.revision : 0,
   };
+}
+
+// Dagdoel and week rhythm derive purely from finished rounds: no extra
+// counters to maintain, nothing to migrate, and merges stay trivial.
+export function roundsByDay(rounds) {
+  const counts = new Map();
+  for (const r of rounds ?? []) {
+    const day = r?.day;
+    if (typeof day !== "string") continue;
+    counts.set(day, (counts.get(day) ?? 0) + 1);
+  }
+  return counts;
+}
+const WEEKDAY_INITIALS = ["zo", "ma", "di", "wo", "do", "vr", "za"];
+export function habitWeek(rounds, now = Date.now()) {
+  const counts = roundsByDay(rounds),
+    out = [],
+    base = new Date(now);
+  for (let i = 6; i >= 0; i--) {
+    const t = new Date(base);
+    t.setDate(base.getDate() - i);
+    const key = localDay(t.getTime());
+    out.push({
+      day: key,
+      initial: WEEKDAY_INITIALS[t.getDay()],
+      done: (counts.get(key) ?? 0) > 0,
+      today: i === 0,
+    });
+  }
+  return out;
+}
+function mondayKey(time) {
+  const d = new Date(time);
+  d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
+  return localDay(d.getTime());
+}
+// Consecutive days with a finished round. Forgiving by design: an empty
+// today is still open, and each calendar week absorbs one missed day
+// instead of resetting to zero.
+export function streakDays(rounds, now = Date.now()) {
+  const days = new Set(roundsByDay(rounds).keys()),
+    graced = new Set(),
+    cursor = new Date(now);
+  let streak = 0,
+    first = true;
+  for (let guard = 0; guard < 4000; guard++) {
+    const key = localDay(cursor.getTime());
+    if (days.has(key)) streak++;
+    else if (first) {
+      // Today may still happen.
+    } else {
+      const week = mondayKey(cursor.getTime());
+      if (graced.has(week)) break;
+      graced.add(week);
+    }
+    first = false;
+    cursor.setDate(cursor.getDate() - 1);
+  }
+  return streak;
 }

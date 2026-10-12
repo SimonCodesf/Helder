@@ -1,5 +1,5 @@
-import { getDeviceValue, setDeviceValue } from "./storage.js?v=3.1.45";
-import { SyncEngine } from "./sync-core.js?v=3.1.45";
+import { getDeviceValue, setDeviceValue } from "./storage.js?v=3.1.46";
+import { SyncEngine } from "./sync-core.js?v=3.1.46";
 export function validateCloudConfig(config) {
   if (!config?.supabaseUrl && !config?.publishableKey) return null;
   let url;
@@ -118,7 +118,7 @@ export class CloudConnection {
         );
         return;
       }
-      const { createClient } = await import("../vendor/supabase.mjs?v=3.1.45");
+      const { createClient } = await import("../vendor/supabase.mjs?v=3.1.46");
       const storage = {
         getItem: (key) => getDeviceValue("oauth:" + key),
         setItem: (key, value) => setDeviceValue("oauth:" + key, value),

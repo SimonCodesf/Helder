@@ -17,6 +17,9 @@ import {
   resetSet,
   swapSetQA,
   setChapter,
+  roundsByDay,
+  habitWeek,
+  streakDays,
   validateCollection,
 } from "../src/model.js";
 import {
@@ -339,4 +342,60 @@ test("Bulk chapter replaces chapter tags, keeps the rest", () => {
   assert.ok(!s.notes[0].tags.some((t) => t.startsWith("hoofdstuk::")));
   assert.ok(s.notes[0].tags.includes("niveau::1"));
   assert.ok(s.notes[1].tags.includes("kern"));
+});
+
+test("Week dots cover seven days ending today", () => {
+  const noon = new Date(2026, 9, 12, 12, 0, 0).getTime();
+  const day = (n) => {
+    const d = new Date(noon);
+    d.setDate(d.getDate() - n);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  };
+  const week = habitWeek(
+    [{ id: "a", day: day(0) }, { id: "b", day: day(2) }],
+    noon,
+  );
+  assert.equal(week.length, 7);
+  assert.equal(week[6].today, true);
+  assert.equal(week[6].done, true);
+  assert.equal(week[4].done, true);
+  assert.equal(week[5].done, false);
+  assert.equal(
+    week.filter((w) => w.done).length,
+    2,
+  );
+});
+
+test("Streak forgives an empty today and one miss per week", () => {
+  const noon = new Date(2026, 9, 12, 12, 0, 0).getTime();
+  const day = (n) => {
+    const d = new Date(noon);
+    d.setDate(d.getDate() - n);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  };
+  const ids = (days) => days.map((n, i) => ({ id: "r" + i, day: day(n) }));
+  // Oct 12 2026 is a Monday: Sun..Sat patterns stay inside known weeks.
+  assert.equal(streakDays(ids([0, 1, 2]), noon), 3);
+  assert.equal(streakDays(ids([1, 2]), noon), 2);
+  assert.equal(streakDays(ids([0, 2]), noon), 2);
+  assert.equal(streakDays(ids([0, 3]), noon), 1);
+  assert.equal(streakDays(ids([6]), noon), 0);
+  assert.equal(streakDays(ids([0]), noon), 1);
+});
+
+test("Rounds log validates shape and daily goal range", () => {
+  assert.equal(emptyCollection().settings.dailyGoal, 1);
+  assert.deepEqual(
+    [...roundsByDay([{ day: "2026-10-12" }, { id: "x" }]).keys()],
+    ["2026-10-12"],
+  );
+  let bad = emptyCollection();
+  bad.settings.dailyGoal = 0;
+  assert.throws(() => validateCollection(bad), /instellingen/);
+  bad = emptyCollection();
+  bad.rounds = [{ id: "a", day: "gisteren" }];
+  assert.throws(() => validateCollection(bad), /rondelogboek/);
+  bad = emptyCollection();
+  bad.rounds = [{ day: "2026-10-12" }];
+  assert.throws(() => validateCollection(bad), /rondelogboek/);
 });

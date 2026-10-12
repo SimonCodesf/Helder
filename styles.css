@@ -516,6 +516,60 @@ svg {
   fill: var(--orange-soft);
 }
 /* Today: one clear next action */
+.habit-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  margin-bottom: 8px;
+}
+.habit-card p {
+  margin: 10px 0 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+.week-dots {
+  display: flex;
+  gap: 10px;
+}
+.week-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.week-day i {
+  font-style: normal;
+  font-size: 12px;
+  color: var(--muted);
+}
+.week-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--control);
+}
+.week-day.done .week-dot {
+  background: var(--green);
+  border-color: var(--green);
+}
+.week-day.today .week-dot {
+  box-shadow: 0 0 0 2px var(--canvas), 0 0 0 4px var(--blue-bright);
+}
+.goal-met {
+  color: var(--green);
+  font-weight: 650;
+  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 16px;
+}
+.goal-met svg {
+  width: 18px;
+  height: 18px;
+}
 .today-hero {
   background: var(--blue-soft);
   border: 1px solid var(--blue-border);
