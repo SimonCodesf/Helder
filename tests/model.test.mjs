@@ -335,4 +335,8 @@ test("Bulk chapter replaces chapter tags, keeps the rest", () => {
   assert.ok(!s.notes[1].tags.includes("hoofdstuk::H0"));
   assert.ok(s.notes[1].tags.includes("kern"));
   assert.equal(setChapter(s, ["missing"], "H2"), 0);
+  assert.equal(setChapter(s, [a.id, b.id], ""), 2);
+  assert.ok(!s.notes[0].tags.some((t) => t.startsWith("hoofdstuk::")));
+  assert.ok(s.notes[0].tags.includes("niveau::1"));
+  assert.ok(s.notes[1].tags.includes("kern"));
 });

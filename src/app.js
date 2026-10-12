@@ -11,9 +11,9 @@ import {
   shuffle,
   downloadText,
   safeURL,
-} from "./utils.js?v=3.1.42";
-import { icon } from "./icons.js?v=3.1.42";
-import { markdown } from "./markdown.js?v=3.1.42";
+} from "./utils.js?v=3.1.43";
+import { icon } from "./icons.js?v=3.1.43";
+import { markdown } from "./markdown.js?v=3.1.43";
 import {
   parseImport,
   splitTags,
@@ -21,7 +21,7 @@ import {
   toMarkdown,
   toTSV,
   noteImportKey,
-} from "./parser.js?v=3.1.42";
+} from "./parser.js?v=3.1.43";
 import {
   emptyCollection,
   validateCollection,
@@ -41,21 +41,21 @@ import {
   isAvailable,
   faces,
   burySiblings,
-} from "./model.js?v=3.1.42";
+} from "./model.js?v=3.1.43";
 import {
   loadCollection,
   saveCollection,
   requestPersistentStorage,
   getDeviceValue,
   setDeviceValue,
-} from "./storage.js?v=3.1.42";
-import { previewRatings, scheduleRating, State } from "./scheduler.js?v=3.1.42";
+} from "./storage.js?v=3.1.43";
+import { previewRatings, scheduleRating, State } from "./scheduler.js?v=3.1.43";
 import {
   createSession,
   currentCardId,
   advanceSession,
-} from "./study.js?v=3.1.42";
-import { guideView } from "./guide.js?v=3.1.42";
+} from "./study.js?v=3.1.43";
+import { guideView } from "./guide.js?v=3.1.43";
 import {
   prepareStep,
   startExploration,
@@ -67,7 +67,7 @@ import {
   beginRecall,
   recognitionOptions,
   shouldApply,
-} from "./learning.js?v=3.1.42";
+} from "./learning.js?v=3.1.43";
 import {
   facet,
   structureFor,
@@ -77,20 +77,20 @@ import {
   labelText,
   resumeLevel,
   resumeChapter,
-} from "./curriculum.js?v=3.1.42";
+} from "./curriculum.js?v=3.1.43";
 import {
   progressStrip,
   courseStructure,
   folderTile,
   groupStrip,
-} from "./curriculum-ui.js?v=3.1.42";
-import { studyScreen } from "./study-ui.js?v=3.1.42";
-import { explorationScreen } from "./exploration-ui.js?v=3.1.42";
-import { emailView } from "./email-ui.js?v=3.1.42";
-import { setupSwipe } from "./swipe.js?v=3.1.42";
-import { CloudConnection } from "./cloud.js?v=3.1.42";
-import { cloudPanel, conflictBody } from "./cloud-ui.js?v=3.1.42";
-import { LocalChangedError, localFromCloud } from "./sync-core.js?v=3.1.42";
+} from "./curriculum-ui.js?v=3.1.43";
+import { studyScreen } from "./study-ui.js?v=3.1.43";
+import { explorationScreen } from "./exploration-ui.js?v=3.1.43";
+import { emailView } from "./email-ui.js?v=3.1.43";
+import { setupSwipe } from "./swipe.js?v=3.1.43";
+import { CloudConnection } from "./cloud.js?v=3.1.43";
+import { cloudPanel, conflictBody } from "./cloud-ui.js?v=3.1.43";
+import { LocalChangedError, localFromCloud } from "./sync-core.js?v=3.1.43";
 import {
   setupInterface,
   syncInterface,
@@ -99,7 +99,7 @@ import {
   offlineUpdateReady,
   offlineAvailable,
   statusButton,
-} from "./interface.js?v=3.1.42";
+} from "./interface.js?v=3.1.43";
 
 let cloud;
 let state,
@@ -1047,9 +1047,9 @@ function openBulkChapter(id) {
   draft = { type: "bulk-chapter", id };
   openModal(
     "Hoofdstuk instellen",
-    `${selected.length} kaarten in deze selectie krijgen samen één hoofdstuk. Bestaande hoofdstukken worden vervangen; andere tags blijven staan.`,
+    `${selected.length} kaarten in deze selectie krijgen samen één hoofdstuk. Bestaande hoofdstukken worden vervangen; andere tags en je planning blijven staan. Met Wissen haal je het hoofdstuk weg (terug naar Zonder hoofdstuk).`,
     `<div class="field"><label for="bulk-chapter">Hoofdstuk</label><input id="bulk-chapter" maxlength="100" placeholder="Bijv. H1" value="${e(current)}"></div>`,
-    `<div class="actions">${button("Annuleren", "close-modal")}${button("Bewaren", "bulk-chapter-save", "primary")}</div>`,
+    `<div class="actions">${button("Annuleren", "close-modal")}${button("Wissen", "bulk-chapter-clear", "ghost")}${button("Bewaren", "bulk-chapter-save", "primary")}</div>`,
   );
 }
 function openSetEditor(id) {
@@ -1760,6 +1760,21 @@ async function handleClick(event) {
         toast(`${n} kaarten in ${raw} gezet.`);
         break;
       }
+      case "bulk-chapter-clear": {
+        const ids = scopeNotes(state, {
+          ...routeScope(),
+          query: ui.query,
+          tag: ui.tag,
+          level: ui.level,
+          chapter: ui.chapter,
+        }).map((n) => n.id);
+        const n = await mutate((next) => setChapter(next, ids, ""));
+        ui.chapter = "";
+        modal.close();
+        draft = null;
+        toast(`Hoofdstuk gewist bij ${n} kaarten.`);
+        break;
+      }
       case "save-folder": {
         const name = $("#folder-name").value.trim(),
           parentId = $("#folder-parent").value || null,
@@ -2192,7 +2207,7 @@ async function boot() {
     state = saved ? validateCollection(saved) : emptyCollection();
     if (!saved) {
       try {
-        const response = await fetch("./data/starter.json?v=3.1.42");
+        const response = await fetch("./data/starter.json?v=3.1.43");
         if (!response.ok) throw new Error("Starterbestand ontbreekt.");
         const starters = await response.json();
         for (const data of starters) {

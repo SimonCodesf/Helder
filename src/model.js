@@ -1,7 +1,7 @@
-import { uid, localDay, nextMidnight, normalize } from "./utils.js?v=3.1.42";
-import { emptySchedule, State, retrievability } from "./scheduler.js?v=3.1.42";
-import { validateNote, clozeMatches } from "./parser.js?v=3.1.42";
-import { exploredCardIds } from "./learning.js?v=3.1.42";
+import { uid, localDay, nextMidnight, normalize } from "./utils.js?v=3.1.43";
+import { emptySchedule, State, retrievability } from "./scheduler.js?v=3.1.43";
+import { validateNote, clozeMatches } from "./parser.js?v=3.1.43";
+import { exploredCardIds } from "./learning.js?v=3.1.43";
 export const SCHEMA_VERSION = 1;
 export const DEFAULT_SETTINGS = {
   newPerDay: 15,
@@ -227,10 +227,13 @@ export function setChapter(state, ids, chapter) {
   let changed = 0;
   for (const note of state.notes) {
     if (!wanted.has(note.id)) continue;
-    note.tags = [
-      ...note.tags.filter((t) => !t.startsWith("hoofdstuk::")),
-      `hoofdstuk::${chapter}`,
-    ];
+    // Tags only: schedules, reviews and planning are never touched.
+    note.tags = chapter
+      ? [
+          ...note.tags.filter((t) => !t.startsWith("hoofdstuk::")),
+          `hoofdstuk::${chapter}`,
+        ]
+      : note.tags.filter((t) => !t.startsWith("hoofdstuk::"));
     note.updatedAt = Date.now();
     changed++;
   }
