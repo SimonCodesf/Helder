@@ -1,10 +1,10 @@
-import { escapeHTML as e, intervalLabel, safeURL } from "./utils.js?v=3.1.49";
-import { icon } from "./icons.js?v=3.1.49";
-import { markdown } from "./markdown.js?v=3.1.49";
-import { faces, scopeCards } from "./model.js?v=3.1.49";
-import { previewRatings } from "./scheduler.js?v=3.1.49";
-import { currentCardId } from "./study.js?v=3.1.49";
-import { facet } from "./curriculum.js?v=3.1.49";
+import { escapeHTML as e, intervalLabel, safeURL } from "./utils.js?v=3.1.50";
+import { icon } from "./icons.js?v=3.1.50";
+import { markdown } from "./markdown.js?v=3.1.50";
+import { faces, scopeCards } from "./model.js?v=3.1.50";
+import { previewRatings } from "./scheduler.js?v=3.1.50";
+import { currentCardId } from "./study.js?v=3.1.50";
+import { facet } from "./curriculum.js?v=3.1.50";
 export function studyScreen(
   state,
   session,
@@ -59,6 +59,8 @@ export function studyScreen(
     );
   }
   if (!flash && !session.application) {
+    if (session.fallback)
+      content += `<p class="study-stats">Niets te herhalen · vrij oefenen zonder planning</p>`;
     // Scope-wide and persistent: ✓ counts every explored term (rated or
     // not), + the explored terms still awaiting their first rating. Rated
     // terms additionally sit in exactly one color by last rating, so terms

@@ -450,3 +450,31 @@ test("Daily flag defaults off and validates boolean", () => {
   bad.rounds = [{ id: "r", day: "2026-10-12", scope: { type: "set" } }];
   assert.throws(() => validateCollection(bad), /rondelogboek/);
 });
+
+test("Empty learn queue falls back to ten random practice terms", () => {
+  const s = emptyCollection(),
+    set = newSet(s, { title: "Vak" });
+  for (let i = 0; i < 12; i++)
+    upsertNote(s, set.id, { kind: "basic", front: "V" + i, back: "A" + i });
+  for (const c of s.cards) {
+    c.schedule.state = 2;
+    c.schedule.reps = 5;
+    c.schedule.due = Date.now() + 86400000;
+  }
+  s.cards[0].suspended = true;
+  const session = createSession(s, { type: "all" });
+  assert.equal(session.queue.length, 10);
+  assert.equal(session.total, 10);
+  assert.equal(session.practice, true);
+  assert.equal(session.fallback, true);
+  assert.ok(!session.queue.includes(s.cards[0].id));
+  assert.ok(
+    session.queue.every(
+      (id) => s.cards.find((c) => c.id === id).schedule.state !== 0,
+    ),
+  );
+  const empty = createSession(emptyCollection(), { type: "all" });
+  assert.equal(empty.queue.length, 0);
+  assert.equal(empty.fallback, false);
+  assert.equal(empty.practice, false);
+});

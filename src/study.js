@@ -1,6 +1,6 @@
-import { queueFor, stats } from "./model.js?v=3.1.49";
-import { shuffle, uid } from "./utils.js?v=3.1.49";
-import { exploredCardIds } from "./learning.js?v=3.1.49";
+import { queueFor, scopeCards, stats } from "./model.js?v=3.1.50";
+import { shuffle, uid } from "./utils.js?v=3.1.50";
+import { exploredCardIds } from "./learning.js?v=3.1.50";
 // A learn round stays steady: new terms are only explored while due
 // reviews plus terms still awaiting their first rating stay below this
 // total. Nothing new is added mid-round; the rest waits for later rounds.
@@ -62,19 +62,34 @@ export function createSession(
     const inBatch = new Set(batch);
     queue = [...batch, ...queue.filter((id) => !inBatch.has(id))];
   }
+  // Nothing due and nothing new: freely practice up to ten random known
+  // terms instead of an empty round. Planning stays untouched.
+  let fallback = false;
+  if (mode === "learn" && !practice && queue.length === 0) {
+    const pool = shuffle(
+      scopeCards(state, scope).filter((c) => !c.suspended),
+    );
+    const known = pool.filter((c) => c.schedule.state !== 0);
+    const fresh = pool.filter((c) => c.schedule.state === 0);
+    const picked = [...known, ...fresh].slice(0, 10);
+    if (picked.length) {
+      fallback = true;
+      queue = picked.map((c) => c.id);
+    }
+  }
+  const limit = fallback
+    ? 10
+    : mode === "flash"
+      ? queue.length
+      : state.settings.sessionSize;
   return {
     id: uid(),
     scope,
     mode,
-    practice,
-    queue: queue.slice(
-      0,
-      mode === "flash" ? queue.length : state.settings.sessionSize,
-    ),
-    total: Math.min(
-      queue.length,
-      mode === "flash" ? queue.length : state.settings.sessionSize,
-    ),
+    practice: practice || fallback,
+    fallback,
+    queue: queue.slice(0, limit),
+    total: Math.min(queue.length, limit),
     completed: [],
     revealed: false,
     hintUsed: false,
