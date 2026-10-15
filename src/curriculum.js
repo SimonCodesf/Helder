@@ -1,5 +1,5 @@
-import { scopeNotes, scopeCards, stats } from "./model.js?v=3.1.47";
-import { evidenceState } from "./learning.js?v=3.1.47";
+import { scopeNotes, scopeCards, stats } from "./model.js?v=3.1.48";
+import { evidenceState } from "./learning.js?v=3.1.48";
 export function facet(note, prefix) {
   return (
     note.tags

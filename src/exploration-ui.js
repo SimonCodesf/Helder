@@ -1,7 +1,8 @@
-import { escapeHTML as e } from "./utils.js?v=3.1.47";
-import { markdown } from "./markdown.js?v=3.1.47";
-import { icon } from "./icons.js?v=3.1.47";
-import { faces } from "./model.js?v=3.1.47";
+import { escapeHTML as e } from "./utils.js?v=3.1.48";
+import { markdown } from "./markdown.js?v=3.1.48";
+import { icon } from "./icons.js?v=3.1.48";
+import { facet } from "./curriculum.js?v=3.1.48";
+import { faces } from "./model.js?v=3.1.48";
 
 export function explorationScreen(state, session, { button, scopeTitle }) {
   const warm = session.exploration,
@@ -21,7 +22,11 @@ export function explorationScreen(state, session, { button, scopeTitle }) {
       shell +
       `<section class="study-card exploration-bridge"><h2>Verkenning zit erop.</h2><p>Nu probeer je de kern zelf op te halen, zonder hulp.</p></section><div class="study-dock reveal-dock">${button(session.mode === "explore" ? "Verder" : "Zelf ophalen", "explore-finish", "primary large", "", "arrow")}</div></div>`
     );
-  const head = `<div class="study-card-head"><span class="pill blue">${task.kind === "choice" ? "Meerkeuze" : task.kind === "reverse" ? "Welke term?" : "Uitleg"}</span><button class="icon-button${note.starred ? " is-starred" : ""}" data-action="star-note" data-id="${e(note.id)}" aria-label="${note.starred ? "Ster verwijderen" : "Ster toevoegen"}" aria-pressed="${!!note.starred}">${icon("star")}</button></div>`;
+  const sub = [
+    facet(note, "niveau") ? `N${facet(note, "niveau")}` : "",
+    facet(note, "hoofdstuk") || "",
+  ].filter(Boolean);
+  const head = `<div class="study-card-head"><div class="tags"><span class="pill blue">${task.kind === "choice" ? "Meerkeuze" : task.kind === "reverse" ? "Welke term?" : "Uitleg"}</span>${sub.length ? `<span class="small muted">${e(sub.join(" · "))}</span>` : ""}</div><button class="icon-button${note.starred ? " is-starred" : ""}" data-action="star-note" data-id="${e(note.id)}" aria-label="${note.starred ? "Ster verwijderen" : "Ster toevoegen"}" aria-pressed="${!!note.starred}">${icon("star")}</button></div>`;
   let body, controls;
   if (task.kind === "choice") {
     const c = task.choice,

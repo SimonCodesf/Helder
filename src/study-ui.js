@@ -1,10 +1,10 @@
-import { escapeHTML as e, intervalLabel, safeURL } from "./utils.js?v=3.1.47";
-import { icon } from "./icons.js?v=3.1.47";
-import { markdown } from "./markdown.js?v=3.1.47";
-import { faces, scopeCards } from "./model.js?v=3.1.47";
-import { previewRatings } from "./scheduler.js?v=3.1.47";
-import { currentCardId } from "./study.js?v=3.1.47";
-import { facet } from "./curriculum.js?v=3.1.47";
+import { escapeHTML as e, intervalLabel, safeURL } from "./utils.js?v=3.1.48";
+import { icon } from "./icons.js?v=3.1.48";
+import { markdown } from "./markdown.js?v=3.1.48";
+import { faces, scopeCards } from "./model.js?v=3.1.48";
+import { previewRatings } from "./scheduler.js?v=3.1.48";
+import { currentCardId } from "./study.js?v=3.1.48";
+import { facet } from "./curriculum.js?v=3.1.48";
 export function studyScreen(
   state,
   session,
@@ -30,7 +30,11 @@ export function studyScreen(
         : card.schedule.state === 0
           ? "Nieuw begrip"
           : "Herhaling";
-  const header = `<div class="study-card-head"><div class="tags"><span class="pill blue">${label}</span>${facet(note, "niveau") ? `<span class="small muted">Niveau ${e(facet(note, "niveau"))}</span>` : ""}</div><button class="icon-button${note.starred ? " is-starred" : ""}" data-action="star-note" data-id="${e(note.id)}" aria-label="${note.starred ? "Ster verwijderen" : "Ster toevoegen"}" aria-pressed="${note.starred}">${icon("star")}</button></div>`;
+  const sub = [
+    facet(note, "niveau") ? `N${facet(note, "niveau")}` : "",
+    facet(note, "hoofdstuk") || "",
+  ].filter(Boolean);
+  const header = `<div class="study-card-head"><div class="tags"><span class="pill blue">${label}</span>${sub.length ? `<span class="small muted">${e(sub.join(" · "))}</span>` : ""}</div><button class="icon-button${note.starred ? " is-starred" : ""}" data-action="star-note" data-id="${e(note.id)}" aria-label="${note.starred ? "Ster verwijderen" : "Ster toevoegen"}" aria-pressed="${note.starred}">${icon("star")}</button></div>`;
   if (flash) {
     const marks = Object.values(session.flashMarks ?? {}),
       knownCount = marks.filter((v) => v === "known").length,
