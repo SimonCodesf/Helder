@@ -11,9 +11,9 @@ import {
   shuffle,
   downloadText,
   safeURL,
-} from "./utils.js?v=3.1.48";
-import { icon } from "./icons.js?v=3.1.48";
-import { markdown } from "./markdown.js?v=3.1.48";
+} from "./utils.js?v=3.1.49";
+import { icon } from "./icons.js?v=3.1.49";
+import { markdown } from "./markdown.js?v=3.1.49";
 import {
   parseImport,
   splitTags,
@@ -21,7 +21,7 @@ import {
   toMarkdown,
   toTSV,
   noteImportKey,
-} from "./parser.js?v=3.1.48";
+} from "./parser.js?v=3.1.49";
 import {
   emptyCollection,
   validateCollection,
@@ -40,25 +40,26 @@ import {
   roundsByDay,
   habitWeek,
   streakDays,
+  dailyGrid,
   queueFor,
   isAvailable,
   faces,
   burySiblings,
-} from "./model.js?v=3.1.48";
+} from "./model.js?v=3.1.49";
 import {
   loadCollection,
   saveCollection,
   requestPersistentStorage,
   getDeviceValue,
   setDeviceValue,
-} from "./storage.js?v=3.1.48";
-import { previewRatings, scheduleRating, State } from "./scheduler.js?v=3.1.48";
+} from "./storage.js?v=3.1.49";
+import { previewRatings, scheduleRating, State } from "./scheduler.js?v=3.1.49";
 import {
   createSession,
   currentCardId,
   advanceSession,
-} from "./study.js?v=3.1.48";
-import { guideView } from "./guide.js?v=3.1.48";
+} from "./study.js?v=3.1.49";
+import { guideView } from "./guide.js?v=3.1.49";
 import {
   prepareStep,
   startExploration,
@@ -70,7 +71,7 @@ import {
   beginRecall,
   recognitionOptions,
   shouldApply,
-} from "./learning.js?v=3.1.48";
+} from "./learning.js?v=3.1.49";
 import {
   facet,
   structureFor,
@@ -81,20 +82,20 @@ import {
   resumeLevel,
   resumeChapter,
   lastActive,
-} from "./curriculum.js?v=3.1.48";
+} from "./curriculum.js?v=3.1.49";
 import {
   progressStrip,
   courseStructure,
   folderTile,
   groupStrip,
-} from "./curriculum-ui.js?v=3.1.48";
-import { studyScreen } from "./study-ui.js?v=3.1.48";
-import { explorationScreen } from "./exploration-ui.js?v=3.1.48";
-import { emailView } from "./email-ui.js?v=3.1.48";
-import { setupSwipe } from "./swipe.js?v=3.1.48";
-import { CloudConnection } from "./cloud.js?v=3.1.48";
-import { cloudPanel, conflictBody } from "./cloud-ui.js?v=3.1.48";
-import { LocalChangedError, localFromCloud } from "./sync-core.js?v=3.1.48";
+} from "./curriculum-ui.js?v=3.1.49";
+import { studyScreen } from "./study-ui.js?v=3.1.49";
+import { explorationScreen } from "./exploration-ui.js?v=3.1.49";
+import { emailView } from "./email-ui.js?v=3.1.49";
+import { setupSwipe } from "./swipe.js?v=3.1.49";
+import { CloudConnection } from "./cloud.js?v=3.1.49";
+import { cloudPanel, conflictBody } from "./cloud-ui.js?v=3.1.49";
+import { LocalChangedError, localFromCloud } from "./sync-core.js?v=3.1.49";
 import {
   setupInterface,
   syncInterface,
@@ -103,7 +104,7 @@ import {
   offlineUpdateReady,
   offlineAvailable,
   statusButton,
-} from "./interface.js?v=3.1.48";
+} from "./interface.js?v=3.1.49";
 
 let cloud;
 let state,
@@ -279,12 +280,13 @@ function chapterRow(set, chapter, scope, last) {
   return `<article class="vak-card"><div class="vak-info"><h3><a href="${routeURL("set", set.id)}">${e(label)}</a></h3><p>${e(set.title)}${last ? " · laatst geoefend" : ""}</p>${groupStrip(state, scope)}</div>${button("Leren", "start-learn", "primary", actionScope(scope) + ` aria-label="${e(label)} leren"`, "play")}</article>`;
 }
 function habitCard() {
-  const week = habitWeek(state.rounds),
+  const grid = dailyGrid(state),
+    week = habitWeek(state.rounds),
     met = week.filter((w) => w.done).length,
     streak = streakDays(state.rounds),
     goal = state.settings.dailyGoal ?? 1,
     today = (roundsByDay(state.rounds).get(localDay()) ?? 0) >= goal;
-  return `<section class="habit-card" aria-label="Je weekritme"><div class="week-dots">${week.map((w) => `<span class="week-day${w.done ? " done" : ""}${w.today ? " today" : ""}" title="${w.day}"><span class="week-dot"></span><i>${w.initial}</i></span>`).join("")}</div><p>${met} van 7 dagen${streak ? ` · ${streak} ${streak === 1 ? "dag" : "dagen"} op rij` : ""} · ${today ? "Doel gehaald ✓" : `Nog ${goal} ${goal === 1 ? "ronde" : "rondes"} voor je doel`}</p></section>`;
+  return `<section class="habit-card" aria-label="Je weekritme"><div class="habit-grid"><div class="habit-row habit-head"><span></span>${grid.columns.map((c) => `<span title="${c.day}">${c.initial}</span>`).join("")}</div>${grid.rows.map((r) => `<div class="habit-row"><span class="habit-name">${e(r.title)}</span>${r.cells.map((done, i) => `<span class="week-dot${done ? " done" : ""}${grid.columns[i].today ? " today" : ""}" title="${r.title} · ${grid.columns[i].day}"></span>`).join("")}</div>`).join("")}</div><p>${met} van 7 dagen${streak ? ` · ${streak} ${streak === 1 ? "dag" : "dagen"} op rij` : ""} · ${today ? "Doel gehaald ✓" : `Nog ${goal} ${goal === 1 ? "ronde" : "rondes"} voor je doel`}</p></section>`;
 }
 function todayView() {
   const s = stats(state),
@@ -595,7 +597,11 @@ function finishedView() {
       justFinished = true;
       mutate((next) => {
         next.rounds ??= [];
-        next.rounds.push({ id: uid(), day: localDay() });
+        next.rounds.push({
+          id: uid(),
+          day: localDay(),
+          scope: { type: session.scope?.type ?? "all", id: session.scope?.id ?? "" },
+        });
         if (next.rounds.length > 2000)
           next.rounds = next.rounds.slice(-2000);
       }, { render: false }).catch(errorMessage);
@@ -1110,7 +1116,7 @@ function openFolderEditor(id = null) {
   openModal(
     folder ? "Map beheren" : "Een nieuwe map",
     "Brede categorieën in mappen, hoofdstukken en niveaus in tags.",
-    `<div class="field"><label for="folder-name">Naam</label><input type="text" id="folder-name" value="${e(folder?.name ?? "")}" maxlength="200" placeholder="Bijvoorbeeld: Filosofie"></div><div class="field"><label for="folder-parent">Bovenliggende map</label><select id="folder-parent">${folderOptions(folder?.parentId ?? (route().type === "folder" && !id ? route().id : null), id)}</select></div>`,
+    `<div class="field"><label for="folder-name">Naam</label><input type="text" id="folder-name" value="${e(folder?.name ?? "")}" maxlength="200" placeholder="Bijvoorbeeld: Filosofie"></div><div class="check-field"><input type="checkbox" id="folder-daily" ${folder?.daily ? "checked" : ""}><label for="folder-daily">Elke dag oefenen<div class="help">Toont dit vak als verplichte rij in je weekraster op Vandaag. Standaard uit.</div></label></div><div class="field"><label for="folder-parent">Bovenliggende map</label><select id="folder-parent">${folderOptions(folder?.parentId ?? (route().type === "folder" && !id ? route().id : null), id)}</select></div>`,
     `<div class="actions">${folder ? button("Map verwijderen", "delete-folder", "danger", `data-id="${e(folder.id)}"`, "trash") : ""}${button("Annuleren", "close-modal")}${button("Bewaren", "save-folder", "primary")}</div>`,
   );
 }
@@ -1831,12 +1837,13 @@ async function handleClick(event) {
         )
           throw new Error("Er bestaat al een map met deze naam op deze plek.");
         await mutate((next) => {
+          const daily = $("#folder-daily").checked;
           if (folderId) {
             Object.assign(
               next.folders.find((f) => f.id === folderId),
-              { name, parentId },
+              { name, parentId, daily },
             );
-          } else next.folders.push({ id: uid(), name, parentId });
+          } else next.folders.push({ id: uid(), name, parentId, daily });
         });
         modal.close();
         draft = null;
@@ -2249,7 +2256,7 @@ async function boot() {
     state = saved ? validateCollection(saved) : emptyCollection();
     if (!saved) {
       try {
-        const response = await fetch("./data/starter.json?v=3.1.48");
+        const response = await fetch("./data/starter.json?v=3.1.49");
         if (!response.ok) throw new Error("Starterbestand ontbreekt.");
         const starters = await response.json();
         for (const data of starters) {

@@ -20,6 +20,8 @@ import {
   roundsByDay,
   habitWeek,
   streakDays,
+  roundVakken,
+  dailyGrid,
   validateCollection,
 } from "../src/model.js";
 import {
@@ -397,5 +399,54 @@ test("Rounds log validates shape and daily goal range", () => {
   assert.throws(() => validateCollection(bad), /rondelogboek/);
   bad = emptyCollection();
   bad.rounds = [{ day: "2026-10-12" }];
+  assert.throws(() => validateCollection(bad), /rondelogboek/);
+});
+
+test("Week grid tracks mandatory vakken per day", () => {
+  const s = emptyCollection();
+  s.folders.push(
+    { id: "f1", name: "Filosofie", parentId: null, daily: true },
+    { id: "f2", name: "Frans", parentId: null },
+    { id: "sub", name: "Ethiek", parentId: "f1" },
+  );
+  const a = newSet(s, { title: "A", folderId: "sub" });
+  const b = newSet(s, { title: "B", folderId: "f2" });
+  const loose = newSet(s, { title: "Los" });
+  const noon = new Date(2026, 9, 12, 12, 0, 0).getTime();
+  const day = (n) => localDay(noon - n * 86400000);
+  s.rounds = [
+    { id: "r1", day: day(0), scope: { type: "set", id: a.id } },
+    { id: "r2", day: day(0), scope: { type: "set", id: b.id } },
+    { id: "r3", day: day(1), scope: { type: "folder", id: "f1" } },
+    { id: "r4", day: day(2) },
+    { id: "r5", day: day(0), scope: { type: "set", id: loose.id } },
+  ];
+  const grid = dailyGrid(s, noon);
+  assert.equal(grid.columns.length, 7);
+  assert.deepEqual(
+    grid.rows.map((r) => r.title),
+    ["Filosofie"],
+  );
+  const row = grid.rows[0];
+  assert.equal(row.cells[6], true);
+  assert.equal(row.cells[5], true);
+  assert.equal(row.cells[4], true);
+  assert.deepEqual(
+    [...roundVakken({ scope: { type: "set", id: a.id } }, s)],
+    ["f1"],
+  );
+  assert.deepEqual(
+    [...roundVakken({ scope: { type: "set", id: loose.id } }, s)],
+    [],
+  );
+  assert.deepEqual([...roundVakken({}, s)].sort(), ["f1", "f2"]);
+});
+
+test("Daily flag defaults off and validates boolean", () => {
+  let bad = emptyCollection();
+  bad.folders.push({ id: "f", name: "F", parentId: null, daily: "ja" });
+  assert.throws(() => validateCollection(bad), /map/);
+  bad = emptyCollection();
+  bad.rounds = [{ id: "r", day: "2026-10-12", scope: { type: "set" } }];
   assert.throws(() => validateCollection(bad), /rondelogboek/);
 });

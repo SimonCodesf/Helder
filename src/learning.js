@@ -1,4 +1,4 @@
-import { normalize, shuffle } from "./utils.js?v=3.1.48";
+import { normalize, shuffle } from "./utils.js?v=3.1.49";
 
 // Pedagogical scaffolding is separate from the FSRS memory model.
 // Choice/application answers must be authored, never invented from other cards.

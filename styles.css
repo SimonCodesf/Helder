@@ -528,20 +528,30 @@ svg {
   font-size: 14px;
   color: var(--muted);
 }
-.week-dots {
-  display: flex;
-  gap: 10px;
-}
-.week-day {
+.habit-grid {
   display: flex;
   flex-direction: column;
+  gap: 6px;
+}
+.habit-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.3fr) repeat(7, minmax(0, 1fr));
   align-items: center;
   gap: 4px;
 }
-.week-day i {
-  font-style: normal;
+.habit-head span {
   font-size: 12px;
   color: var(--muted);
+  text-align: center;
+}
+.habit-name {
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.habit-row .week-dot {
+  justify-self: center;
 }
 .week-dot {
   width: 14px;
@@ -549,11 +559,11 @@ svg {
   border-radius: 50%;
   border: 2px solid var(--control);
 }
-.week-day.done .week-dot {
+.week-dot.done {
   background: var(--green);
   border-color: var(--green);
 }
-.week-day.today .week-dot {
+.week-dot.today {
   box-shadow: 0 0 0 2px var(--canvas), 0 0 0 4px var(--blue-bright);
 }
 .goal-met {

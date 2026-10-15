@@ -1,7 +1,7 @@
-import { uid, localDay, nextMidnight, normalize } from "./utils.js?v=3.1.48";
-import { emptySchedule, State, retrievability } from "./scheduler.js?v=3.1.48";
-import { validateNote, clozeMatches } from "./parser.js?v=3.1.48";
-import { exploredCardIds } from "./learning.js?v=3.1.48";
+import { uid, localDay, nextMidnight, normalize } from "./utils.js?v=3.1.49";
+import { emptySchedule, State, retrievability } from "./scheduler.js?v=3.1.49";
+import { validateNote, clozeMatches } from "./parser.js?v=3.1.49";
+import { exploredCardIds } from "./learning.js?v=3.1.49";
 export const SCHEMA_VERSION = 1;
 export const DEFAULT_SETTINGS = {
   newPerDay: 15,
@@ -476,7 +476,8 @@ export function validateCollection(raw) {
       typeof f.name !== "string" ||
       !f.name.trim() ||
       f.name.length > 200 ||
-      (f.parentId && !folders.has(f.parentId))
+      (f.parentId && !folders.has(f.parentId)) ||
+      (f.daily != null && typeof f.daily !== "boolean")
     )
       throw new Error("Ongeldige map.");
     const seen = new Set([f.id]);
@@ -572,7 +573,10 @@ export function validateCollection(raw) {
     if (
       typeof rd?.id !== "string" ||
       typeof rd?.day !== "string" ||
-      !/^\d{4}-\d{2}-\d{2}$/.test(rd.day)
+      !/^\d{4}-\d{2}-\d{2}$/.test(rd.day) ||
+      (rd.scope != null &&
+        (typeof rd.scope?.type !== "string" ||
+          typeof rd.scope?.id !== "string"))
     )
       throw new Error("Ongeldig rondelogboek.");
   for (const c of raw.cards)
@@ -634,22 +638,26 @@ export function roundsByDay(rounds) {
   return counts;
 }
 const WEEKDAY_INITIALS = ["zo", "ma", "di", "wo", "do", "vr", "za"];
-export function habitWeek(rounds, now = Date.now()) {
-  const counts = roundsByDay(rounds),
-    out = [],
+function weekColumns(now = Date.now()) {
+  const out = [],
     base = new Date(now);
   for (let i = 6; i >= 0; i--) {
     const t = new Date(base);
     t.setDate(base.getDate() - i);
-    const key = localDay(t.getTime());
     out.push({
-      day: key,
+      day: localDay(t.getTime()),
       initial: WEEKDAY_INITIALS[t.getDay()],
-      done: (counts.get(key) ?? 0) > 0,
       today: i === 0,
     });
   }
   return out;
+}
+export function habitWeek(rounds, now = Date.now()) {
+  const counts = roundsByDay(rounds);
+  return weekColumns(now).map((c) => ({
+    ...c,
+    done: (counts.get(c.day) ?? 0) > 0,
+  }));
 }
 function mondayKey(time) {
   const d = new Date(time);
@@ -679,4 +687,57 @@ export function streakDays(rounds, now = Date.now()) {
     cursor.setDate(cursor.getDate() - 1);
   }
   return streak;
+}
+
+// Which top-level folders ("vakken") does a finished round count for?
+// Structural scopes resolve exactly; tag selections and legacy entries
+// without a scope count everywhere studied.
+export function roundVakken(round, state) {
+  const scope = round?.scope ?? { type: "all" },
+    tops = state.folders.filter((f) => !f.parentId).map((f) => f.id);
+  const topOf = (folderId) => {
+    let f = state.folders.find((x) => x.id === folderId);
+    while (f?.parentId)
+      f = state.folders.find((x) => x.id === f.parentId);
+    return f ? f.id : null;
+  };
+  if (scope.type === "folder") {
+    const top = topOf(scope.id);
+    return new Set(top ? [top] : []);
+  }
+  if (scope.type === "set") {
+    const set = state.sets.find((x) => x.id === scope.id);
+    const top = set?.folderId ? topOf(set.folderId) : null;
+    return new Set(top ? [top] : []);
+  }
+  return new Set(tops);
+}
+// Week grid: days on X, mandatory vakken on Y. Folders opt in with daily;
+// without any, a single "Alles" row keeps the previous overview.
+export function dailyGrid(state, now = Date.now()) {
+  const columns = weekColumns(now),
+    mandatory = state.folders.filter((f) => !f.parentId && f.daily),
+    rows =
+      mandatory.length > 0
+        ? mandatory.map((f) => ({ key: f.id, title: f.name }))
+        : [{ key: "all", title: "Alles" }];
+  const counts = roundsByDay(state.rounds),
+    byVakDay = new Map();
+  for (const r of state.rounds ?? []) {
+    const day = r?.day;
+    if (typeof day !== "string") continue;
+    for (const vak of roundVakken(r, state))
+      byVakDay.set(vak + "|" + day, true);
+  }
+  return {
+    columns,
+    rows: rows.map((row) => ({
+      ...row,
+      cells: columns.map((c) =>
+        row.key === "all"
+          ? (counts.get(c.day) ?? 0) > 0
+          : byVakDay.has(row.key + "|" + c.day),
+      ),
+    })),
+  };
 }
