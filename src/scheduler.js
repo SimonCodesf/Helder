@@ -3,7 +3,7 @@ import {
   createEmptyCard,
   Rating,
   State,
-} from "../vendor/fsrs.mjs?v=3.1.50";
+} from "../vendor/fsrs.mjs?v=3.1.51";
 export { Rating, State };
 export function serializeSchedule(card) {
   return {

@@ -1,7 +1,7 @@
-import { uid, localDay, nextMidnight, normalize } from "./utils.js?v=3.1.50";
-import { emptySchedule, State, retrievability } from "./scheduler.js?v=3.1.50";
-import { validateNote, clozeMatches } from "./parser.js?v=3.1.50";
-import { exploredCardIds } from "./learning.js?v=3.1.50";
+import { uid, localDay, nextMidnight, normalize } from "./utils.js?v=3.1.51";
+import { emptySchedule, State, retrievability } from "./scheduler.js?v=3.1.51";
+import { validateNote, clozeMatches } from "./parser.js?v=3.1.51";
+import { exploredCardIds } from "./learning.js?v=3.1.51";
 export const SCHEMA_VERSION = 1;
 export const DEFAULT_SETTINGS = {
   newPerDay: 15,
@@ -494,7 +494,8 @@ export function validateCollection(raw) {
       typeof s.title !== "string" ||
       !s.title.trim() ||
       s.title.length > 200 ||
-      (s.folderId && !folders.has(s.folderId))
+      (s.folderId && !folders.has(s.folderId)) ||
+      (s.daily != null && typeof s.daily !== "boolean")
     )
       throw new Error("Ongeldige set of mapverwijzing.");
   for (const s of raw.sets) validateCurriculum(s.curriculum);
@@ -617,8 +618,21 @@ export function validateCollection(raw) {
     settings.dailyGoal > 10
   )
     throw new Error("Ongeldige instellingen.");
+  const migratedSets = (raw.sets ?? []).map((s) => {
+    if (
+      s.daily == null &&
+      raw.folders.some((f) => f.id === s.folderId && f.daily)
+    )
+      return { ...s, daily: true };
+    return s;
+  });
+  const migratedFolders = (raw.folders ?? []).map((f) =>
+    f.daily ? { ...f, daily: false } : f,
+  );
   return {
     ...raw,
+    sets: migratedSets,
+    folders: migratedFolders,
     activities: raw.activities ?? [],
     rounds: raw.rounds ?? [],
     settings,
@@ -689,45 +703,38 @@ export function streakDays(rounds, now = Date.now()) {
   return streak;
 }
 
-// Which top-level folders ("vakken") does a finished round count for?
-// Structural scopes resolve exactly; tag selections and legacy entries
-// without a scope count everywhere studied.
-export function roundVakken(round, state) {
-  const scope = round?.scope ?? { type: "all" },
-    tops = state.folders.filter((f) => !f.parentId).map((f) => f.id);
-  const topOf = (folderId) => {
-    let f = state.folders.find((x) => x.id === folderId);
-    while (f?.parentId)
-      f = state.folders.find((x) => x.id === f.parentId);
-    return f ? f.id : null;
-  };
+// Which mandatory sets does a finished round count for? Set rounds
+// resolve exactly; folder rounds count every set inside; tag selections
+// and legacy entries without a scope count everywhere studied.
+export function roundSets(round, state) {
+  const scope = round?.scope ?? { type: "all" };
+  if (scope.type === "set")
+    return new Set(
+      state.sets.some((x) => x.id === scope.id) ? [scope.id] : [],
+    );
   if (scope.type === "folder") {
-    const top = topOf(scope.id);
-    return new Set(top ? [top] : []);
+    const inside = folderDescendants(state, scope.id);
+    return new Set(
+      state.sets.filter((x) => inside.has(x.folderId)).map((x) => x.id),
+    );
   }
-  if (scope.type === "set") {
-    const set = state.sets.find((x) => x.id === scope.id);
-    const top = set?.folderId ? topOf(set.folderId) : null;
-    return new Set(top ? [top] : []);
-  }
-  return new Set(tops);
+  return new Set(state.sets.map((x) => x.id));
 }
-// Week grid: days on X, mandatory vakken on Y. Folders opt in with daily;
+// Week grid: days on X, mandatory sets on Y. Sets opt in with daily;
 // without any, a single "Alles" row keeps the previous overview.
 export function dailyGrid(state, now = Date.now()) {
   const columns = weekColumns(now),
-    mandatory = state.folders.filter((f) => !f.parentId && f.daily),
+    mandatory = state.sets.filter((x) => x.daily),
     rows =
       mandatory.length > 0
-        ? mandatory.map((f) => ({ key: f.id, title: f.name }))
+        ? mandatory.map((x) => ({ key: x.id, title: x.title }))
         : [{ key: "all", title: "Alles" }];
   const counts = roundsByDay(state.rounds),
     byVakDay = new Map();
   for (const r of state.rounds ?? []) {
     const day = r?.day;
     if (typeof day !== "string") continue;
-    for (const vak of roundVakken(r, state))
-      byVakDay.set(vak + "|" + day, true);
+    for (const id of roundSets(r, state)) byVakDay.set(id + "|" + day, true);
   }
   return {
     columns,
