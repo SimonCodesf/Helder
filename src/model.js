@@ -1,7 +1,12 @@
-import { uid, localDay, nextMidnight, normalize } from "./utils.js?v=3.1.54";
-import { emptySchedule, State, retrievability } from "./scheduler.js?v=3.1.54";
-import { validateNote, clozeMatches } from "./parser.js?v=3.1.54";
-import { exploredCardIds } from "./learning.js?v=3.1.54";
+import { uid, localDay, nextMidnight, normalize } from "./utils.js?v=3.1.55";
+import {
+  emptySchedule,
+  State,
+  retrievability,
+  MAX_INTERVAL_DAYS,
+} from "./scheduler.js?v=3.1.55";
+import { validateNote, clozeMatches } from "./parser.js?v=3.1.55";
+import { exploredCardIds } from "./learning.js?v=3.1.55";
 export const SCHEMA_VERSION = 1;
 export const DEFAULT_SETTINGS = {
   newPerDay: 15,
@@ -629,10 +634,29 @@ export function validateCollection(raw) {
   const migratedFolders = (raw.folders ?? []).map((f) =>
     f.daily ? { ...f, daily: false } : f,
   );
+  // Cards planned before the three-month ceiling existed may still point
+  // years ahead. Pull those in once, relative to their last review.
+  const cap = MAX_INTERVAL_DAYS * 86400000;
+  const migratedCards = (raw.cards ?? []).map((c) => {
+    const s = c.schedule;
+    if (
+      !s ||
+      s.state === State.New ||
+      !Number.isFinite(s.last_review) ||
+      !Number.isFinite(s.due) ||
+      s.due <= s.last_review + cap
+    )
+      return c;
+    return {
+      ...c,
+      schedule: { ...s, due: s.last_review + cap },
+    };
+  });
   return {
     ...raw,
     sets: migratedSets,
     folders: migratedFolders,
+    cards: migratedCards,
     activities: raw.activities ?? [],
     rounds: raw.rounds ?? [],
     settings,

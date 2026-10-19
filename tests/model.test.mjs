@@ -486,3 +486,41 @@ test("Empty learn queue falls back to ten random practice terms", () => {
   assert.equal(empty.fallback, false);
   assert.equal(empty.practice, false);
 });
+
+test("Review intervals never exceed three months", () => {
+  const start = new Date(2026, 0, 1, 12, 0, 0).getTime();
+  let card = { schedule: emptySchedule(start) },
+    now = start;
+  for (let i = 0; i < 8; i++) {
+    const out = scheduleRating(card, 3, 0.9, now);
+    const days = (out.schedule.due - now) / 86400000;
+    // Local calendar days may span a DST hour.
+    assert.ok(days <= 90 + 1 / 24, `interval ${days} > 90 dagen`);
+    assert.ok(out.schedule.scheduled_days <= 90);
+    card = { schedule: out.schedule };
+    now = out.schedule.due;
+  }
+});
+
+test("Stored intervals beyond the ceiling are pulled back once", () => {
+  const { s, c } = fixture();
+  const now = Date.now(),
+    last = now - 200 * 86400000;
+  c.schedule = {
+    ...c.schedule,
+    state: State.Review,
+    last_review: last,
+    due: now + 365 * 86400000,
+    scheduled_days: 365,
+    stability: 365,
+  };
+  const done = validateCollection(s);
+  assert.equal(done.cards[0].schedule.due, last + 90 * 86400000);
+  assert.ok(done.cards[0].schedule.due < now);
+  // Untouched new cards keep their schedule.
+  const fresh = fixture();
+  assert.equal(
+    validateCollection(fresh.s).cards[0].schedule.due,
+    fresh.c.schedule.due,
+  );
+});

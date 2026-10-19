@@ -3,7 +3,7 @@ import {
   createEmptyCard,
   Rating,
   State,
-} from "../vendor/fsrs.mjs?v=3.1.54";
+} from "../vendor/fsrs.mjs?v=3.1.55";
 export { Rating, State };
 export function serializeSchedule(card) {
   return {
@@ -21,6 +21,21 @@ export function hydrateSchedule(card) {
 }
 export const emptySchedule = (now = Date.now()) =>
   serializeSchedule(createEmptyCard(new Date(now)));
+// Hard ceiling: no review interval ever exceeds three months. Longer
+// waits look efficient on paper but leave too few chances to notice a
+// half-forgotten term before an exam or conversation.
+export const MAX_INTERVAL_DAYS = 90;
+// ts-fsrs keeps Good/Easy at least one day above Hard/Easy previews, so a
+// capped Hard can push Good one day past maximum_interval. Clamp the final
+// card ourselves to keep the promise exact.
+function capInterval(card, now) {
+  if (!card || card.scheduled_days <= MAX_INTERVAL_DAYS) return card;
+  const due = new Date(card.last_review ?? now);
+  due.setDate(due.getDate() + MAX_INTERVAL_DAYS);
+  card.due = due;
+  card.scheduled_days = MAX_INTERVAL_DAYS;
+  return card;
+}
 const instances = new Map();
 export function scheduler(retention = 0.9) {
   const r = Math.min(0.95, Math.max(0.8, Number(retention) || 0.9));
@@ -29,7 +44,7 @@ export function scheduler(retention = 0.9) {
       r,
       fsrs({
         request_retention: r,
-        maximum_interval: 36500,
+        maximum_interval: MAX_INTERVAL_DAYS,
         enable_fuzz: false,
         enable_short_term: true,
         learning_steps: ["1m", "10m"],
@@ -39,10 +54,12 @@ export function scheduler(retention = 0.9) {
   return instances.get(r);
 }
 export function previewRatings(card, retention = 0.9, now = Date.now()) {
-  return scheduler(retention).repeat(
+  const preview = scheduler(retention).repeat(
     hydrateSchedule(card.schedule),
     new Date(now),
   );
+  for (const item of Object.values(preview)) capInterval(item?.card, now);
+  return preview;
 }
 export function scheduleRating(
   card,
@@ -56,11 +73,13 @@ export function scheduleRating(
     new Date(now),
     rating,
   );
+  capInterval(result.card, now);
+  const schedule = serializeSchedule(result.card);
   return {
-    schedule: serializeSchedule(result.card),
+    schedule,
     log: {
       ...result.log,
-      due: new Date(result.log.due).getTime(),
+      due: schedule.due,
       review: new Date(result.log.review).getTime(),
     },
   };
