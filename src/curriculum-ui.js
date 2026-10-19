@@ -1,17 +1,17 @@
-import { escapeHTML as e, countLabel } from "./utils.js?v=3.1.56";
-import { icon } from "./icons.js?v=3.1.56";
+import { escapeHTML as e, countLabel } from "./utils.js?v=3.1.57";
+import { icon } from "./icons.js?v=3.1.57";
 import {
   scopeNotes,
   scopeCards,
   stats,
   folderDescendants,
-} from "./model.js?v=3.1.56";
+} from "./model.js?v=3.1.57";
 import {
   progressFor,
   structureFor,
   levelLabel,
   chapterLabel,
-} from "./curriculum.js?v=3.1.56";
+} from "./curriculum.js?v=3.1.57";
 // Only the number that actually asks for action: terms due for review.
 // Shown as a small pill; the title attribute carries the words.
 const dueBadge = (n) =>
@@ -30,7 +30,7 @@ export function courseStructure(state, set, ui, button, actionScope) {
   const baseScope = { ...scope, level: ui.level };
   const notes = scopeNotes(state, baseScope),
     chapters = structureFor(state, baseScope).chapters;
-  return `<section class="curriculum-section" aria-labelledby="structure-title"><div class="section-head"><div><h2 id="structure-title">De opbouw van je vak</h2><p class="section-caption">Kies een niveau. Je herhalingen blijven gewoon ingepland.</p></div></div>
+  return `<section class="curriculum-section" aria-labelledby="structure-title"><div class="section-head"><h2 id="structure-title">Opbouw</h2></div>
   ${
     structure.levels.length
       ? `<div class="level-grid">${structure.levels
@@ -43,7 +43,7 @@ export function courseStructure(state, set, ui, button, actionScope) {
           })
           .join(
             "",
-          )}</div><div class="level-filter-row"><button class="text-button" data-action="select-level" data-level="" ${!ui.level ? "disabled" : ""}>Alle niveaus</button><p class="small muted">${ui.level ? e(levelLabel(set, ui.level)) + " geselecteerd" : "Nieuwe kaarten beginnen bij het laagste niveau."}</p></div>`
+          )}</div><div class="level-filter-row"><button class="text-button" data-action="select-level" data-level="" ${!ui.level ? "disabled" : ""}>Alle niveaus</button></div>`
       : ""
   }
   <div class="section-head compact"><h3>${chapters.length ? "Hoofdstukken" : "Je selectie"}</h3><button class="text-button" data-action="edit-names" data-id="${e(set.id)}">Namen aanpassen</button><span class="small muted">${notes.length} notities</span></div>
@@ -59,7 +59,7 @@ export function courseStructure(state, set, ui, button, actionScope) {
       return `<article class="chapter-row"><div class="chapter-symbol">${icon("book")}</div><button class="chapter-open" data-action="select-chapter" data-chapter="${e(value)}"><span class="chapter-title"><strong>${e(chapterLabel(set, value === "__none" ? "" : value))}</strong>${dueBadge(st.due)}</span>${groupStrip(state, sc)}</button>${button("Leren", "start-learn", "chapter-learn", actionScope(sc) + ` aria-label="${e(chapterLabel(set, value === "__none" ? "" : value))} leren"`, "play")}<button class="icon-button" data-action="select-chapter" data-chapter="${e(value)}" aria-label="${e(chapterLabel(set, value === "__none" ? "" : value))} bekijken">${icon("chevron")}</button></article>`;
     })
     .join("")}</div>
-  <p class="small muted evidence-disclaimer">“Gespreid opgehaald” = op minstens twee verschillende dagen, met minstens 24 uur ertussen, zonder hulp als correct beoordeeld. Geen garantie op begrip of examenresultaat.</p></section>`;
+  </section>`;
 }
 
 export function groupStrip(state, scope) {

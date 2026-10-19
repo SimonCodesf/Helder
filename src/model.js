@@ -1,12 +1,12 @@
-import { uid, localDay, nextMidnight, normalize } from "./utils.js?v=3.1.56";
+import { uid, localDay, nextMidnight, normalize } from "./utils.js?v=3.1.57";
 import {
   emptySchedule,
   State,
   retrievability,
   MAX_INTERVAL_DAYS,
-} from "./scheduler.js?v=3.1.56";
-import { validateNote, clozeMatches } from "./parser.js?v=3.1.56";
-import { exploredCardIds } from "./learning.js?v=3.1.56";
+} from "./scheduler.js?v=3.1.57";
+import { validateNote, clozeMatches } from "./parser.js?v=3.1.57";
+import { exploredCardIds } from "./learning.js?v=3.1.57";
 export const SCHEMA_VERSION = 1;
 export const DEFAULT_SETTINGS = {
   newPerDay: 15,
@@ -278,7 +278,6 @@ export function scopeNotes(state, scope = { type: "all" }) {
       );
     notes = notes.filter((n) => sets.has(n.setId));
   }
-  if (scope.type === "starred") notes = notes.filter((n) => n.starred);
   if (scope.type === "difficult") {
     const ids = new Set(
       state.cards

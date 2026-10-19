@@ -1,8 +1,8 @@
-import { escapeHTML as e } from "./utils.js?v=3.1.56";
-import { markdown } from "./markdown.js?v=3.1.56";
-import { icon } from "./icons.js?v=3.1.56";
-import { facet } from "./curriculum.js?v=3.1.56";
-import { faces } from "./model.js?v=3.1.56";
+import { escapeHTML as e } from "./utils.js?v=3.1.57";
+import { markdown } from "./markdown.js?v=3.1.57";
+import { icon } from "./icons.js?v=3.1.57";
+import { facet } from "./curriculum.js?v=3.1.57";
+import { faces } from "./model.js?v=3.1.57";
 
 export function explorationScreen(state, session, { button, scopeTitle }) {
   const warm = session.exploration,
@@ -26,7 +26,7 @@ export function explorationScreen(state, session, { button, scopeTitle }) {
     facet(note, "niveau") ? `N${facet(note, "niveau")}` : "",
     facet(note, "hoofdstuk") || "",
   ].filter(Boolean);
-  const head = `<div class="study-card-head"><div class="tags"><span class="pill blue">${task.kind === "choice" ? "Meerkeuze" : task.kind === "reverse" ? "Welke term?" : "Uitleg"}</span>${sub.length ? `<span class="small muted">${e(sub.join(" · "))}</span>` : ""}</div><button class="icon-button${note.starred ? " is-starred" : ""}" data-action="star-note" data-id="${e(note.id)}" aria-label="${note.starred ? "Ster verwijderen" : "Ster toevoegen"}" aria-pressed="${!!note.starred}">${icon("star")}</button></div>`;
+  const head = `<div class="study-card-head"><div class="tags"><span class="pill blue">${task.kind === "choice" ? "Meerkeuze" : task.kind === "reverse" ? "Welke term?" : "Uitleg"}</span>${sub.length ? `<span class="small muted">${e(sub.join(" · "))}</span>` : ""}</div></div>`;
   let body, controls;
   if (task.kind === "choice") {
     const c = task.choice,

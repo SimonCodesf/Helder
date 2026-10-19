@@ -1,10 +1,10 @@
-import { escapeHTML as e, intervalLabel, safeURL } from "./utils.js?v=3.1.56";
-import { icon } from "./icons.js?v=3.1.56";
-import { markdown } from "./markdown.js?v=3.1.56";
-import { faces, scopeCards } from "./model.js?v=3.1.56";
-import { previewRatings } from "./scheduler.js?v=3.1.56";
-import { currentCardId } from "./study.js?v=3.1.56";
-import { facet } from "./curriculum.js?v=3.1.56";
+import { escapeHTML as e, intervalLabel, safeURL } from "./utils.js?v=3.1.57";
+import { icon } from "./icons.js?v=3.1.57";
+import { markdown } from "./markdown.js?v=3.1.57";
+import { faces, scopeCards } from "./model.js?v=3.1.57";
+import { previewRatings } from "./scheduler.js?v=3.1.57";
+import { currentCardId } from "./study.js?v=3.1.57";
+import { facet } from "./curriculum.js?v=3.1.57";
 export function studyScreen(
   state,
   session,
@@ -34,7 +34,7 @@ export function studyScreen(
     facet(note, "niveau") ? `N${facet(note, "niveau")}` : "",
     facet(note, "hoofdstuk") || "",
   ].filter(Boolean);
-  const header = `<div class="study-card-head"><div class="tags"><span class="pill blue">${label}</span>${sub.length ? `<span class="small muted">${e(sub.join(" · "))}</span>` : ""}</div><button class="icon-button${note.starred ? " is-starred" : ""}" data-action="star-note" data-id="${e(note.id)}" aria-label="${note.starred ? "Ster verwijderen" : "Ster toevoegen"}" aria-pressed="${note.starred}">${icon("star")}</button></div>`;
+  const header = `<div class="study-card-head"><div class="tags"><span class="pill blue">${label}</span>${sub.length ? `<span class="small muted">${e(sub.join(" · "))}</span>` : ""}</div></div>`;
   if (flash) {
     const marks = Object.values(session.flashMarks ?? {}),
       knownCount = marks.filter((v) => v === "known").length,

@@ -11,9 +11,9 @@ import {
   shuffle,
   downloadText,
   safeURL,
-} from "./utils.js?v=3.1.56";
-import { icon } from "./icons.js?v=3.1.56";
-import { markdown } from "./markdown.js?v=3.1.56";
+} from "./utils.js?v=3.1.57";
+import { icon } from "./icons.js?v=3.1.57";
+import { markdown } from "./markdown.js?v=3.1.57";
 import {
   parseImport,
   splitTags,
@@ -21,7 +21,7 @@ import {
   toMarkdown,
   toTSV,
   noteImportKey,
-} from "./parser.js?v=3.1.56";
+} from "./parser.js?v=3.1.57";
 import {
   emptyCollection,
   validateCollection,
@@ -45,21 +45,21 @@ import {
   isAvailable,
   faces,
   burySiblings,
-} from "./model.js?v=3.1.56";
+} from "./model.js?v=3.1.57";
 import {
   loadCollection,
   saveCollection,
   requestPersistentStorage,
   getDeviceValue,
   setDeviceValue,
-} from "./storage.js?v=3.1.56";
-import { previewRatings, scheduleRating, State } from "./scheduler.js?v=3.1.56";
+} from "./storage.js?v=3.1.57";
+import { previewRatings, scheduleRating, State } from "./scheduler.js?v=3.1.57";
 import {
   createSession,
   currentCardId,
   advanceSession,
-} from "./study.js?v=3.1.56";
-import { guideView } from "./guide.js?v=3.1.56";
+} from "./study.js?v=3.1.57";
+import { guideView } from "./guide.js?v=3.1.57";
 import {
   prepareStep,
   startExploration,
@@ -71,7 +71,7 @@ import {
   beginRecall,
   recognitionOptions,
   shouldApply,
-} from "./learning.js?v=3.1.56";
+} from "./learning.js?v=3.1.57";
 import {
   facet,
   structureFor,
@@ -82,20 +82,20 @@ import {
   resumeLevel,
   resumeChapter,
   lastActive,
-} from "./curriculum.js?v=3.1.56";
+} from "./curriculum.js?v=3.1.57";
 import {
   progressStrip,
   courseStructure,
   folderTile,
   groupStrip,
-} from "./curriculum-ui.js?v=3.1.56";
-import { studyScreen } from "./study-ui.js?v=3.1.56";
-import { explorationScreen } from "./exploration-ui.js?v=3.1.56";
-import { emailView } from "./email-ui.js?v=3.1.56";
-import { setupSwipe } from "./swipe.js?v=3.1.56";
-import { CloudConnection } from "./cloud.js?v=3.1.56";
-import { cloudPanel, conflictBody } from "./cloud-ui.js?v=3.1.56";
-import { LocalChangedError, localFromCloud } from "./sync-core.js?v=3.1.56";
+} from "./curriculum-ui.js?v=3.1.57";
+import { studyScreen } from "./study-ui.js?v=3.1.57";
+import { explorationScreen } from "./exploration-ui.js?v=3.1.57";
+import { emailView } from "./email-ui.js?v=3.1.57";
+import { setupSwipe } from "./swipe.js?v=3.1.57";
+import { CloudConnection } from "./cloud.js?v=3.1.57";
+import { cloudPanel, conflictBody } from "./cloud-ui.js?v=3.1.57";
+import { LocalChangedError, localFromCloud } from "./sync-core.js?v=3.1.57";
 import {
   setupInterface,
   syncInterface,
@@ -104,7 +104,7 @@ import {
   offlineUpdateReady,
   offlineAvailable,
   statusButton,
-} from "./interface.js?v=3.1.56";
+} from "./interface.js?v=3.1.57";
 
 let cloud;
 let state,
@@ -148,7 +148,7 @@ function route() {
   }
 }
 function routeScope(r = route()) {
-  return ["set", "folder", "tag", "starred", "difficult"].includes(r.type)
+  return ["set", "folder", "tag", "difficult"].includes(r.type)
     ? { type: r.type, id: r.id }
     : { type: "all" };
 }
@@ -158,7 +158,6 @@ function scopeTitle(scope) {
   if (scope.type === "folder")
     return state.folders.find((f) => f.id === scope.id)?.name ?? "Map";
   if (scope.type === "tag") return scope.id;
-  if (scope.type === "starred") return "Kaarten met ster";
   if (scope.type === "difficult") return "Moeilijke kaarten";
   return "Je hele bibliotheek";
 }
@@ -247,29 +246,25 @@ function renderSidebar() {
     <div class="brand-row">
       <div class="brand-heading"><a class="wordmark" href="#/today">helder<span>.</span></a>
         <button class="icon-button drawer-close" data-action="close-nav" aria-label="Navigatie sluiten">${icon("close")}</button></div>
-      <p class="brand-subtitle">Leren dat blijft.</p>
     </div>
     <nav class="side-nav" aria-label="Studeren">
       ${navLink("today", "Vandaag", "today", "", s.due)}
       ${navLink("library", "Bibliotheek", "stack")}
-      ${navLink("starred", "Met ster", "star")}
       ${navLink("difficult", "Moeilijke kaarten", "bulb")}
     </nav>
     <section class="sidebar-folders"><div class="side-section-head"><span>JE MAPPEN</span>
       <button class="icon-button" data-action="new-folder" aria-label="Nieuwe map">${icon("plus")}</button></div>
       <nav class="folder-tree" aria-label="Mappen en sets">${state.folders.length || state.sets.length ? renderTree() : '<p class="tree-empty">Hier komt je bibliotheek.</p>'}</nav>
     </section>
-    <div class="side-bottom"><nav class="side-nav" aria-label="Hulp en instellingen">
-      ${navLink("guide", "Zo werkt het", "help")}${navLink("settings", "Instellingen", "settings")}
+    <div class="side-bottom"><nav class="side-nav" aria-label="Instellingen">
+      ${navLink("settings", "Instellingen", "settings")}
       </nav>${statusButton("sidebar-status")}
-      <p class="local-note">Geen abonnement in de app.<br>Lokaal bewaard. Optionele privésync.</p>
     </div>`;
 }
 function setTile(set) {
   const sc = { type: "set", id: set.id },
-    s = stats(state, sc),
-    structure = structureFor(state, sc);
-  return `<article class="set-card course-tile"><div class="set-card-top"><div class="set-icon">${icon("book")}</div><div class="set-card-title"><h3><a href="${routeURL("set", set.id)}">${e(set.title)}</a></h3><p>${e((folderPath(state, set.folderId) || "Eigen set").replaceAll("::", " / "))}</p></div><a class="icon-button set-open" href="${routeURL("set", set.id)}" aria-label="${e(set.title)} openen">${icon("chevron")}</a></div><p class="set-card-description">${e(set.description || "Jouw vragen, in een eigen leerroute.")}</p>${progressStrip(state, sc, { labels: false })}<div class="set-card-foot"><span>${countLabel(s.total, "kaart", "kaarten")}${structure.levels.length ? " · " + structure.levels.length + " niveaus" : ""}</span></div></article>`;
+    s = stats(state, sc);
+  return `<article class="set-card course-tile"><div class="set-card-top"><div class="set-icon">${icon("book")}</div><div class="set-card-title"><h3><a href="${routeURL("set", set.id)}">${e(set.title)}</a></h3></div><a class="icon-button set-open" href="${routeURL("set", set.id)}" aria-label="${e(set.title)} openen">${icon("chevron")}</a></div>${progressStrip(state, sc, { labels: false })}<div class="set-card-foot"><span>${countLabel(s.total, "kaart", "kaarten")}${s.due ? ` · ${s.due} te herhalen` : ""}</span></div></article>`;
 }
 function vakRow(row) {
   const strip = groupStrip(state, row.scope);
@@ -295,8 +290,7 @@ function habitCard() {
     .join("")}</div><p>${met} van 7 dagen${streak ? ` · ${streak} ${streak === 1 ? "dag" : "dagen"} op rij` : ""} · ${today ? "Doel gehaald ✓" : `Nog ${goal} ${goal === 1 ? "ronde" : "rondes"} voor je doel`}</p></section>`;
 }
 function todayView() {
-  const s = stats(state),
-    rows = [
+  const rows = [
       ...state.folders
         .filter((f) => !f.parentId)
         .map((f) => ({
@@ -358,7 +352,7 @@ function todayView() {
   }).format(new Date());
   if (!state.notes.length)
     return `<div class="page today-page welcome-page"><header class="page-head"><div><div class="eyebrow">Jouw eigen leerplek</div><h1>Welkom bij helder<span class="accent-dot">.</span></h1><p>Van een eerste begrip naar kennis die je zelf kunt gebruiken.</p></div></header><section class="welcome-card"><div class="welcome-symbol">${icon("book")}</div><span class="eyebrow">Begin met één onderwerp</span><h2>Wat wil je leren?</h2><p>Maak je eerste set, of importeer kaarten die je al hebt. Geen account nodig om te beginnen.</p><div class="welcome-actions">${button("Maak een set", "new-set", "primary large", "", "plus")}${button("Importeer kaarten", "new-import", "large", "", "upload")}</div><div class="welcome-features"><span>${icon("lock")} Privé op dit apparaat</span><span>${icon("refresh")} Werkt ook offline</span></div></section><div class="section-head"><h2>Een rustige leerroute</h2></div><ol class="welcome-steps"><li><span>01</span><div><h3>Begrijp de kern</h3><p>Begin met uitleg en een goed voorbeeld.</p></div></li><li><span>02</span><div><h3>Probeer zonder hulp</h3><p>De steun verdwijnt; jij haalt de kennis op.</p></div></li><li><span>03</span><div><h3>Kom erop terug</h3><p>Gespreid herhalen. Daarna ook toepassen.</p></div></li></ol><a class="section-link" href="#/guide">Zo werkt Helder ${icon("arrow")}</a></div>`;
-  return `<div class="page today-page"><header class="page-head"><div><div class="eyebrow">${e(date.charAt(0).toUpperCase() + date.slice(1))}</div><h1>Vandaag</h1><p>Begrijpen. Zelf ophalen. Er later op terugkomen.</p></div><div class="head-actions">${button("Nieuwe set", "new-set", "", "", "plus")}</div></header>${habitCard()}${topChapters.length ? `<div class="section-head"><div><h2>Verder gaan</h2><p class="section-caption">Pak een hoofdstuk op</p></div></div><div class="vak-list">${topChapters.map((c, i) => chapterRow(c.set, c.chapter, c.scope, i === 0 && c.active > 0)).join("")}${openChapters.length > 6 ? `<p class="small muted">Nog ${openChapters.length - 6} hoofdstukken open — zie <a href="#/library">Bibliotheek</a></p>` : ""}</div>` : ""}<div class="section-head"><div><h2>Je vakken</h2><p class="section-caption">Wat er per vak openstaat</p></div></div><div class="vak-list">${rows.map(vakRow).join("")}</div><div class="section-head"><div><h2>Je sets</h2><p class="section-caption">${countLabel(s.total, "kaart", "kaarten")} · ${state.sets.length} sets</p></div><a class="section-link" href="#/library">Alles ${icon("arrow")}</a></div><div class="set-grid">${state.sets.slice(0, 4).map(setTile).join("")}</div><details class="learning-note"><summary>${icon("help")} Wat betekenen “gekend” en “geleerd”? ${icon("down")}</summary><p>Een swipe betekent dat jij een kaart herkent. Alleen gespreide, zelfstandige ophaalpogingen leveren herinneringsdata op voor de planner. Toepassen oefen je apart.</p></details></div>`;
+  return `<div class="page today-page"><header class="page-head"><div><div class="eyebrow">${e(date.charAt(0).toUpperCase() + date.slice(1))}</div><h1>Vandaag</h1></div><div class="head-actions">${button("Nieuwe set", "new-set", "", "", "plus")}</div></header>${habitCard()}${topChapters.length ? `<div class="section-head"><h2>Verder gaan</h2></div><div class="vak-list">${topChapters.map((c, i) => chapterRow(c.set, c.chapter, c.scope, i === 0 && c.active > 0)).join("")}${openChapters.length > 6 ? `<p class="small muted">Nog ${openChapters.length - 6} hoofdstukken open — zie <a href="#/library">Bibliotheek</a></p>` : ""}</div>` : ""}<div class="section-head"><h2>Je vakken</h2></div><div class="vak-list">${rows.map(vakRow).join("")}</div></div>`;
 }
 function emptyHTML(title, text, label = "", action = "") {
   return `<div class="empty-state"><div class="empty-icon">${icon("stack")}</div><h2>${e(title)}</h2><p>${e(text)}</p>${action ? button(e(label), action, "primary") : ""}</div>`;
@@ -393,72 +387,12 @@ function libraryView(r) {
         .includes(ui.query.toLowerCase()),
     );
   const children = state.folders.filter(
-    (f) => f.parentId === (folder?.id ?? null),
-  );
-  return `<div class="page"><header class="page-head"><div>${inFolder ? `<div class="breadcrumb"><a href="#/library">Bibliotheek</a><span>/</span><span>${e(folderPath(state, folder.id).replaceAll("::", " / "))}</span></div>` : '<div class="eyebrow">Alles op zijn plek.</div>'}<h1>${e(folder?.name ?? "Je bibliotheek")}</h1><p>${inFolder ? "Oefen deze map als geheel, of kies een set hieronder." : "Je vakken en sets. Binnen een vak kies je niveau en hoofdstuk."}</p></div><div class="head-actions">${inFolder ? button("Map beheren", "edit-folder", "", `data-id="${e(folder.id)}"`, "folder") : button("Nieuwe map", "new-folder", "", "", "folder")}${button("Nieuwe set", "new-set", "primary", inFolder ? `data-folder="${e(folder.id)}"` : "", "plus")}</div></header>${inFolder ? `<div class="actions">${button("Samen leren", "start-learn", "soft", actionScope({ type: "folder", id: r.id }), "arrow")}${button("Flashcards", "start-flash", "", actionScope({ type: "folder", id: r.id }), "stack")}</div>` : ""}<div class="toolbar"><label class="search-field">${icon("search")}<input id="live-query" type="search" data-live-search="sets" placeholder="Zoek een set of map…" aria-label="Sets zoeken" value="${e(ui.query)}"></label></div>${children.length ? `<div class="subject-grid">${children.map((f) => folderTile(state, f)).join("")}</div>` : ""}<div class="section-head"><h2>${inFolder ? "Sets in deze map" : "Alle sets"}</h2><span class="small muted">${sets.length} ${sets.length === 1 ? "set" : "sets"}</span></div>${sets.length ? `<div class="set-grid">${sets.map(setTile).join("")}</div>` : emptyHTML(ui.query ? "Geen sets gevonden." : "Nog geen sets.", "Maak een set of wijzig je zoekopdracht.", "Nieuwe set", "new-set")}</div>`;
-}
-function tagOptions(notes) {
-  return (
-    `<option value="">Alle tags</option>` +
-    [
-      ...new Set(
-        notes
-          .flatMap((n) => n.tags)
-          .filter(
-            (t) => !t.startsWith("niveau::") && !t.startsWith("hoofdstuk::"),
-          ),
-      ),
-    ]
-      .sort((a, b) => a.localeCompare(b, "nl", { numeric: true }))
-      .map(
-        (t) =>
-          `<option value="${e(t)}" ${ui.tag === t ? "selected" : ""}>${e(t)}</option>`,
-      )
-      .join("")
-  );
-}
-function noteRow(note) {
-  const cards = state.cards.filter((c) => c.noteId === note.id),
-    level = facet(note, "niveau"),
-    chapter = facet(note, "hoofdstuk"),
-    set = state.sets.find((s) => s.id === note.setId);
-  const fresh = cards.every((c) => c.schedule.state === State.New),
-    due = cards.some(
-      (c) =>
-        c.schedule.state !== State.New &&
-        c.schedule.due <= Date.now() &&
-        isAvailable(c),
-    );
-  const generic = note.tags.filter(
-    (t) => !t.startsWith("niveau::") && !t.startsWith("hoofdstuk::"),
-  );
-  return `<article class="note-row"><div class="note-title"><strong>${e(stripImages(note.front))}</strong><div class="tags">${level ? `<span class="pill blue">${e(levelLabel(set, level))}</span>` : ""}${chapter ? `<span class="pill">${e(chapterLabel(set, chapter))}</span>` : ""}${generic
-    .slice(0, 3)
-    .map((t) => `<a class="tag-link" href="${routeURL("tag", t)}">${e(t)}</a>`)
-    .join(
-      "",
-    )}</div><div class="note-state"><span class="pill">${cards.every((c) => c.suspended) ? "Gepauzeerd" : due ? "Te herhalen" : fresh ? "Nieuw" : "In je planning"}</span>${cards.some((c) => c.practiceMark === "unknown") ? '<span class="small attention">Nog oefenen</span>' : ""}${note.learning?.choice || note.learning?.application ? '<span class="small muted">Extra oefeningen</span>' : ""}</div></div><div class="note-answer">${markdown(note.back || "Invulkaart")}</div><div class="note-actions"><button class="icon-button ${note.starred ? "is-starred" : ""}" data-action="star-note" data-id="${e(note.id)}" aria-label="${note.starred ? "Ster verwijderen" : "Ster toevoegen"}" aria-pressed="${!!note.starred}">${icon("star")}</button><button class="icon-button" data-action="edit-note" data-id="${e(note.id)}" aria-label="Kaart bewerken">${icon("edit")}</button></div></article>`;
-}
-function setContinue(set, fallbackScope) {
-  // Set pages default to resuming the busiest engaged chapter, never the
-  // whole set at once. Chapter rows below stay available for the rest.
-  const found = resumeChapter(state, set, ui.level || "");
-  if (!found)
-    return button(
-      "Vrij oefenen",
-      "start-practice",
-      "primary large",
-      actionScope(fallbackScope),
-      "refresh",
-    );
-  const label = `${ui.level ? levelLabel(set, ui.level) + " · " : ""}${chapterLabel(set, found.chapter === "__none" ? "" : found.chapter)}`;
-  return `<p class="continue-now">Verder met <strong>${e(label)}</strong></p>` + button(
-    "Ga verder",
-    "start-learn",
-    "primary large",
-    actionScope(found.scope) + ` aria-label="Ga verder met ${e(label)}"`,
-    "arrow",
-  );
+      (f) => f.parentId === (folder?.id ?? null),
+    ),
+    subtitle = inFolder
+      ? `${sets.length} ${sets.length === 1 ? "set" : "sets"}`
+      : `${state.sets.length} sets · ${countLabel(stats(state).total, "kaart", "kaarten")}`;
+  return `<div class="page"><header class="page-head"><div>${inFolder ? `<div class="breadcrumb"><a href="#/library">Bibliotheek</a><span>/</span><span>${e(folderPath(state, folder.id).replaceAll("::", " / "))}</span></div>` : ""}<h1>${e(folder?.name ?? "Bibliotheek")}</h1><p>${subtitle}</p></div><div class="head-actions">${inFolder ? button("Map beheren", "edit-folder", "", `data-id="${e(folder.id)}"`, "folder") : button("Nieuwe map", "new-folder", "", "", "folder")}${button("Nieuwe set", "new-set", "primary", inFolder ? `data-folder="${e(folder.id)}"` : "", "plus")}</div></header>${inFolder ? `<div class="actions">${button("Leren", "start-learn", "soft", actionScope({ type: "folder", id: r.id }), "arrow")}${button("Flashcards", "start-flash", "", actionScope({ type: "folder", id: r.id }), "stack")}</div>` : ""}<div class="toolbar"><label class="search-field">${icon("search")}<input id="live-query" type="search" data-live-search="sets" placeholder="Zoek een set…" aria-label="Sets zoeken" value="${e(ui.query)}"></label></div>${children.length ? `<div class="subject-grid">${children.map((f) => folderTile(state, f)).join("")}</div>` : ""}${sets.length ? `${children.length ? `<div class="section-head"><h2>${inFolder ? "Sets in deze map" : "Alle sets"}</h2></div>` : ""}<div class="set-grid">${sets.map(setTile).join("")}</div>` : emptyHTML(ui.query ? "Geen sets gevonden." : "Nog geen sets.", ui.query ? "Pas je zoekopdracht aan." : "Maak je eerste set.", "Nieuwe set", "new-set")}</div>`;
 }
 function notesView(r) {
   const scope = routeScope(r),
@@ -492,31 +426,27 @@ function notesView(r) {
     ui.page,
     Math.max(0, Math.ceil(filtered.length / perPage) - 1),
   );
-  const shown = filtered.slice(ui.page * perPage, (ui.page + 1) * perPage);
-  return `<div class="page set-page"><header class="page-head"><div><div class="breadcrumb"><a href="#/library">Bibliotheek</a>${set?.folderId ? `<span>/</span><a href="${routeURL("folder", set.folderId)}">${e(folderPath(state, set.folderId).replaceAll("::", " / "))}</a>` : ""}</div><h1>${e(scopeTitle(scope))}</h1><p>${e(set?.description ?? (r.type === "difficult" ? "Je swipes naar “nog niet” en kaarten die vaker moeilijk bleken." : r.type === "starred" ? "Bewaar wat je wilt terugvinden, uit al je vakken." : "Alle kaarten met deze tag."))}</p></div><div class="head-actions detail-actions">${set ? button('<span class="btn-label">Kaarten toevoegen</span>', "add-cards", "detail-action", `data-id="${e(set.id)}" aria-label="Kaarten toevoegen"`, "plus") + button('<span class="btn-label">Set beheren</span>', "edit-set", "detail-action", `data-id="${e(set.id)}" aria-label="Set beheren"`, "more") : ""}</div></header>${hasStructure ? `<nav class="course-tabs" aria-label="Setweergave"><button class="${overview ? "active" : ""}" data-action="course-tab" data-view="overview" aria-pressed="${overview}">Overzicht</button><button class="${!overview ? "active" : ""}" data-action="course-tab" data-view="cards" aria-pressed="${!overview}">Kaarten <span>${allNotes.length}</span></button></nav>` : ""}<div class="set-study-actions">${set && hasStructure ? setContinue(set, selectedScope) : button("Leren", "start-learn", "primary large", actionScope(selectedScope), "arrow")}${button("Flashcards", "start-flash", "large", actionScope(selectedScope), "stack")}</div><div class="set-study-meta"><span class="small muted">${countLabel(s.total, "kaart", "kaarten")} · ${s.due} te herhalen${s.learning ? ` · ${s.learning} in leren` : ""}${ui.level ? " · " + e(levelLabel(set, ui.level)) : ""}${ui.chapter ? " · " + e(chapterLabel(set, ui.chapter === "__none" ? "" : ui.chapter)) : ""}</span><div class="practice-modes">${button("Verkennen", "start-explore", "ghost", actionScope(selectedScope), "book")}${button("Toepassen", "start-transfer", "ghost", actionScope(selectedScope), "bulb")}</div></div>
+  const shown = filtered.slice(ui.page * perPage, (ui.page + 1) * perPage),
+    subtitle =
+      set?.description ||
+      (r.type === "difficult" ? "Kaarten die je vaker moeilijk vond." : "");
+  return `<div class="page set-page"><header class="page-head"><div><div class="breadcrumb"><a href="#/library">Bibliotheek</a>${set?.folderId ? `<span>/</span><a href="${routeURL("folder", set.folderId)}">${e(folderPath(state, set.folderId).replaceAll("::", " / "))}</a>` : ""}</div><h1>${e(scopeTitle(scope))}</h1>${subtitle ? `<p>${e(subtitle)}</p>` : ""}</div><div class="head-actions detail-actions">${set ? button('<span class="btn-label">Kaarten toevoegen</span>', "add-cards", "detail-action", `data-id="${e(set.id)}" aria-label="Kaarten toevoegen"`, "plus") + button('<span class="btn-label">Set beheren</span>', "edit-set", "detail-action", `data-id="${e(set.id)}" aria-label="Set beheren"`, "more") : ""}</div></header>${hasStructure ? `<nav class="course-tabs" aria-label="Setweergave"><button class="${overview ? "active" : ""}" data-action="course-tab" data-view="overview" aria-pressed="${overview}">Overzicht</button><button class="${!overview ? "active" : ""}" data-action="course-tab" data-view="cards" aria-pressed="${!overview}">Kaarten <span>${allNotes.length}</span></button></nav>` : ""}<div class="set-study-actions">${set && hasStructure ? setContinue(set, selectedScope) : button("Leren", "start-learn", "primary large", actionScope(selectedScope), "arrow")}${button("Flashcards", "start-flash", "large", actionScope(selectedScope), "stack")}</div><div class="set-study-meta"><span class="small muted">${s.due} te herhalen${s.learning ? ` · ${s.learning} in leren` : ""}</span><div class="practice-modes">${button("Verkennen", "start-explore", "ghost", actionScope(selectedScope), "book")}${button("Toepassen", "start-transfer", "ghost", actionScope(selectedScope), "bulb")}</div></div>
   ${overview ? courseStructure(state, set, ui, button, actionScope) : `<div class="toolbar course-filters"><label class="search-field">${icon("search")}<input type="search" id="live-query" data-live-search="notes" placeholder="Zoek een kaart…" aria-label="Kaarten zoeken" value="${e(ui.query)}"></label>${structure.levels.length ? `<select id="level-filter" aria-label="Niveau"><option value="">Alle niveaus</option>${structure.levels.map((v) => `<option value="${e(v)}" ${ui.level === v ? "selected" : ""}>${e(levelLabel(set, v))}</option>`).join("")}</select>` : ""}${filterChapters.length ? `<select id="chapter-filter" aria-label="Hoofdstuk"><option value="">Alle hoofdstukken</option>${filterChapters.map((v) => `<option value="${e(v)}" ${ui.chapter === v ? "selected" : ""}>${e(chapterLabel(set, v))}</option>`).join("")}<option value="__none" ${ui.chapter === "__none" ? "selected" : ""}>Zonder hoofdstuk</option></select>` : ""}<select id="tag-filter" aria-label="Overige tags">${tagOptions(allNotes)}</select></div><div class="section-head"><h2>Kaarten</h2><span class="small muted">${filtered.length} notities · ${scopeCards(state, selectedScope).length} kaarten</span>${set ? button("Hoofdstuk instellen", "bulk-chapter", "soft", `data-id="${e(set.id)}"`, "folder") : ""}</div>${shown.length ? `<div class="cards-list">${shown.map(noteRow).join("")}</div><div class="pagination"><span>${ui.page * perPage + 1}–${Math.min((ui.page + 1) * perPage, filtered.length)} van ${filtered.length}</span><div class="actions">${button("Vorige", "page-prev", "", ui.page ? "" : "disabled", "back")}${button("Volgende", "page-next", "", (ui.page + 1) * perPage < filtered.length ? "" : "disabled", "chevron")}</div></div>` : emptyHTML("Geen kaarten in deze selectie.", "Kies een ander niveau of hoofdstuk, of maak een kaart.")}`}
-  <div class="scope-practice">${button("Extra ophalen oefenen", "start-practice", "ghost", actionScope(selectedScope), "refresh")}<span class="small muted">Buiten je planning</span></div></div>`;
+  <div class="scope-practice">${button("Extra oefenen", "start-practice", "ghost", actionScope(selectedScope), "refresh")}</div></div>`;
 }
 function settingsView() {
-  const s = state.settings,
-    logs = state.reviews.filter((r) => !r.inactive),
-    reviews = logs.filter((r) => !r.wasNew),
-    correct = reviews.filter((r) => r.rating > 1),
-    rate =
-      reviews.length >= 5
-        ? Math.round((correct.length / reviews.length) * 100) + "%"
-        : "Nog te weinig data";
-  return `<div class="page narrow settings"><header class="page-head"><div><div class="eyebrow">Jouw manier van leren.</div><h1>Instellingen</h1><p>Een paar keuzes. De rest houden we eenvoudig.</p></div></header><form id="settings-form"><section class="setting-section"><h2>Je leerplanning</h2><p>15 is een startinstelling, geen wetenschappelijk ideaal en geen premiumlimiet. Alleen nieuwe kaarten vallen hieronder. Herhalingen kun je altijd afwerken, ronde na ronde.</p><div class="check-field"><input type="checkbox" id="daily-limit" name="dailyLimit" ${s.dailyLimit ? "checked" : ""}><label for="daily-limit">Daglimiet voor nieuwe kaarten<div class="help">Uitschakelen = geen daglimiet. Kies wat bij je beschikbare tijd past.</div></label></div><div class="daily-presets">${[5, 10, 15, 25].map((v) => button(String(v), "daily-preset", "", `data-value="${v}"`)).join("")}<span class="small muted">nieuwe kaarten</span></div><div class="form-row"><div class="field"><label for="new-per-day">Nieuwe kaarten per dag</label><input type="number" id="new-per-day" name="newPerDay" min="0" max="100000" step="1" value="${s.newPerDay}" ${s.dailyLimit ? "" : "disabled"} required><span class="help">0 = alleen bestaande kaarten herhalen.</span></div><div class="field"><label for="session-size">Kaarten per ronde</label><input type="number" id="session-size" name="sessionSize" min="5" max="200" step="1" value="${s.sessionSize}" required><span class="help">Een rondelimiet, geen dagelijkse reviewlimiet.</span></div></div><div class="field"><label for="retention">Gewenste herinnering (FSRS)</label><select id="retention" name="retention">${[
+  const s = state.settings;
+  return `<div class="page narrow settings"><header class="page-head"><h1>Instellingen</h1></header><form id="settings-form"><section class="setting-section"><h2>Leren</h2><div class="check-field"><input type="checkbox" id="daily-limit" name="dailyLimit" ${s.dailyLimit ? "checked" : ""}><label for="daily-limit">Daglimiet voor nieuwe kaarten<div class="help">Uit = geen daglimiet.</div></label></div><div class="daily-presets">${[5, 10, 15, 25].map((v) => button(String(v), "daily-preset", "", `data-value="${v}"`)).join("")}<span class="small muted">nieuwe kaarten</span></div><div class="form-row"><div class="field"><label for="new-per-day">Nieuwe kaarten per dag</label><input type="number" id="new-per-day" name="newPerDay" min="0" max="100000" step="1" value="${s.newPerDay}" ${s.dailyLimit ? "" : "disabled"} required></div><div class="field"><label for="session-size">Kaarten per ronde</label><input type="number" id="session-size" name="sessionSize" min="5" max="200" step="1" value="${s.sessionSize}" required></div></div><div class="field"><label for="retention">Gewenste herinnering</label><select id="retention" name="retention">${[
     ...new Set([0.8, 0.85, 0.9, 0.95, s.retention]),
   ]
     .sort((a, b) => a - b)
     .map(
       (v) =>
-        `<option value="${v}" ${s.retention === v ? "selected" : ""}>${Math.round(v * 100)}%${v === 0.9 ? " — aanbevolen startpunt" : ""}</option>`,
+        `<option value="${v}" ${s.retention === v ? "selected" : ""}>${Math.round(v * 100)}%</option>`,
     )
     .join(
       "",
-    )}</select><span class="help">Hoger betekent vaker oefenen. Geen voorspelling van examenresultaat of werkelijk begrip. Nieuwe beoordelingen gebruiken je keuze; bestaande vervaldata blijven staan. Geen enkele kaart wacht langer dan 3 maanden.</span></div><div class="check-field"><input type="checkbox" id="scaffold" name="scaffold" ${s.scaffold ? "checked" : ""}><label for="scaffold">Nieuwe stof geleidelijk opbouwen<div class="help">Eerst een groep verkennen: meerkeuze waar beschikbaar, definitie → term of uitleg. Daarna verdwijnen de opties en uitleg. Herhalingen blijven zonder deze opwarming. Eens verkend, blijft verkend — ook als je tussendoor stopt.</div></label></div><div class="field"><label for="explore-size">Kaarten per verkenningsgroep</label><select id="explore-size" name="exploreSize">${[1, 3, 5].map((n) => `<option value="${n}" ${s.exploreSize === n ? "selected" : ""}>${n} ${n === 1 ? "kaart" : "kaarten"}</option>`).join("")}</select><span class="help">Eén groep nieuwe kaarten per leer­ronde: eerst verkennen, daarna direct ophalen met de herhalingen. Blijven herhalingen plus nog-te-beoordelen samen onder de tien, dan komen er nieuwe kaarten bij.</span></div><div class="check-field"><input type="checkbox" id="application" name="application" ${s.application ? "checked" : ""}><label for="application">Toepassingen aanbieden na gespreid ophalen<div class="help">Alleen wanneer je kaart een eigen scenario en modelredenering heeft. Los toepassen oefenen kan altijd.</div></label></div><div class="check-field"><input type="checkbox" id="mix" name="mix" ${s.mix ? "checked" : ""}><label for="mix">Herhalingen door elkaar aanbieden<div class="help">Nieuwe kaarten gaan per set van het laagste naar het hoogste niveau. Herhalingen houden voorrang.</div></label></div><div class="field"><label for="daily-goal">Rondes per dag (dagdoel)</label><input type="number" id="daily-goal" name="dailyGoal" min="1" max="10" step="1" value="${s.dailyGoal ?? 1}" required><span class="help">Eén afgeronde ronde vult je weekbolletje. Rustig aan telt ook.</span></div><div class="check-field"><input type="checkbox" id="flash-shuffle" name="flashShuffle" ${s.flashShuffle !== false ? "checked" : ""}><label for="flash-shuffle">Flashcards husselen<div class="help">Uit = vaste volgorde van de set. Husselen kan altijd nog met de husselknop.</div></label></div></section><section class="setting-section"><h2>Uiterlijk</h2><div class="field"><label for="theme">Thema</label><select id="theme" name="theme"><option value="system" ${s.theme === "system" ? "selected" : ""}>Volg mijn apparaat</option><option value="light" ${s.theme === "light" ? "selected" : ""}>Licht</option><option value="dark" ${s.theme === "dark" ? "selected" : ""}>Donker</option></select></div>${button("Instellingen opslaan", "submit-settings", "primary")}</section></form><section class="setting-section"><h2>Je apparaten</h2><div id="cloud-panel">${cloudPanel(cloud, button)}</div></section><section class="setting-section"><h2>Je gegevens</h2><p>Alles wordt eerst lokaal bewaard. Sync is optioneel via je eigen backend. Een JSON-back-up bewaart ook je leerlogboek, maar nooit aanmeldtokens.</p><div class="actions">${button("Volledige back-up", "backup", "primary", "", "download")}${button("Back-up herstellen", "restore", "", "", "upload")}${button("Opslag beschermen", "persist", "", "", "lock")}</div><p class="backup-note">Laatste export: ${state.lastBackup ? e(new Intl.DateTimeFormat("nl-BE", { dateStyle: "medium", timeStyle: "short" }).format(new Date(state.lastBackup))) : "nog geen back-up gemaakt"}.</p><p class="small muted">Een back-up bevat kaarten, tags, mappen, FSRS-planning en het leerlogboek. Open de app altijd op hetzelfde websiteadres; een ander adres of andere browser heeft een aparte collectie.</p></section><section class="setting-section"><h2>Wat je logboek zegt</h2><p>${logs.length} beoordelingen opgeslagen. ${reviews.length} daarvan waren herhalingen van eerder geziene kaarten.</p><p><strong>${rate}</strong>${reviews.length >= 5 ? " van die herhalingen beoordeelde je als correct (Moeilijk, Goed of Makkelijk)." : ""}</p><p class="small muted">Dit is je eigen beoordeling, geen objectieve meting. Nieuwe kaarten zijn uitgesloten; herhaalde pogingen op dezelfde dag tellen mee. Een afgeronde ronde zegt niet dat je de stof blijvend beheerst.</p></section><section class="setting-section"><h2>Op je beginscherm</h2><p>Op HTTPS kun je Helder als gratis webapp installeren. Open de site één keer volledig online; daarna werkt de gecachete app offline.</p><div class="actions">${installPrompt ? button("App installeren", "install", "soft", "", "download") : ""}<a class="btn" href="#/guide">${icon("help")} Installatie en uitleg</a></div><p class="backup-note">Helder 3.1 · ts-fsrs 5.4.2 · Geen telemetry</p></section></div>`;
+    )}</select><span class="help">Hoger = vaker oefenen. Maximaal 3 maanden tussen herhalingen.</span></div><div class="check-field"><input type="checkbox" id="scaffold" name="scaffold" ${s.scaffold ? "checked" : ""}><label for="scaffold">Nieuwe stof eerst verkennen<div class="help">Daarna verdwijnen opties en uitleg.</div></label></div><div class="field"><label for="explore-size">Kaarten per verkenningsgroep</label><select id="explore-size" name="exploreSize">${[1, 3, 5].map((n) => `<option value="${n}" ${s.exploreSize === n ? "selected" : ""}>${n} ${n === 1 ? "kaart" : "kaarten"}</option>`).join("")}</select></div><div class="check-field"><input type="checkbox" id="application" name="application" ${s.application ? "checked" : ""}><label for="application">Toepassingen aanbieden<div class="help">Alleen als een kaart een eigen scenario heeft.</div></label></div><div class="check-field"><input type="checkbox" id="mix" name="mix" ${s.mix ? "checked" : ""}><label for="mix">Herhalingen door elkaar<div class="help">Nieuwe kaarten blijven per set op niveau.</div></label></div><div class="field"><label for="daily-goal">Rondes per dag</label><input type="number" id="daily-goal" name="dailyGoal" min="1" max="10" step="1" value="${s.dailyGoal ?? 1}" required></div><div class="check-field"><input type="checkbox" id="flash-shuffle" name="flashShuffle" ${s.flashShuffle !== false ? "checked" : ""}><label for="flash-shuffle">Flashcards husselen<div class="help">Uit = vaste volgorde.</div></label></div></section><section class="setting-section"><h2>Weergave</h2><div class="field"><label for="theme">Thema</label><select id="theme" name="theme"><option value="system" ${s.theme === "system" ? "selected" : ""}>Volg mijn apparaat</option><option value="light" ${s.theme === "light" ? "selected" : ""}>Licht</option><option value="dark" ${s.theme === "dark" ? "selected" : ""}>Donker</option></select></div>${button("Opslaan", "submit-settings", "primary")}</section></form><section class="setting-section"><h2>Apparaten</h2><div id="cloud-panel">${cloudPanel(cloud, button)}</div></section><section class="setting-section"><h2>Gegevens</h2><p>Alles staat lokaal. Sync en back-ups zijn optioneel.</p><div class="actions">${button("Volledige back-up", "backup", "primary", "", "download")}${button("Back-up herstellen", "restore", "", "", "upload")}${button("Opslag beschermen", "persist", "", "", "lock")}</div><p class="backup-note">Laatste export: ${state.lastBackup ? e(new Intl.DateTimeFormat("nl-BE", { dateStyle: "medium", timeStyle: "short" }).format(new Date(state.lastBackup))) : "nog geen back-up gemaakt"}.</p></section><section class="setting-section"><h2>App</h2><p>Installeer Helder op je beginscherm om offline te werken.</p><div class="actions">${installPrompt ? button("App installeren", "install", "soft", "", "download") : ""}<a class="btn" href="#/guide">${icon("help")} Uitleg</a></div><p class="backup-note">Helder 3.1 · ts-fsrs 5.4.2</p></section></div>`;
 }
 function notFoundView() {
   return `<div class="page">${emptyHTML("Deze plek bestaat niet meer.", "Misschien is de set of map verwijderd.", "Naar de bibliotheek", "go-library")}</div>`;
@@ -534,7 +464,7 @@ function renderApp({ keepFocus = false } = {}) {
     content = `<div class="page">${emptyHTML("Je antwoorden zijn bewaard.", "Na een herlaadbeurt maak je een nieuwe ronde op basis van je actuele planning.", "Naar Vandaag", "go-today")}</div>`;
   else if (r.type === "today") content = todayView();
   else if (["library", "folder"].includes(r.type)) content = libraryView(r);
-  else if (["set", "tag", "starred", "difficult"].includes(r.type))
+  else if (["set", "tag", "difficult"].includes(r.type))
     content = notesView(r);
   else if (r.type === "settings") content = settingsView();
   else if (r.type === "guide") content = guideView();
@@ -591,7 +521,7 @@ function studyView() {
 }
 function finishedView() {
   if (session.mode === "explore")
-    return `<div class="study-page"><header class="study-header">${button("Terug", "end-study", "ghost", "", "back")}<div class="study-context"><h1>Je verkenningsronde</h1><p>${e(scopeTitle(session.scope))}</p></div><span></span></header><section class="finish-card"><div class="finish-icon">${icon("book")}</div><h1>Een eerste kennismaking.</h1><p>Je hebt ${session.exploredIds?.length ?? 0} kaarten verkend. Dat is een ingang, geen bewijs van zelfstandig onthouden. Je herhalingsplanning is niet veranderd.</p><div class="actions">${button("Nu zelf ophalen", "start-learn", "primary", actionScope(session.scope), "arrow")}${button("Terug naar overzicht", "end-study")}</div></section></div>`;
+    return `<div class="study-page"><header class="study-header">${button("Terug", "end-study", "ghost", "", "back")}<div class="study-context"><h1>Je verkenningsronde</h1><p>${e(scopeTitle(session.scope))}</p></div><span></span></header><section class="finish-card"><div class="finish-icon">${icon("book")}</div><h1>Een eerste kennismaking.</h1><p>${session.exploredIds?.length ?? 0} kaarten verkend.</p><div class="actions">${button("Nu zelf ophalen", "start-learn", "primary", actionScope(session.scope), "arrow")}${button("Terug naar overzicht", "end-study")}</div></section></div>`;
   let justFinished = false;
   if (!session.roundLogged) {
     session.roundLogged = true;
@@ -623,7 +553,7 @@ function finishedView() {
       known = Object.values(marks).filter((v) => v === "known").length,
       unknown = Object.values(marks).filter((v) => v === "unknown").length,
       skipped = session.total - known - unknown;
-    return `<div class="study-page"><header class="study-header">${button("Terug", "end-study", "ghost", "", "back")}<div class="study-context"><h1>Je sorteerronde</h1><p>${e(scopeTitle(session.scope))}</p></div><span></span></header><section class="finish-card"><div class="finish-icon">${icon("check")}</div><h1>Wat wil je nog oefenen?</h1><p>Je swipes zijn bewaard. Je herhalingsplanning is niet veranderd.</p><div class="finish-stats"><div><strong>${known}</strong><span>gekend</span></div><div><strong>${unknown}</strong><span>nog niet</span></div><div><strong>${Math.max(0, skipped)}</strong><span>overgeslagen</span></div></div><div class="actions">${unknown ? button("De moeilijke opnieuw", "repeat-unknown", "primary", "", "refresh") : ""}${button("Terug naar overzicht", "end-study", unknown ? "" : "primary")}${button("Alle kaarten opnieuw", "restart-flash", "ghost", "", "stack")}</div>${session.flashUndo ? button("Laatste swipe ongedaan", "undo-flash", "ghost", "", "undo") : ""}<p class="small muted">Gekend bij het swipen is niet hetzelfde als later zelfstandig onthouden.</p></section></div>`;
+    return `<div class="study-page"><header class="study-header">${button("Terug", "end-study", "ghost", "", "back")}<div class="study-context"><h1>Je sorteerronde</h1><p>${e(scopeTitle(session.scope))}</p></div><span></span></header><section class="finish-card"><div class="finish-icon">${icon("check")}</div><h1>Wat wil je nog oefenen?</h1><div class="finish-stats"><div><strong>${known}</strong><span>gekend</span></div><div><strong>${unknown}</strong><span>nog niet</span></div><div><strong>${Math.max(0, skipped)}</strong><span>overgeslagen</span></div></div><div class="actions">${unknown ? button("De moeilijke opnieuw", "repeat-unknown", "primary", "", "refresh") : ""}${button("Terug naar overzicht", "end-study", unknown ? "" : "primary")}${button("Alle kaarten opnieuw", "restart-flash", "ghost", "", "stack")}</div>${session.flashUndo ? button("Laatste swipe ongedaan", "undo-flash", "ghost", "", "undo") : ""}</section></div>`;
   }
   const flash = session.mode === "flash",
     completed = session.completed.length,
@@ -636,7 +566,7 @@ function finishedView() {
     1,
     Math.round((Date.now() - session.startedAt) / 60000),
   );
-  return `<div class="study-page"><header class="study-header">${button("Terug", "end-study", "ghost", "", "back")}<div class="study-context"><h1>${e(scopeTitle(session.scope))}</h1></div><span></span></header><section class="finish-card"><div class="finish-icon">${icon("check")}</div><h1>${flash ? "Je hebt de set bekeken." : completed ? "Deze ronde zit erop." : "Voor nu is er niets aan de beurt."}</h1><p>${flash ? "Je planning is niet veranderd. Herhaal gerust vrij, of gebruik Leren voor gespreide herhaling." : session.practice ? "Je hebt extra geoefend, zonder de gewone FSRS-planning te veranderen." : "Dat is een goede tussenstap, geen bewijs dat alles voorgoed blijft zitten. De planner bewaart de volgende herhalingen."}</p>${!flash && completed ? `<div class="finish-stats"><div><strong>${completed}</strong><span>beoordeeld</span></div><div><strong>${good}</strong><span>als correct beoordeeld</span></div><div><strong>${minutes}</strong><span>${minutes === 1 ? "minuut" : "minuten"}</span></div></div>` : ""}${next ? `<div class="timer-line" id="pending-time" data-due="${next.schedule.due}">${countLabel(pending.length, "kaart", "kaarten")} in de leerfase. Volgende ${next.schedule.due <= Date.now() ? "is nu beschikbaar" : "over " + intervalLabel(next.schedule.due)}.</div>` : ""}<div class="actions">${canContinue ? button("Volgende ronde", "continue-learning", "primary", "", "arrow") : ""}${flash ? button("Nog eens bekijken", "restart-flash", "primary", "", "refresh") : ""}${button("Terug naar overzicht", "end-study", canContinue || flash ? "" : "primary")}${!flash ? button("Vrij oefenen", "switch-flash", "ghost", "", "stack") : ""}</div>${session.lastUndo ? `<div class="actions" style="margin-top:16px">${button("Laatste beoordeling ongedaan", "undo-grade", "ghost", "", "undo")}</div>` : ""}${goalMet ? `<p class="goal-met">${icon("check")} Dagdoel gehaald</p>` : ""}</section><p class="small muted" style="margin-top:24px;text-align:center">Reeds beoordeelde kaarten zijn direct opgeslagen. Een nieuwe ronde gebruikt je actuele planning.</p></div>`;
+  return `<div class="study-page"><header class="study-header">${button("Terug", "end-study", "ghost", "", "back")}<div class="study-context"><h1>${e(scopeTitle(session.scope))}</h1></div><span></span></header><section class="finish-card"><div class="finish-icon">${icon("check")}</div><h1>${flash ? "Je hebt de set bekeken." : completed ? "Deze ronde zit erop." : "Voor nu is er niets aan de beurt."}</h1>${session.practice ? "<p>Vrij geoefend, zonder je planning te wijzigen.</p>" : ""}${!flash && completed ? `<div class="finish-stats"><div><strong>${completed}</strong><span>beoordeeld</span></div><div><strong>${good}</strong><span>als correct beoordeeld</span></div><div><strong>${minutes}</strong><span>${minutes === 1 ? "minuut" : "minuten"}</span></div></div>` : ""}${next ? `<div class="timer-line" id="pending-time" data-due="${next.schedule.due}">${countLabel(pending.length, "kaart", "kaarten")} in de leerfase. Volgende ${next.schedule.due <= Date.now() ? "is nu beschikbaar" : "over " + intervalLabel(next.schedule.due)}.</div>` : ""}<div class="actions">${canContinue ? button("Volgende ronde", "continue-learning", "primary", "", "arrow") : ""}${flash ? button("Nog eens bekijken", "restart-flash", "primary", "", "refresh") : ""}${button("Terug naar overzicht", "end-study", canContinue || flash ? "" : "primary")}${!flash ? button("Vrij oefenen", "switch-flash", "ghost", "", "stack") : ""}</div>${session.lastUndo ? `<div class="actions" style="margin-top:16px">${button("Laatste beoordeling ongedaan", "undo-grade", "ghost", "", "undo")}</div>` : ""}${goalMet ? `<p class="goal-met">${icon("check")} Dagdoel gehaald</p>` : ""}</section></div>`;
 }
 async function grade(rating) {
   if (
@@ -776,7 +706,7 @@ function navigateBack() {
   ui.grading = false;
   location.hash =
     scope &&
-    ["set", "folder", "tag", "starred", "difficult"].includes(scope.type)
+    ["set", "folder", "tag", "difficult"].includes(scope.type)
       ? routeURL(scope.type, scope.id)
       : "#/today";
   renderApp();
@@ -1200,13 +1130,17 @@ async function handleClick(event) {
         closeNav();
         break;
       case "connection-info":
+        if (offlineUpdateReady()) {
+          toast(
+            "Nieuwe versie klaar. Sluit alle Helder-vensters en open opnieuw.",
+          );
+          break;
+        }
         openModal(
-          "Ook onderweg",
-          "Je leerplek, op dit apparaat.",
-          `<div class="connection-intro">${icon(offlineUpdateReady() ? "refresh" : offlineAvailable() ? "check" : "lock")}<div><h3>${offlineUpdateReady() ? "Je nieuwe offline-versie staat klaar" : offlineAvailable() ? "Deze app is offline gereed" : "Lokale opslag op dit apparaat"}</h3><p>${offlineUpdateReady() ? "Sluit alle Helder-tabs en geïnstalleerde appvensters. Open daarna opnieuw op hetzelfde adres; zo wordt de update actief. Je opgeslagen voortgang blijft behouden." : "Je kaarten en voortgang worden eerst lokaal bewaard. Via Instellingen → Je apparaten kun je optionele privésync activeren."}</p></div></div>
-          <ol class="connection-steps"><li><strong>Publiceer op HTTPS.</strong><p>Een vaste website maakt de app ook buitenshuis bereikbaar. Je lokale computeradres werkt niet op je telefoon.</p></li><li><strong>Open één keer volledig online.</strong><p>Wacht op de melding ‘Offline gereed’. Daarna werkt de geïnstalleerde app ook zonder verbinding.</p></li><li><strong>Zet op je beginscherm.</strong><p>iPhone: Safari → Deel → Zet op beginscherm. Android: Chrome → menu → App installeren of Toevoegen aan beginscherm.</p></li></ol>
-          <div class="note-banner">${icon("download")}<p>Maak regelmatig een JSON-back-up via Instellingen. Voor automatisch delen verbind je dezelfde account via Instellingen → Je apparaten.</p></div>`,
-          button("Begrepen", "close-modal", "primary"),
+          "Offline gebruik",
+          "",
+          `<p class="small muted">Je kaarten staan op dit apparaat. Een back-up maak je bij Instellingen → Je gegevens.</p>`,
+          button("Sluiten", "close-modal", "primary"),
         );
         break;
       case "dismiss-toast":
@@ -1592,12 +1526,6 @@ async function handleClick(event) {
         break;
       case "undo-grade":
         await undoGrade();
-        break;
-      case "star-note":
-        await mutate((next) => {
-          const n = next.notes.find((n) => n.id === id);
-          if (n) n.starred = !n.starred;
-        });
         break;
       case "edit-note":
         openNoteEditor(id);
@@ -2262,7 +2190,7 @@ async function boot() {
     state = saved ? validateCollection(saved) : emptyCollection();
     if (!saved) {
       try {
-        const response = await fetch("./data/starter.json?v=3.1.56");
+        const response = await fetch("./data/starter.json?v=3.1.57");
         if (!response.ok) throw new Error("Starterbestand ontbreekt.");
         const starters = await response.json();
         for (const data of starters) {

@@ -100,10 +100,8 @@ test("Folder scope includes nested sets", () => {
     1,
   );
 });
-test("Stars and difficult filters are dynamic, not copies", () => {
-  const { s, n, c } = fixture();
-  n.starred = true;
-  assert.equal(scopeNotes(s, { type: "starred" }).length, 1);
+test("Difficult filter is dynamic, not a copy", () => {
+  const { s, c } = fixture();
   c.schedule.lapses = 3;
   assert.equal(scopeNotes(s, { type: "difficult" }).length, 1);
   assert.equal(s.notes.length, 1);
