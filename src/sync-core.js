@@ -1,4 +1,4 @@
-import { emptyCollection, validateCollection } from "./model.js?v=3.1.55";
+import { emptyCollection, validateCollection } from "./model.js?v=3.1.56";
 const groups = ["folders", "sets", "notes", "cards", "reviews", "activities", "rounds"];
 const localSettings = ["theme", "answerMode"];
 const copy = (v) => (v === undefined ? undefined : structuredClone(v));

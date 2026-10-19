@@ -535,7 +535,7 @@ svg {
 }
 .habit-row {
   display: grid;
-  grid-template-columns: minmax(0, 1.3fr) repeat(7, minmax(0, 1fr));
+  grid-template-columns: minmax(84px, 2fr) repeat(7, minmax(16px, 1fr));
   align-items: center;
   gap: 4px;
 }
@@ -545,10 +545,25 @@ svg {
   text-align: center;
 }
 .habit-name {
-  font-size: 14px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  margin: 0;
+  padding: 6px 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.25;
+  color: inherit;
+  text-align: left;
+  overflow-wrap: anywhere;
+  text-decoration: underline dotted var(--control);
+  text-underline-offset: 3px;
+  cursor: pointer;
+  min-height: 32px;
+}
+.habit-name:hover,
+.habit-name:focus-visible {
+  color: var(--blue);
+  text-decoration: underline solid var(--blue);
 }
 .habit-row .week-dot {
   justify-self: center;
@@ -987,6 +1002,10 @@ svg {
   flex: 1;
 }
 .vak-info h3 {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 8px;
   font-size: 17px;
   margin: 0;
 }

@@ -1,12 +1,12 @@
-import { uid, localDay, nextMidnight, normalize } from "./utils.js?v=3.1.55";
+import { uid, localDay, nextMidnight, normalize } from "./utils.js?v=3.1.56";
 import {
   emptySchedule,
   State,
   retrievability,
   MAX_INTERVAL_DAYS,
-} from "./scheduler.js?v=3.1.55";
-import { validateNote, clozeMatches } from "./parser.js?v=3.1.55";
-import { exploredCardIds } from "./learning.js?v=3.1.55";
+} from "./scheduler.js?v=3.1.56";
+import { validateNote, clozeMatches } from "./parser.js?v=3.1.56";
+import { exploredCardIds } from "./learning.js?v=3.1.56";
 export const SCHEMA_VERSION = 1;
 export const DEFAULT_SETTINGS = {
   newPerDay: 15,

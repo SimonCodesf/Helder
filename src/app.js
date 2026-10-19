@@ -11,9 +11,9 @@ import {
   shuffle,
   downloadText,
   safeURL,
-} from "./utils.js?v=3.1.55";
-import { icon } from "./icons.js?v=3.1.55";
-import { markdown } from "./markdown.js?v=3.1.55";
+} from "./utils.js?v=3.1.56";
+import { icon } from "./icons.js?v=3.1.56";
+import { markdown } from "./markdown.js?v=3.1.56";
 import {
   parseImport,
   splitTags,
@@ -21,7 +21,7 @@ import {
   toMarkdown,
   toTSV,
   noteImportKey,
-} from "./parser.js?v=3.1.55";
+} from "./parser.js?v=3.1.56";
 import {
   emptyCollection,
   validateCollection,
@@ -45,21 +45,21 @@ import {
   isAvailable,
   faces,
   burySiblings,
-} from "./model.js?v=3.1.55";
+} from "./model.js?v=3.1.56";
 import {
   loadCollection,
   saveCollection,
   requestPersistentStorage,
   getDeviceValue,
   setDeviceValue,
-} from "./storage.js?v=3.1.55";
-import { previewRatings, scheduleRating, State } from "./scheduler.js?v=3.1.55";
+} from "./storage.js?v=3.1.56";
+import { previewRatings, scheduleRating, State } from "./scheduler.js?v=3.1.56";
 import {
   createSession,
   currentCardId,
   advanceSession,
-} from "./study.js?v=3.1.55";
-import { guideView } from "./guide.js?v=3.1.55";
+} from "./study.js?v=3.1.56";
+import { guideView } from "./guide.js?v=3.1.56";
 import {
   prepareStep,
   startExploration,
@@ -71,7 +71,7 @@ import {
   beginRecall,
   recognitionOptions,
   shouldApply,
-} from "./learning.js?v=3.1.55";
+} from "./learning.js?v=3.1.56";
 import {
   facet,
   structureFor,
@@ -82,20 +82,20 @@ import {
   resumeLevel,
   resumeChapter,
   lastActive,
-} from "./curriculum.js?v=3.1.55";
+} from "./curriculum.js?v=3.1.56";
 import {
   progressStrip,
   courseStructure,
   folderTile,
   groupStrip,
-} from "./curriculum-ui.js?v=3.1.55";
-import { studyScreen } from "./study-ui.js?v=3.1.55";
-import { explorationScreen } from "./exploration-ui.js?v=3.1.55";
-import { emailView } from "./email-ui.js?v=3.1.55";
-import { setupSwipe } from "./swipe.js?v=3.1.55";
-import { CloudConnection } from "./cloud.js?v=3.1.55";
-import { cloudPanel, conflictBody } from "./cloud-ui.js?v=3.1.55";
-import { LocalChangedError, localFromCloud } from "./sync-core.js?v=3.1.55";
+} from "./curriculum-ui.js?v=3.1.56";
+import { studyScreen } from "./study-ui.js?v=3.1.56";
+import { explorationScreen } from "./exploration-ui.js?v=3.1.56";
+import { emailView } from "./email-ui.js?v=3.1.56";
+import { setupSwipe } from "./swipe.js?v=3.1.56";
+import { CloudConnection } from "./cloud.js?v=3.1.56";
+import { cloudPanel, conflictBody } from "./cloud-ui.js?v=3.1.56";
+import { LocalChangedError, localFromCloud } from "./sync-core.js?v=3.1.56";
 import {
   setupInterface,
   syncInterface,
@@ -104,7 +104,7 @@ import {
   offlineUpdateReady,
   offlineAvailable,
   statusButton,
-} from "./interface.js?v=3.1.55";
+} from "./interface.js?v=3.1.56";
 
 let cloud;
 let state,
@@ -276,8 +276,9 @@ function vakRow(row) {
   return `<article class="vak-card"><div class="vak-info"><h3><a href="${row.href}">${e(row.title)}</a></h3>${strip || "<p>Nog geen kaarten</p>"}</div><a class="icon-button" href="${row.href}" aria-label="${e(row.title)} openen">${icon("chevron")}</a></article>`;
 }
 function chapterRow(set, chapter, scope, last) {
-  const label = chapterLabel(set, chapter === "__none" ? "" : chapter);
-  return `<article class="vak-card"><div class="vak-info"><h3><a href="${routeURL("set", set.id)}">${e(label)}</a></h3><p>${e(set.title)}${last ? " · laatst geoefend" : ""}</p>${groupStrip(state, scope)}</div>${button("Leren", "start-learn", "primary", actionScope(scope) + ` aria-label="${e(label)} leren"`, "play")}</article>`;
+  const label = chapterLabel(set, chapter === "__none" ? "" : chapter),
+    due = stats(state, scope).due;
+  return `<article class="vak-card"><div class="vak-info"><h3><a href="${routeURL("set", set.id)}">${e(label)}</a>${due ? `<span class="due-badge" title="${due} te herhalen">${icon("refresh")}<b>${due}</b></span>` : ""}</h3><p>${e(set.title)}${last ? " · laatst geoefend" : ""}</p>${groupStrip(state, scope)}</div>${button("Leren", "start-learn", "primary", actionScope(scope) + ` aria-label="${e(label)} leren"`, "play")}</article>`;
 }
 function habitCard() {
   const grid = dailyGrid(state),
@@ -286,7 +287,12 @@ function habitCard() {
     streak = streakDays(state.rounds),
     goal = state.settings.dailyGoal ?? 1,
     today = (roundsByDay(state.rounds).get(localDay()) ?? 0) >= goal;
-  return `<section class="habit-card" aria-label="Je weekritme"><div class="habit-grid"><div class="habit-row habit-head"><span></span>${grid.columns.map((c) => `<span title="${c.day}">${c.initial}</span>`).join("")}</div>${grid.rows.map((r) => `<div class="habit-row"><span class="habit-name">${e(r.title)}</span>${r.cells.map((done, i) => `<span class="week-dot${done ? " done" : ""}${grid.columns[i].today ? " today" : ""}" title="${r.title} · ${grid.columns[i].day}"></span>`).join("")}</div>`).join("")}</div><p>${met} van 7 dagen${streak ? ` · ${streak} ${streak === 1 ? "dag" : "dagen"} op rij` : ""} · ${today ? "Doel gehaald ✓" : `Nog ${goal} ${goal === 1 ? "ronde" : "rondes"} voor je doel`}</p></section>`;
+  return `<section class="habit-card" aria-label="Je weekritme"><div class="habit-grid"><div class="habit-row habit-head"><span></span>${grid.columns.map((c) => `<span title="${c.day}">${c.initial}</span>`).join("")}</div>${grid.rows
+    .map((r) => {
+      const scope = r.key === "all" ? { type: "all" } : { type: "set", id: r.key };
+      return `<div class="habit-row"><button class="habit-name" data-action="start-learn" ${actionScope(scope)} title="Oefen ${e(r.title)}">${e(r.title)}</button>${r.cells.map((done, i) => `<span class="week-dot${done ? " done" : ""}${grid.columns[i].today ? " today" : ""}" title="${r.title} · ${grid.columns[i].day}"></span>`).join("")}</div>`;
+    })
+    .join("")}</div><p>${met} van 7 dagen${streak ? ` · ${streak} ${streak === 1 ? "dag" : "dagen"} op rij` : ""} · ${today ? "Doel gehaald ✓" : `Nog ${goal} ${goal === 1 ? "ronde" : "rondes"} voor je doel`}</p></section>`;
 }
 function todayView() {
   const s = stats(state),
@@ -2256,7 +2262,7 @@ async function boot() {
     state = saved ? validateCollection(saved) : emptyCollection();
     if (!saved) {
       try {
-        const response = await fetch("./data/starter.json?v=3.1.55");
+        const response = await fetch("./data/starter.json?v=3.1.56");
         if (!response.ok) throw new Error("Starterbestand ontbreekt.");
         const starters = await response.json();
         for (const data of starters) {
