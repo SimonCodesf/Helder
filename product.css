@@ -409,36 +409,45 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 4px 10px;
+  gap: 4px 8px;
 }
-.chapter-counts {
+.level-heading {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: 8px;
-  font-size: 13px;
-  color: var(--muted);
 }
-.chapter-open .chapter-counts span {
+/* The single number that asks for action: due reviews. Quiet pill, warm
+   accent so it reads as "something waits", never as an alarm. */
+.due-badge {
   display: inline-flex;
   align-items: center;
-  gap: 3px;
-  font-size: 13px;
-  font-weight: 600;
-  line-height: 1;
-}
-.chapter-counts svg {
-  width: 14px;
-  height: 14px;
-}
-.chapter-open .chapter-due {
+  gap: 4px;
+  padding: 2px 7px 2px 5px;
+  border-radius: 999px;
+  background: var(--orange-soft);
+  border: 1px solid var(--orange-border);
   color: var(--orange);
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1;
+  white-space: nowrap;
 }
-.chapter-open .chapter-pending {
-  color: var(--muted);
+.due-badge svg {
+  width: 12px;
+  height: 12px;
+  stroke-width: 2.2;
 }
-.chapter-open .chapter-new {
-  color: var(--green);
+.due-badge b {
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+.chapter-open .chapter-title {
+  color: var(--text);
+}
+.chapter-open .due-badge {
+  color: var(--orange);
+  font-size: 12px;
 }
 .groups {
   width: 100%;

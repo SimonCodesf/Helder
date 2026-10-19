@@ -1,17 +1,24 @@
-import { escapeHTML as e, countLabel } from "./utils.js?v=3.1.53";
-import { icon } from "./icons.js?v=3.1.53";
+import { escapeHTML as e, countLabel } from "./utils.js?v=3.1.54";
+import { icon } from "./icons.js?v=3.1.54";
 import {
   scopeNotes,
   scopeCards,
   stats,
   folderDescendants,
-} from "./model.js?v=3.1.53";
+} from "./model.js?v=3.1.54";
 import {
   progressFor,
   structureFor,
   levelLabel,
   chapterLabel,
-} from "./curriculum.js?v=3.1.53";
+} from "./curriculum.js?v=3.1.54";
+// Only the number that actually asks for action: terms due for review.
+// Shown as a small pill; the title attribute carries the words.
+const dueBadge = (n) =>
+  n
+    ? `<span class="due-badge" title="${n} te herhalen">${icon("refresh")}<b>${n}</b></span>`
+    : "";
+
 export function progressStrip(state, scope, { labels = true } = {}) {
   const p = progressFor(state, scope);
   return `<div class="evidence"><div class="evidence-track" role="img" aria-label="${p.new} nieuw, ${p.building} in opbouw, ${p.spaced} op meerdere dagen correct beoordeeld">${p.total ? `<span class="evidence-spaced" style="width:${(p.spaced / p.total) * 100}%"></span><span class="evidence-building" style="width:${(p.building / p.total) * 100}%"></span>` : ""}</div>${labels ? `<div class="evidence-key"><span><i class="key-building"></i>${p.building} in opbouw</span><span><i class="key-spaced"></i>${p.spaced} gespreid opgehaald</span></div>` : ""}</div>`;
@@ -32,7 +39,7 @@ export function courseStructure(state, set, ui, button, actionScope) {
               s = stats(state, sc),
               open = s.due + s.newToday + s.learning;
             const idx = `<span class="level-index">${String(index + 1).padStart(2, "0")}</span>`;
-            return `<article class="level-card ${ui.level === value ? "selected" : ""}">${idx}<button class="level-main" data-action="select-level" data-level="${e(value)}" aria-pressed="${ui.level === value}" aria-label="${e(levelLabel(set, value))} filteren"><span class="level-title">${e(levelLabel(set, value))}</span>${groupStrip(state, sc)}</button>${open ? `<button class="icon-button level-play" data-action="start-learn" ${actionScope({ ...scope, level: value })} aria-label="${e(levelLabel(set, value))} leren">${icon("play")}</button>` : ""}</article>`;
+            return `<article class="level-card ${ui.level === value ? "selected" : ""}">${idx}<button class="level-main" data-action="select-level" data-level="${e(value)}" aria-pressed="${ui.level === value}" aria-label="${e(levelLabel(set, value))} filteren"><span class="level-heading"><span class="level-title">${e(levelLabel(set, value))}</span>${dueBadge(s.due)}</span>${groupStrip(state, sc)}</button>${open ? `<button class="icon-button level-play" data-action="start-learn" ${actionScope({ ...scope, level: value })} aria-label="${e(levelLabel(set, value))} leren">${icon("play")}</button>` : ""}</article>`;
           })
           .join(
             "",
@@ -48,21 +55,8 @@ export function courseStructure(state, set, ui, button, actionScope) {
   ]
     .map((value) => {
       const sc = { ...baseScope, chapter: value },
-        st = stats(state, sc),
-        chips = [];
-      if (st.due)
-        chips.push(
-          `<span class="chapter-due" title="${st.due} te herhalen">${icon("refresh")}${st.due}</span>`,
-        );
-      if (st.learning)
-        chips.push(
-          `<span class="chapter-pending" title="${st.learning} zonder oordeel">${icon("clock")}${st.learning}</span>`,
-        );
-      if (st.newToday)
-        chips.push(
-          `<span class="chapter-new" title="${st.newToday} nieuw">${icon("plus")}${st.newToday}</span>`,
-        );
-      return `<article class="chapter-row"><div class="chapter-symbol">${icon("book")}</div><button class="chapter-open" data-action="select-chapter" data-chapter="${e(value)}"><span class="chapter-title"><strong>${e(chapterLabel(set, value === "__none" ? "" : value))}</strong><span class="chapter-counts">${chips.join("")}</span></span>${groupStrip(state, sc)}</button>${button("Leren", "start-learn", "chapter-learn", actionScope(sc) + ` aria-label="${e(chapterLabel(set, value === "__none" ? "" : value))} leren"`, "play")}<button class="icon-button" data-action="select-chapter" data-chapter="${e(value)}" aria-label="${e(chapterLabel(set, value === "__none" ? "" : value))} bekijken">${icon("chevron")}</button></article>`;
+        st = stats(state, sc);
+      return `<article class="chapter-row"><div class="chapter-symbol">${icon("book")}</div><button class="chapter-open" data-action="select-chapter" data-chapter="${e(value)}"><span class="chapter-title"><strong>${e(chapterLabel(set, value === "__none" ? "" : value))}</strong>${dueBadge(st.due)}</span>${groupStrip(state, sc)}</button>${button("Leren", "start-learn", "chapter-learn", actionScope(sc) + ` aria-label="${e(chapterLabel(set, value === "__none" ? "" : value))} leren"`, "play")}<button class="icon-button" data-action="select-chapter" data-chapter="${e(value)}" aria-label="${e(chapterLabel(set, value === "__none" ? "" : value))} bekijken">${icon("chevron")}</button></article>`;
     })
     .join("")}</div>
   <p class="small muted evidence-disclaimer">“Gespreid opgehaald” = op minstens twee verschillende dagen, met minstens 24 uur ertussen, zonder hulp als correct beoordeeld. Geen garantie op begrip of examenresultaat.</p></section>`;
