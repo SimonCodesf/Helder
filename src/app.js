@@ -11,9 +11,9 @@ import {
   shuffle,
   downloadText,
   safeURL,
-} from "./utils.js?v=3.1.58";
-import { icon } from "./icons.js?v=3.1.58";
-import { markdown } from "./markdown.js?v=3.1.58";
+} from "./utils.js?v=3.1.59";
+import { icon } from "./icons.js?v=3.1.59";
+import { markdown } from "./markdown.js?v=3.1.59";
 import {
   parseImport,
   splitTags,
@@ -21,7 +21,7 @@ import {
   toMarkdown,
   toTSV,
   noteImportKey,
-} from "./parser.js?v=3.1.58";
+} from "./parser.js?v=3.1.59";
 import {
   emptyCollection,
   validateCollection,
@@ -45,21 +45,21 @@ import {
   isAvailable,
   faces,
   burySiblings,
-} from "./model.js?v=3.1.58";
+} from "./model.js?v=3.1.59";
 import {
   loadCollection,
   saveCollection,
   requestPersistentStorage,
   getDeviceValue,
   setDeviceValue,
-} from "./storage.js?v=3.1.58";
-import { previewRatings, scheduleRating, State } from "./scheduler.js?v=3.1.58";
+} from "./storage.js?v=3.1.59";
+import { previewRatings, scheduleRating, State } from "./scheduler.js?v=3.1.59";
 import {
   createSession,
   currentCardId,
   advanceSession,
-} from "./study.js?v=3.1.58";
-import { guideView } from "./guide.js?v=3.1.58";
+} from "./study.js?v=3.1.59";
+import { guideView } from "./guide.js?v=3.1.59";
 import {
   prepareStep,
   startExploration,
@@ -71,7 +71,7 @@ import {
   beginRecall,
   recognitionOptions,
   shouldApply,
-} from "./learning.js?v=3.1.58";
+} from "./learning.js?v=3.1.59";
 import {
   facet,
   structureFor,
@@ -82,20 +82,20 @@ import {
   resumeLevel,
   resumeChapter,
   lastActive,
-} from "./curriculum.js?v=3.1.58";
+} from "./curriculum.js?v=3.1.59";
 import {
   progressStrip,
   courseStructure,
   folderTile,
   groupStrip,
-} from "./curriculum-ui.js?v=3.1.58";
-import { studyScreen } from "./study-ui.js?v=3.1.58";
-import { explorationScreen } from "./exploration-ui.js?v=3.1.58";
-import { emailView } from "./email-ui.js?v=3.1.58";
-import { setupSwipe } from "./swipe.js?v=3.1.58";
-import { CloudConnection } from "./cloud.js?v=3.1.58";
-import { cloudPanel, conflictBody } from "./cloud-ui.js?v=3.1.58";
-import { LocalChangedError, localFromCloud } from "./sync-core.js?v=3.1.58";
+} from "./curriculum-ui.js?v=3.1.59";
+import { studyScreen } from "./study-ui.js?v=3.1.59";
+import { explorationScreen } from "./exploration-ui.js?v=3.1.59";
+import { emailView } from "./email-ui.js?v=3.1.59";
+import { setupSwipe } from "./swipe.js?v=3.1.59";
+import { CloudConnection } from "./cloud.js?v=3.1.59";
+import { cloudPanel, conflictBody } from "./cloud-ui.js?v=3.1.59";
+import { LocalChangedError, localFromCloud } from "./sync-core.js?v=3.1.59";
 import {
   setupInterface,
   syncInterface,
@@ -104,7 +104,7 @@ import {
   offlineUpdateReady,
   offlineAvailable,
   statusButton,
-} from "./interface.js?v=3.1.58";
+} from "./interface.js?v=3.1.59";
 
 let cloud;
 let state,
@@ -394,6 +394,70 @@ function libraryView(r) {
       : `${state.sets.length} sets · ${countLabel(stats(state).total, "kaart", "kaarten")}`;
   return `<div class="page"><header class="page-head"><div>${inFolder ? `<div class="breadcrumb"><a href="#/library">Bibliotheek</a><span>/</span><span>${e(folderPath(state, folder.id).replaceAll("::", " / "))}</span></div>` : ""}<h1>${e(folder?.name ?? "Bibliotheek")}</h1><p>${subtitle}</p></div><div class="head-actions">${inFolder ? button("Map beheren", "edit-folder", "", `data-id="${e(folder.id)}"`, "folder") : button("Nieuwe map", "new-folder", "", "", "folder")}${button("Nieuwe set", "new-set", "primary", inFolder ? `data-folder="${e(folder.id)}"` : "", "plus")}</div></header>${inFolder ? `<div class="actions">${button("Leren", "start-learn", "soft", actionScope({ type: "folder", id: r.id }), "arrow")}${button("Flashcards", "start-flash", "", actionScope({ type: "folder", id: r.id }), "stack")}</div>` : ""}<div class="toolbar"><label class="search-field">${icon("search")}<input id="live-query" type="search" data-live-search="sets" placeholder="Zoek een set…" aria-label="Sets zoeken" value="${e(ui.query)}"></label></div>${children.length ? `<div class="subject-grid">${children.map((f) => folderTile(state, f)).join("")}</div>` : ""}${sets.length ? `${children.length ? `<div class="section-head"><h2>${inFolder ? "Sets in deze map" : "Alle sets"}</h2></div>` : ""}<div class="set-grid">${sets.map(setTile).join("")}</div>` : emptyHTML(ui.query ? "Geen sets gevonden." : "Nog geen sets.", ui.query ? "Pas je zoekopdracht aan." : "Maak je eerste set.", "Nieuwe set", "new-set")}</div>`;
 }
+function tagOptions(notes) {
+  return (
+    `<option value="">Alle tags</option>` +
+    [
+      ...new Set(
+        notes
+          .flatMap((n) => n.tags)
+          .filter(
+            (t) => !t.startsWith("niveau::") && !t.startsWith("hoofdstuk::"),
+          ),
+      ),
+    ]
+      .sort((a, b) => a.localeCompare(b, "nl", { numeric: true }))
+      .map(
+        (t) =>
+          `<option value="${e(t)}" ${ui.tag === t ? "selected" : ""}>${e(t)}</option>`,
+      )
+      .join("")
+  );
+}
+function noteRow(note) {
+  const cards = state.cards.filter((c) => c.noteId === note.id),
+    level = facet(note, "niveau"),
+    chapter = facet(note, "hoofdstuk"),
+    set = state.sets.find((s) => s.id === note.setId);
+  const fresh = cards.every((c) => c.schedule.state === State.New),
+    due = cards.some(
+      (c) =>
+        c.schedule.state !== State.New &&
+        c.schedule.due <= Date.now() &&
+        isAvailable(c),
+    );
+  const generic = note.tags.filter(
+    (t) => !t.startsWith("niveau::") && !t.startsWith("hoofdstuk::"),
+  );
+  return `<article class="note-row"><div class="note-title"><strong>${e(stripImages(note.front))}</strong><div class="tags">${level ? `<span class="pill blue">${e(levelLabel(set, level))}</span>` : ""}${chapter ? `<span class="pill">${e(chapterLabel(set, chapter))}</span>` : ""}${generic
+    .slice(0, 3)
+    .map((t) => `<a class="tag-link" href="${routeURL("tag", t)}">${e(t)}</a>`)
+    .join(
+      "",
+    )}</div><div class="note-state"><span class="pill">${cards.every((c) => c.suspended) ? "Gepauzeerd" : due ? "Te herhalen" : fresh ? "Nieuw" : "In je planning"}</span>${cards.some((c) => c.practiceMark === "unknown") ? '<span class="small attention">Nog oefenen</span>' : ""}${note.learning?.choice || note.learning?.application ? '<span class="small muted">Extra oefeningen</span>' : ""}</div></div><div class="note-answer">${markdown(note.back || "Invulkaart")}</div><div class="note-actions"><button class="icon-button" data-action="edit-note" data-id="${e(note.id)}" aria-label="Kaart bewerken">${icon("edit")}</button></div></article>`;
+}
+function setContinue(set, fallbackScope) {
+  // Set pages default to resuming the busiest engaged chapter, never the
+  // whole set at once. Chapter rows below stay available for the rest.
+  const found = resumeChapter(state, set, ui.level || "");
+  if (!found)
+    return button(
+      "Vrij oefenen",
+      "start-practice",
+      "primary large",
+      actionScope(fallbackScope),
+      "refresh",
+    );
+  const label = `${ui.level ? levelLabel(set, ui.level) + " · " : ""}${chapterLabel(set, found.chapter === "__none" ? "" : found.chapter)}`;
+  return `<p class="continue-now">Verder met <strong>${e(label)}</strong></p>` + button(
+    "Ga verder",
+    "start-learn",
+    "primary large",
+    actionScope(found.scope) + ` aria-label="Ga verder met ${e(label)}"`,
+    "arrow",
+  );
+}
+
 function notesView(r) {
   const scope = routeScope(r),
     set = r.type === "set" ? state.sets.find((s) => s.id === r.id) : null;
@@ -2190,7 +2254,7 @@ async function boot() {
     state = saved ? validateCollection(saved) : emptyCollection();
     if (!saved) {
       try {
-        const response = await fetch("./data/starter.json?v=3.1.58");
+        const response = await fetch("./data/starter.json?v=3.1.59");
         if (!response.ok) throw new Error("Starterbestand ontbreekt.");
         const starters = await response.json();
         for (const data of starters) {
