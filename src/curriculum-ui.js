@@ -1,17 +1,17 @@
-import { escapeHTML as e, countLabel } from "./utils.js?v=3.1.57";
-import { icon } from "./icons.js?v=3.1.57";
+import { escapeHTML as e, countLabel } from "./utils.js?v=3.1.58";
+import { icon } from "./icons.js?v=3.1.58";
 import {
   scopeNotes,
   scopeCards,
   stats,
   folderDescendants,
-} from "./model.js?v=3.1.57";
+} from "./model.js?v=3.1.58";
 import {
   progressFor,
   structureFor,
   levelLabel,
   chapterLabel,
-} from "./curriculum.js?v=3.1.57";
+} from "./curriculum.js?v=3.1.58";
 // Only the number that actually asks for action: terms due for review.
 // Shown as a small pill; the title attribute carries the words.
 const dueBadge = (n) =>

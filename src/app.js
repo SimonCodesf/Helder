@@ -11,9 +11,9 @@ import {
   shuffle,
   downloadText,
   safeURL,
-} from "./utils.js?v=3.1.57";
-import { icon } from "./icons.js?v=3.1.57";
-import { markdown } from "./markdown.js?v=3.1.57";
+} from "./utils.js?v=3.1.58";
+import { icon } from "./icons.js?v=3.1.58";
+import { markdown } from "./markdown.js?v=3.1.58";
 import {
   parseImport,
   splitTags,
@@ -21,7 +21,7 @@ import {
   toMarkdown,
   toTSV,
   noteImportKey,
-} from "./parser.js?v=3.1.57";
+} from "./parser.js?v=3.1.58";
 import {
   emptyCollection,
   validateCollection,
@@ -45,21 +45,21 @@ import {
   isAvailable,
   faces,
   burySiblings,
-} from "./model.js?v=3.1.57";
+} from "./model.js?v=3.1.58";
 import {
   loadCollection,
   saveCollection,
   requestPersistentStorage,
   getDeviceValue,
   setDeviceValue,
-} from "./storage.js?v=3.1.57";
-import { previewRatings, scheduleRating, State } from "./scheduler.js?v=3.1.57";
+} from "./storage.js?v=3.1.58";
+import { previewRatings, scheduleRating, State } from "./scheduler.js?v=3.1.58";
 import {
   createSession,
   currentCardId,
   advanceSession,
-} from "./study.js?v=3.1.57";
-import { guideView } from "./guide.js?v=3.1.57";
+} from "./study.js?v=3.1.58";
+import { guideView } from "./guide.js?v=3.1.58";
 import {
   prepareStep,
   startExploration,
@@ -71,7 +71,7 @@ import {
   beginRecall,
   recognitionOptions,
   shouldApply,
-} from "./learning.js?v=3.1.57";
+} from "./learning.js?v=3.1.58";
 import {
   facet,
   structureFor,
@@ -82,20 +82,20 @@ import {
   resumeLevel,
   resumeChapter,
   lastActive,
-} from "./curriculum.js?v=3.1.57";
+} from "./curriculum.js?v=3.1.58";
 import {
   progressStrip,
   courseStructure,
   folderTile,
   groupStrip,
-} from "./curriculum-ui.js?v=3.1.57";
-import { studyScreen } from "./study-ui.js?v=3.1.57";
-import { explorationScreen } from "./exploration-ui.js?v=3.1.57";
-import { emailView } from "./email-ui.js?v=3.1.57";
-import { setupSwipe } from "./swipe.js?v=3.1.57";
-import { CloudConnection } from "./cloud.js?v=3.1.57";
-import { cloudPanel, conflictBody } from "./cloud-ui.js?v=3.1.57";
-import { LocalChangedError, localFromCloud } from "./sync-core.js?v=3.1.57";
+} from "./curriculum-ui.js?v=3.1.58";
+import { studyScreen } from "./study-ui.js?v=3.1.58";
+import { explorationScreen } from "./exploration-ui.js?v=3.1.58";
+import { emailView } from "./email-ui.js?v=3.1.58";
+import { setupSwipe } from "./swipe.js?v=3.1.58";
+import { CloudConnection } from "./cloud.js?v=3.1.58";
+import { cloudPanel, conflictBody } from "./cloud-ui.js?v=3.1.58";
+import { LocalChangedError, localFromCloud } from "./sync-core.js?v=3.1.58";
 import {
   setupInterface,
   syncInterface,
@@ -104,7 +104,7 @@ import {
   offlineUpdateReady,
   offlineAvailable,
   statusButton,
-} from "./interface.js?v=3.1.57";
+} from "./interface.js?v=3.1.58";
 
 let cloud;
 let state,
@@ -284,8 +284,8 @@ function habitCard() {
     today = (roundsByDay(state.rounds).get(localDay()) ?? 0) >= goal;
   return `<section class="habit-card" aria-label="Je weekritme"><div class="habit-grid"><div class="habit-row habit-head"><span></span>${grid.columns.map((c) => `<span title="${c.day}">${c.initial}</span>`).join("")}</div>${grid.rows
     .map((r) => {
-      const scope = r.key === "all" ? { type: "all" } : { type: "set", id: r.key };
-      return `<div class="habit-row"><button class="habit-name" data-action="start-learn" ${actionScope(scope)} title="Oefen ${e(r.title)}">${e(r.title)}</button>${r.cells.map((done, i) => `<span class="week-dot${done ? " done" : ""}${grid.columns[i].today ? " today" : ""}" title="${r.title} · ${grid.columns[i].day}"></span>`).join("")}</div>`;
+      const href = r.key === "all" ? "#/library" : routeURL("set", r.key);
+      return `<div class="habit-row"><a class="habit-name" href="${href}" title="${e(r.title)}">${e(r.title)}</a>${r.cells.map((done, i) => `<span class="week-dot${done ? " done" : ""}${grid.columns[i].today ? " today" : ""}" title="${r.title} · ${grid.columns[i].day}"></span>`).join("")}</div>`;
     })
     .join("")}</div><p>${met} van 7 dagen${streak ? ` · ${streak} ${streak === 1 ? "dag" : "dagen"} op rij` : ""} · ${today ? "Doel gehaald ✓" : `Nog ${goal} ${goal === 1 ? "ronde" : "rondes"} voor je doel`}</p></section>`;
 }
@@ -2190,7 +2190,7 @@ async function boot() {
     state = saved ? validateCollection(saved) : emptyCollection();
     if (!saved) {
       try {
-        const response = await fetch("./data/starter.json?v=3.1.57");
+        const response = await fetch("./data/starter.json?v=3.1.58");
         if (!response.ok) throw new Error("Starterbestand ontbreekt.");
         const starters = await response.json();
         for (const data of starters) {
