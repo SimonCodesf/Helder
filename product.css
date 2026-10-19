@@ -405,6 +405,25 @@
 .chapter-learn {
   font-weight: 600;
 }
+.chapter-counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.chapter-due {
+  color: var(--orange);
+  font-weight: 600;
+}
+.chapter-pending {
+  color: var(--muted);
+  font-weight: 600;
+}
+.chapter-new {
+  color: var(--green);
+  font-weight: 600;
+}
 .groups {
   width: 100%;
   margin-top: 8px;
