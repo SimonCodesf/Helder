@@ -1,17 +1,17 @@
-import { escapeHTML as e, countLabel } from "./utils.js?v=3.1.52";
-import { icon } from "./icons.js?v=3.1.52";
+import { escapeHTML as e, countLabel } from "./utils.js?v=3.1.53";
+import { icon } from "./icons.js?v=3.1.53";
 import {
   scopeNotes,
   scopeCards,
   stats,
   folderDescendants,
-} from "./model.js?v=3.1.52";
+} from "./model.js?v=3.1.53";
 import {
   progressFor,
   structureFor,
   levelLabel,
   chapterLabel,
-} from "./curriculum.js?v=3.1.52";
+} from "./curriculum.js?v=3.1.53";
 export function progressStrip(state, scope, { labels = true } = {}) {
   const p = progressFor(state, scope);
   return `<div class="evidence"><div class="evidence-track" role="img" aria-label="${p.new} nieuw, ${p.building} in opbouw, ${p.spaced} op meerdere dagen correct beoordeeld">${p.total ? `<span class="evidence-spaced" style="width:${(p.spaced / p.total) * 100}%"></span><span class="evidence-building" style="width:${(p.building / p.total) * 100}%"></span>` : ""}</div>${labels ? `<div class="evidence-key"><span><i class="key-building"></i>${p.building} in opbouw</span><span><i class="key-spaced"></i>${p.spaced} gespreid opgehaald</span></div>` : ""}</div>`;
@@ -50,10 +50,19 @@ export function courseStructure(state, set, ui, button, actionScope) {
       const sc = { ...baseScope, chapter: value },
         st = stats(state, sc),
         chips = [];
-      if (st.due) chips.push(`<span class="chapter-due">${st.due} te herhalen</span>`);
-      if (st.learning) chips.push(`<span class="chapter-pending">${st.learning} zonder oordeel</span>`);
-      if (st.newToday) chips.push(`<span class="chapter-new">${st.newToday} nieuw</span>`);
-      return `<article class="chapter-row"><div class="chapter-symbol">${icon("book")}</div><button class="chapter-open" data-action="select-chapter" data-chapter="${e(value)}"><strong>${e(chapterLabel(set, value === "__none" ? "" : value))}</strong><span class="chapter-counts">${chips.join("")}</span>${groupStrip(state, sc)}</button>${button("Leren", "start-learn", "chapter-learn", actionScope(sc) + ` aria-label="${e(chapterLabel(set, value === "__none" ? "" : value))} leren"`, "play")}<button class="icon-button" data-action="select-chapter" data-chapter="${e(value)}" aria-label="${e(chapterLabel(set, value === "__none" ? "" : value))} bekijken">${icon("chevron")}</button></article>`;
+      if (st.due)
+        chips.push(
+          `<span class="chapter-due" title="${st.due} te herhalen">${icon("refresh")}${st.due}</span>`,
+        );
+      if (st.learning)
+        chips.push(
+          `<span class="chapter-pending" title="${st.learning} zonder oordeel">${icon("clock")}${st.learning}</span>`,
+        );
+      if (st.newToday)
+        chips.push(
+          `<span class="chapter-new" title="${st.newToday} nieuw">${icon("plus")}${st.newToday}</span>`,
+        );
+      return `<article class="chapter-row"><div class="chapter-symbol">${icon("book")}</div><button class="chapter-open" data-action="select-chapter" data-chapter="${e(value)}"><span class="chapter-title"><strong>${e(chapterLabel(set, value === "__none" ? "" : value))}</strong><span class="chapter-counts">${chips.join("")}</span></span>${groupStrip(state, sc)}</button>${button("Leren", "start-learn", "chapter-learn", actionScope(sc) + ` aria-label="${e(chapterLabel(set, value === "__none" ? "" : value))} leren"`, "play")}<button class="icon-button" data-action="select-chapter" data-chapter="${e(value)}" aria-label="${e(chapterLabel(set, value === "__none" ? "" : value))} bekijken">${icon("chevron")}</button></article>`;
     })
     .join("")}</div>
   <p class="small muted evidence-disclaimer">“Gespreid opgehaald” = op minstens twee verschillende dagen, met minstens 24 uur ertussen, zonder hulp als correct beoordeeld. Geen garantie op begrip of examenresultaat.</p></section>`;

@@ -405,24 +405,40 @@
 .chapter-learn {
   font-weight: 600;
 }
+.chapter-title {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+}
 .chapter-counts {
   display: flex;
+  align-items: center;
   flex-wrap: wrap;
   gap: 8px;
   font-size: 13px;
   color: var(--muted);
 }
-.chapter-due {
+.chapter-open .chapter-counts span {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1;
+}
+.chapter-counts svg {
+  width: 14px;
+  height: 14px;
+}
+.chapter-open .chapter-due {
   color: var(--orange);
-  font-weight: 600;
 }
-.chapter-pending {
+.chapter-open .chapter-pending {
   color: var(--muted);
-  font-weight: 600;
 }
-.chapter-new {
+.chapter-open .chapter-new {
   color: var(--green);
-  font-weight: 600;
 }
 .groups {
   width: 100%;
